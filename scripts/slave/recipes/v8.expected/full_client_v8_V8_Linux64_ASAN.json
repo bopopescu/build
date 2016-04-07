@@ -7,7 +7,7 @@
       "--master",
       "client.v8",
       "--builder",
-      "V8 Linux64 ASAN",
+      "V8 Linux64 ASAN NOGOMA",
       "--slave",
       "TestSlavename",
       "--spec",
@@ -88,7 +88,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "GYP_DEFINES": "asan=1 clang=1 gomadir='[BUILD]/goma' lsan=1 target_arch=x64 test_isolation_mode=prepare use_goma=1 v8_target_arch=x64",
+      "GYP_DEFINES": "asan=1 clang=1 lsan=1 target_arch=x64 test_isolation_mode=prepare v8_target_arch=x64",
       "GYP_GENERATORS": "ninja",
       "PATH": "%(PATH)s:RECIPE_PACKAGE_REPO[depot_tools]"
     },
@@ -140,16 +140,10 @@
       "Release",
       "--src-dir",
       "[SLAVE_BUILD]/v8",
-      "--goma-cache-dir",
-      "[GOMA_CACHE]",
       "--build-tool",
       "ninja",
       "--compiler",
-      "goma-clang",
-      "--goma-jsonstatus",
-      "/path/to/tmp/json",
-      "--goma-dir",
-      "[BUILD]/goma",
+      "clang",
       "--"
     ],
     "cwd": "[SLAVE_BUILD]",
@@ -201,7 +195,7 @@
       "--shards",
       "2",
       "--task-name",
-      "Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571",
+      "Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571",
       "--dump-json",
       "/path/to/tmp/json",
       "--expiration",
@@ -223,7 +217,7 @@
       "pool",
       "Chrome",
       "--tag",
-      "buildername:V8 Linux64 ASAN",
+      "buildername:V8 Linux64 ASAN NOGOMA",
       "--tag",
       "buildnumber:571",
       "--tag",
@@ -269,14 +263,14 @@
     "name": "[trigger] Check on Ubuntu-14.04",
     "~followup_annotations": [
       "@@@STEP_LOG_LINE@json.output@{@@@",
-      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571\", @@@",
+      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571\", @@@",
       "@@@STEP_LOG_LINE@json.output@  \"tasks\": {@@@",
-      "@@@STEP_LOG_LINE@json.output@    \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571:2:0\": {@@@",
+      "@@@STEP_LOG_LINE@json.output@    \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571:2:0\": {@@@",
       "@@@STEP_LOG_LINE@json.output@      \"shard_index\": 0, @@@",
       "@@@STEP_LOG_LINE@json.output@      \"task_id\": \"10000\", @@@",
       "@@@STEP_LOG_LINE@json.output@      \"view_url\": \"https://chromium-swarm.appspot.com/user/task/10000\"@@@",
       "@@@STEP_LOG_LINE@json.output@    }, @@@",
-      "@@@STEP_LOG_LINE@json.output@    \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571:2:1\": {@@@",
+      "@@@STEP_LOG_LINE@json.output@    \"Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571:2:1\": {@@@",
       "@@@STEP_LOG_LINE@json.output@      \"shard_index\": 1, @@@",
       "@@@STEP_LOG_LINE@json.output@      \"task_id\": \"10100\", @@@",
       "@@@STEP_LOG_LINE@json.output@      \"view_url\": \"https://chromium-swarm.appspot.com/user/task/10100\"@@@",
@@ -303,7 +297,7 @@
       "--shards",
       "1",
       "--task-name",
-      "Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571",
+      "Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571",
       "--dump-json",
       "/path/to/tmp/json",
       "--expiration",
@@ -325,7 +319,7 @@
       "pool",
       "Chrome",
       "--tag",
-      "buildername:V8 Linux64 ASAN",
+      "buildername:V8 Linux64 ASAN NOGOMA",
       "--tag",
       "buildnumber:571",
       "--tag",
@@ -373,9 +367,9 @@
     "name": "[trigger] Test262 - no variants on Ubuntu-14.04",
     "~followup_annotations": [
       "@@@STEP_LOG_LINE@json.output@{@@@",
-      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571\", @@@",
+      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571\", @@@",
       "@@@STEP_LOG_LINE@json.output@  \"tasks\": {@@@",
-      "@@@STEP_LOG_LINE@json.output@    \"Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571\": {@@@",
+      "@@@STEP_LOG_LINE@json.output@    \"Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571\": {@@@",
       "@@@STEP_LOG_LINE@json.output@      \"shard_index\": 0, @@@",
       "@@@STEP_LOG_LINE@json.output@      \"task_id\": \"10000\", @@@",
       "@@@STEP_LOG_LINE@json.output@      \"view_url\": \"https://chromium-swarm.appspot.com/user/task/10000\"@@@",
@@ -401,7 +395,7 @@
       "--shards",
       "1",
       "--task-name",
-      "Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571",
+      "Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571",
       "--dump-json",
       "/path/to/tmp/json",
       "--expiration",
@@ -423,7 +417,7 @@
       "pool",
       "Chrome",
       "--tag",
-      "buildername:V8 Linux64 ASAN",
+      "buildername:V8 Linux64 ASAN NOGOMA",
       "--tag",
       "buildnumber:571",
       "--tag",
@@ -471,9 +465,9 @@
     "name": "[trigger] Ignition on Ubuntu-14.04",
     "~followup_annotations": [
       "@@@STEP_LOG_LINE@json.output@{@@@",
-      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571\", @@@",
+      "@@@STEP_LOG_LINE@json.output@  \"base_task_name\": \"Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571\", @@@",
       "@@@STEP_LOG_LINE@json.output@  \"tasks\": {@@@",
-      "@@@STEP_LOG_LINE@json.output@    \"Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571\": {@@@",
+      "@@@STEP_LOG_LINE@json.output@    \"Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571\": {@@@",
       "@@@STEP_LOG_LINE@json.output@      \"shard_index\": 0, @@@",
       "@@@STEP_LOG_LINE@json.output@      \"task_id\": \"10000\", @@@",
       "@@@STEP_LOG_LINE@json.output@      \"view_url\": \"https://chromium-swarm.appspot.com/user/task/10000\"@@@",
@@ -504,7 +498,7 @@
       "--print-status-updates",
       "--shards",
       "2",
-      "Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571"
+      "Check/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "Check",
@@ -545,7 +539,7 @@
       "--print-status-updates",
       "--shards",
       "1",
-      "Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571"
+      "Test262 - no variants/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "Test262 - no variants",
@@ -586,7 +580,7 @@
       "--print-status-updates",
       "--shards",
       "1",
-      "Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN/571"
+      "Ignition/Ubuntu-14.04/[dummy has/V8 Linux64 ASAN NOGOMA/571"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "Ignition",
@@ -613,7 +607,7 @@
     "name": "trigger",
     "trigger_specs": [
       {
-        "builder_name": "V8 Linux64 ASAN no inline - release builder",
+        "builder_name": "V8 Linux64 ASAN NO GOMA no inline - release builder",
         "properties": {
           "parent_got_revision": "f2cbea7e89a45f46819777bb78a1f5bd0241f64c",
           "parent_got_revision_cp": "refs/heads/master@{#50110}",
@@ -627,7 +621,7 @@
         }
       },
       {
-        "builder_name": "V8 Linux64 ASAN - debug builder",
+        "builder_name": "V8 Linux64 ASAN NOGOMA - debug builder",
         "properties": {
           "parent_got_revision": "f2cbea7e89a45f46819777bb78a1f5bd0241f64c",
           "parent_got_revision_cp": "refs/heads/master@{#50110}",
@@ -641,7 +635,7 @@
         }
       },
       {
-        "builder_name": "V8 Linux64 ASAN arm64 - debug builder",
+        "builder_name": "V8 Linux64 ASAN NOGOMA arm64 - debug builder",
         "properties": {
           "parent_got_revision": "f2cbea7e89a45f46819777bb78a1f5bd0241f64c",
           "parent_got_revision_cp": "refs/heads/master@{#50110}",
@@ -655,7 +649,7 @@
         }
       },
       {
-        "builder_name": "V8 Linux ASAN arm - debug builder",
+        "builder_name": "V8 Linux ASAN NOGOMA arm - debug builder",
         "properties": {
           "parent_got_revision": "f2cbea7e89a45f46819777bb78a1f5bd0241f64c",
           "parent_got_revision_cp": "refs/heads/master@{#50110}",
@@ -669,7 +663,7 @@
         }
       },
       {
-        "builder_name": "V8 Linux ASAN mipsel - debug builder",
+        "builder_name": "V8 Linux ASAN NOGOMA mipsel - debug builder",
         "properties": {
           "parent_got_revision": "f2cbea7e89a45f46819777bb78a1f5bd0241f64c",
           "parent_got_revision_cp": "refs/heads/master@{#50110}",
@@ -684,7 +678,7 @@
       }
     ],
     "~followup_annotations": [
-      "@@@STEP_TEXT@V8 Linux ASAN arm - debug builder<br />V8 Linux ASAN mipsel - debug builder<br />V8 Linux64 ASAN - debug builder<br />V8 Linux64 ASAN arm64 - debug builder<br />V8 Linux64 ASAN no inline - release builder@@@"
+      "@@@STEP_TEXT@V8 Linux ASAN NOGOMA arm - debug builder<br />V8 Linux ASAN NOGOMA mipsel - debug builder<br />V8 Linux64 ASAN NOGOMA - debug builder<br />V8 Linux64 ASAN NOGOMA arm64 - debug builder<br />V8 Linux64 ASAN NOGOMA no inline - release builder@@@"
     ]
   },
   {
