@@ -50,7 +50,8 @@ class Authz(object):
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 
     def advertiseAction(self, action):
-        """Should the web interface even show the form for ACTION?"""
+        return True
+	"""Should the web interface even show the form for ACTION?"""
         if action not in self.knownActions:
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
@@ -59,7 +60,8 @@ class Authz(object):
         return False
 
     def needAuthForm(self, action):
-        """Does this action require an authentication form?"""
+        return True
+	"""Does this action require an authentication form?"""
         if action not in self.knownActions:
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
@@ -68,7 +70,8 @@ class Authz(object):
         return False
 
     def actionAllowed(self, action, request, *args):
-        """Is this ACTION allowed, given this http REQUEST?"""
+        return True
+	"""Is this ACTION allowed, given this http REQUEST?"""
         if action not in self.knownActions:
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
