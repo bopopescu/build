@@ -1238,7 +1238,7 @@ BUILDERS = {
         'testing': {'platform': 'linux'},
       },
       'V8 Linux64 ASAN NOGOMA': {
-        'chromium_apply_config': ['v8_ninja', 'clang', 'asan', 'goma'],
+        'chromium_apply_config': ['v8_ninja', 'clang', 'asan'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Release',
           'TARGET_BITS': 64,
@@ -2450,7 +2450,7 @@ def AddBranchBuilder(build_config, arch, bits, presubmit=False,
   if presubmit:
     tests = [Presubmit] + tests
   config = {
-    'chromium_apply_config': ['clang', 'v8_ninja', 'goma'],
+    'chromium_apply_config': ['clang', 'v8_ninja'],
     'v8_config_kwargs': {
       'BUILD_CONFIG': build_config,
       'TARGET_ARCH': arch,
@@ -2515,10 +2515,10 @@ BUILDERS['client.dart.fyi'] = {'builders': {
 dart_linux_release = (
   BUILDERS['client.dart.fyi']['builders']['v8-linux-release'])
 dart_linux_release['chromium_apply_config'].extend(
-    ['clang', 'v8_ninja', 'goma'])
+    ['clang', 'v8_ninja'])
 
 dart_mac_release = BUILDERS['client.dart.fyi']['builders']['v8-mac-release']
-dart_mac_release['chromium_apply_config'].extend(['v8_ninja', 'clang', 'goma'])
+dart_mac_release['chromium_apply_config'].extend(['v8_ninja', 'clang'])
 
 dart_win_release = BUILDERS['client.dart.fyi']['builders']['v8-win-release']
 dart_win_release['chromium_apply_config'].extend(['v8_ninja', 'msvs2013'])
