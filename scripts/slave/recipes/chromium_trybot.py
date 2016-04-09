@@ -33,19 +33,10 @@ DEPS = [
 # TODO(phajdan.jr): Remove special case for layout tests.
 # This could be done by moving layout tests to main waterfall.
 CHROMIUM_BLINK_TESTS_BUILDERS = freeze([
-  'linux_blink_oilpan_rel',
   'linux_chromium_rel_ng',
   'mac_chromium_rel_ng',
   'win_chromium_rel_ng',
 ])
-
-
-CHROMIUM_BLINK_TESTS_EXTRA_ARGS = freeze({
-  'linux_blink_oilpan_rel': [
-    '--additional-expectations',
-    'src/third_party/WebKit/LayoutTests/OilpanExpectations',
-  ],
-})
 
 
 CHROMIUM_BLINK_TESTS_PATHS = freeze([
@@ -203,8 +194,7 @@ def _RunStepsInternal(api):
           api.chromium_tests.steps.ScriptTest(
               'webkit_python_tests', 'webkit_python_tests.py',
               collections.defaultdict(list)),
-          api.chromium_tests.steps.BlinkTest(
-              extra_args=CHROMIUM_BLINK_TESTS_EXTRA_ARGS.get(buildername)),
+          api.chromium_tests.steps.BlinkTest(),
       ]
       add_tests(blink_tests)
       for test in blink_tests:

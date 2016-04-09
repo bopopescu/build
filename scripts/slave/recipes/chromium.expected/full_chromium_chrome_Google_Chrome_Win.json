@@ -219,8 +219,7 @@
       "--clobber",
       "--",
       "chrome",
-      "chrome_official_builder_no_unittests",
-      "crash_service"
+      "chrome_official_builder_no_unittests"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile",
@@ -228,17 +227,6 @@
       "@@@STEP_LOG_LINE@json.output (invalid)@null@@@",
       "@@@STEP_LOG_END@json.output (invalid)@@@"
     ]
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Release"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "start_crash_service"
   },
   {
     "allow_subannotations": true,

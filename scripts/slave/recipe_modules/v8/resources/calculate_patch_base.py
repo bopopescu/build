@@ -50,6 +50,9 @@ for line in patch.splitlines():
     # "Index" and before "index" that looks like:
     # copy from <old file name>
     current_file = line.split('copy from ')[1]
+  elif line.startswith('rename from '):
+    # Same as above with rename.
+    current_file = line.split('rename from ')[1]
   elif line.startswith('index '):
     # "index" header looks like this and comes a few lines after the one above:
     # index <base hash>..<hash after patch> <mode>

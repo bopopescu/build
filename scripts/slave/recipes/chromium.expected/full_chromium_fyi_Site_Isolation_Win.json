@@ -216,8 +216,7 @@
       "[BUILD]\\goma",
       "--",
       "content_browsertests",
-      "content_unittests",
-      "crash_service"
+      "content_unittests"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile",

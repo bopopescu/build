@@ -182,7 +182,6 @@ processes = [
     'content_shell.exe',
     'content_shell_crash_service.exe',
     'content_unittests.exe',
-    'crash_service.exe',
     'crypto_unittests.exe',
     'debug_message.exe',
     'device_unittests.exe',

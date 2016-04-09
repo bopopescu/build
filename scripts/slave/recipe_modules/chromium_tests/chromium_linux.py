@@ -170,6 +170,7 @@ SPEC = {
         steps.AndroidJunitTest('components_invalidation_impl_junit_tests'),
         steps.AndroidJunitTest('components_policy_junit_tests'),
         steps.AndroidJunitTest('content_junit_tests'),
+        steps.AndroidJunitTest('junit_unit_tests'),
         steps.AndroidJunitTest('net_junit_tests'),
         steps.AndroidJunitTest('ui_junit_tests'),
       ],

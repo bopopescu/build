@@ -78,17 +78,6 @@ def _ChromiumPerfTesters():
 
 BUILDERS = freeze({
   'chromium.perf': _ChromiumPerfTesters(),
-  'chromium.perf.fyi': {
-    'android_nexus5_oilpan_perf': {
-      'perf_id': 'android-nexus5-oilpan',
-      'bucket': 'chromium-android',
-      'path': lambda api: (
-          '%s/build_product_%s.zip' % (
-              api.properties['parent_buildername'],
-              api.properties['parent_revision'])),
-      'num_device_shards': 1,
-    },
-  },
   'client.v8.fyi': {
     'Android Nexus4 Perf': {
       'gclient_apply_config': [

@@ -42,21 +42,6 @@ BUILDERS = freeze({
       'gclient_apply_config': ['android', 'chrome_internal'],
     },
   },
-  'chromium.perf.fyi': {
-    'android_oilpan_builder': {
-      'recipe_config': 'oilpan_builder',
-      'gclient_apply_config': ['android', 'chrome_internal'],
-      'kwargs': {
-        'BUILD_CONFIG': 'Release',
-      },
-      'upload': {
-        'bucket': 'chromium-android',
-        'path': lambda api: (
-          '%s/build_product_%s.zip' % (api.properties['buildername'],
-                                       api.properties['revision'])),
-      }
-    }
-  },
   'chromium.perf': {
     'Android Builder': {
       'recipe_config': 'main_builder_rel_mb',

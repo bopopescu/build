@@ -242,8 +242,7 @@
       "@@@STEP_LOG_LINE@analyze_details@    \"all\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"compile_targets\": [@@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"all\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\"@@@",
+      "@@@STEP_LOG_LINE@analyze_details@    \"all\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"self.m.filter.compile_targets\": [@@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"all\"@@@",
@@ -341,8 +340,7 @@
       "--goma-fail-fast",
       "--goma-disable-local-fallback",
       "--",
-      "all",
-      "crash_service"
+      "all"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile (with patch)",

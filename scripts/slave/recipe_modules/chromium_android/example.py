@@ -190,8 +190,6 @@ def RunSteps(api, buildername):
       timeout_scale=config.get('timeout_scale'),
       strict_mode=config.get('strict_mode'),
       additional_apks=['Additional.apk'],
-      step_test_data=lambda: api.raw_io.test_api.output(
-          'logging...\nbeep\nboop\bbop'),
       device_flags=config.get('device_flags'))
   api.chromium_android.run_test_suite(
       'unittests',

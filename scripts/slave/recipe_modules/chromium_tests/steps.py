@@ -1415,11 +1415,7 @@ class PrintPreviewTests(PythonBasedTest):  # pylint: disable=W032
 
   @staticmethod
   def compile_targets(api):
-    targets = ['browser_tests', 'blink_tests']
-    if api.platform.is_win:
-      targets.append('crash_service')
-
-    return targets
+    return ['browser_tests', 'blink_tests']
 
 
 class BisectTest(Test):  # pylint: disable=W0232
@@ -1818,7 +1814,7 @@ class WebViewCTSTest(Test):
   @property
   def name(self):
     return 'WebView CTS'
-  
+
   @property
   def uses_local_devices(self):
     return True

@@ -110,26 +110,6 @@
     ]
   },
   {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]/scripts/slave/runtest.py",
-      "--target",
-      "Debug",
-      "--no-xvfb",
-      "--factory-properties",
-      "{\"BUILD_CONFIG\": \"Debug\", \"buildername\": \"Linux64 Debug (GN)\", \"mastername\": \"client.libyuv\", \"recipe\": \"libyuv/libyuv\", \"revision\": \"12345\", \"slavename\": \"slavename\"}",
-      "--build-properties",
-      "{\"BUILD_CONFIG\": \"Debug\", \"buildername\": \"Linux64 Debug (GN)\", \"mastername\": \"client.libyuv\", \"recipe\": \"libyuv/libyuv\", \"revision\": \"12345\", \"slavename\": \"slavename\"}",
-      "--step-name=libyuv_unittest",
-      "--builder-name=Linux64 Debug (GN)",
-      "--slave-name=slavename",
-      "libyuv_unittest"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "libyuv_unittest"
-  },
-  {
     "name": "$result",
     "recipe_result": null,
     "status_code": 0

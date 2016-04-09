@@ -153,8 +153,7 @@
       "--mode",
       "official",
       "--",
-      "chromium_builder_perf",
-      "crash_service"
+      "chromium_builder_perf"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile"

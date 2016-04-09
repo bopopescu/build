@@ -384,20 +384,6 @@
     "cmd": [
       "python",
       "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Release"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "test r1.start_crash_service",
-    "~followup_annotations": [
-      "@@@STEP_NEST_LEVEL@1@@@"
-    ]
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
       "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\process_dumps.py",
       "--target",
       "Release"

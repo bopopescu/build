@@ -512,8 +512,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_remoting_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",

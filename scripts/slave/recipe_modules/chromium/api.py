@@ -610,14 +610,6 @@ class ChromiumApi(recipe_api.RecipeApi):
        self.package_repo_resource('scripts', 'slave', 'cleanup_temp.py')],
       infra_step=True)
 
-  def crash_handler(self):
-    self.m.python(
-        'start_crash_service',
-        self.package_repo_resource(
-            'scripts', 'slave', 'chromium', 'run_crash_handler.py'),
-        ['--target', self.c.build_config_fs],
-        infra_step=True)
-
   def process_dumps(self, **kwargs):
     # Dumps are especially useful when other steps (e.g. tests) are failing.
     try:

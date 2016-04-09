@@ -237,8 +237,7 @@
       "--",
       "browser_tests",
       "browser_tests_run",
-      "chromium_builder_tests",
-      "crash_service"
+      "chromium_builder_tests"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile",

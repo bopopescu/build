@@ -41,7 +41,7 @@ twistd.pid
 /scripts/master/log_parser/perf_expectations
 /scripts/private
 /scripts/release
-/scripts/slave/.recipe_deps
+*.*recipe_deps/
 /scripts/slave/.recipe_engine
 /scripts/tools/deps2git
 /scripts/tools/deps2git_internal

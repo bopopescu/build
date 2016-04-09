@@ -76,16 +76,20 @@ SUPPRESSIONS = {
 }
 
 
-def getBuilders(recipe_name):
+def getBuilders(recipe_name, deps_path):
   """Asks the given recipe to dump its BUILDERS dictionary.
 
   This must be implemented by the recipe in question.
+
+  deps_path is where the recipe engine should download the dependent recipe
+  packages. This is to avoid git.lock collision.
   """
   (fh, builders_file) = tempfile.mkstemp('.json')
   os.close(fh)
   try:
     subprocess.check_call([
         os.path.join(BASE_DIR, 'scripts', 'slave', 'recipes.py'),
+        '--deps-path', deps_path,
         'run', recipe_name, 'dump_builders=%s' % builders_file])
     with open(builders_file) as fh:
       return json.load(fh)
@@ -133,8 +137,13 @@ def main(argv):
 
   exit_code = 0
 
-  chromium_trybot_BUILDERS = getBuilders('chromium_trybot')
-  chromium_BUILDERS = getBuilders('chromium')
+  current_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+  chromium_trybot_BUILDERS = getBuilders(
+      'chromium_trybot', os.path.join(
+          current_dir, '.chromium_trybot_recipe_deps'))
+  chromium_BUILDERS = getBuilders(
+      'chromium', os.path.join(
+          current_dir, '.chromium_recipe_deps'))
 
   cq_builders = getCQBuilders(args.cq_config) if args.cq_config else None
 

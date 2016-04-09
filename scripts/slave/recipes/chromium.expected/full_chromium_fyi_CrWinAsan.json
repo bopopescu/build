@@ -254,8 +254,7 @@
       "--",
       "browser_tests",
       "browser_tests_run",
-      "chromium_builder_asan",
-      "crash_service"
+      "chromium_builder_asan"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {

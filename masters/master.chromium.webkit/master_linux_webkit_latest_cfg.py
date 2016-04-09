@@ -26,10 +26,6 @@ defaults['category'] = 'layout'
 ## Release
 ################################################################################
 
-# Artificial scheduler to make master start. Actual triggering is done
-# from recipes.
-T('webkit_linux_oilpan_rel_trigger')
-
 #
 # Linux Rel Builder/Tester
 #
@@ -41,33 +37,17 @@ B('WebKit Linux Trusty', 'f_webkit_linux_rel_trusty',
     scheduler='global_scheduler')
 F('f_webkit_linux_rel_trusty', m_annotator.BaseFactory('chromium'))
 
-B('WebKit Linux non-Oilpan Builder', 'f_webkit_linux_oilpan_builder_rel',
-    scheduler='global_scheduler', category='oilpan')
-F('f_webkit_linux_oilpan_builder_rel', m_annotator.BaseFactory('chromium'))
-
-B('WebKit Linux non-Oilpan', 'f_webkit_linux_oilpan_rel',
-    scheduler='webkit_linux_oilpan_rel_trigger', category='oilpan')
-F('f_webkit_linux_oilpan_rel', m_annotator.BaseFactory('chromium'))
-
 B('WebKit Linux ASAN', 'f_webkit_linux_rel_asan', scheduler='global_scheduler',
     auto_reboot=True)
 F('f_webkit_linux_rel_asan', m_annotator.BaseFactory('chromium'))
-
-B('WebKit Linux non-Oilpan ASAN', 'f_webkit_linux_oilpan_rel_asan',
-    scheduler='global_scheduler', auto_reboot=True, category='oilpan')
-F('f_webkit_linux_oilpan_rel_asan', m_annotator.BaseFactory('chromium'))
 
 B('WebKit Linux MSAN', 'f_webkit_linux_rel_msan', scheduler='global_scheduler',
     auto_reboot=True)
 F('f_webkit_linux_rel_msan', m_annotator.BaseFactory('chromium'))
 
 B('WebKit Linux Leak', 'f_webkit_linux_leak_rel', scheduler='global_scheduler',
-    category='oilpan')
+    category='layout')
 F('f_webkit_linux_leak_rel', m_annotator.BaseFactory('chromium'))
-
-B('WebKit Linux non-Oilpan Leak', 'f_webkit_linux_oilpan_leak_rel',
-    scheduler='global_scheduler', category='oilpan')
-F('f_webkit_linux_oilpan_leak_rel', m_annotator.BaseFactory('chromium'))
 
 
 ################################################################################
@@ -81,10 +61,6 @@ F('f_webkit_linux_oilpan_leak_rel', m_annotator.BaseFactory('chromium'))
 B('WebKit Linux (dbg)', 'f_webkit_dbg_tests', scheduler='global_scheduler',
     auto_reboot=False)
 F('f_webkit_dbg_tests', m_annotator.BaseFactory('chromium'))
-
-B('WebKit Linux non-Oilpan (dbg)', 'f_webkit_linux_oilpan_dbg',
-    scheduler='global_scheduler', category='oilpan')
-F('f_webkit_linux_oilpan_dbg', m_annotator.BaseFactory('chromium'))
 
 
 def Update(_config, _active_master, c):

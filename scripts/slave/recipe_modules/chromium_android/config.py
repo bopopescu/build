@@ -73,10 +73,6 @@ def clang_asan_tot_release_builder(c):  # pragma: no cover
   c.env.LLVM_FORCE_HEAD_REVISION = 'YES'
 
 @config_ctx()
-def component_builder(c):
-  pass
-
-@config_ctx()
 def x86_base(c):
   pass
 
@@ -210,10 +206,6 @@ def non_device_wipe_provisioning(c):
 @config_ctx(includes=['main_builder'])
 def incremental_coverage_builder_tests(c):
   c.incremental_coverage = True
-
-@config_ctx(includes=['component_builder'])
-def oilpan_builder(c):
-  pass
 
 @config_ctx()
 def perf(c):

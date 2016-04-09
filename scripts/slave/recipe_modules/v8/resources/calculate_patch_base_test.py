@@ -78,6 +78,19 @@ index b5d8dd0..7601807
 +baz
 """
 
+# Same as above with rename.
+PATCH5 = """
+Index: baz
+new file mode 100644
+rename from test2
+rename to baz
+index b5d8dd0..7601807
+--- /dev/null
++++ b/baz
+@@ -0,0 +1 @@
++baz
+"""
+
 
 class PatchBaseTest(unittest.TestCase):
   @classmethod
@@ -159,4 +172,8 @@ class PatchBaseTest(unittest.TestCase):
 
   def testFileCopied(self):
     commit_title = self.calculate_patch_base(PATCH4)
+    self.assertEquals('Commit2', commit_title)
+
+  def testFileRename(self):
+    commit_title = self.calculate_patch_base(PATCH5)
     self.assertEquals('Commit2', commit_title)

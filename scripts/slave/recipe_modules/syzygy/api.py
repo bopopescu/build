@@ -189,17 +189,12 @@ PATCH=1
     os.environ['SYZYGY_UNITTEST_METRICS'] = '--emit-to-log'
 
     # Generate a test step for each unittest.
-    app_verifier_py = self.public_scripts_dir.join('app_verifier.py')
     for unittest in unittests:
       unittest_path = self.output_dir.join(unittest + '.exe')
-      args = ['--on-waterfall',
-              unittest_path,
-              '--',
-              # Arguments to the actual gtest unittest.
-              '--single-process-tests',  # Our VMs are single core.
+      args = ['--single-process-tests',  # Our VMs are single core.
               '--test-launcher-timeout=300000',  # 5 minutes in milliseconds.
               '--gtest_print_time']
-      self.m.chromium.runtest(app_verifier_py, args, name=unittest,
+      self.m.chromium.runtest(unittest_path, args, name=unittest,
                               test_type=unittest)
 
   def randomly_reorder_chrome(self):

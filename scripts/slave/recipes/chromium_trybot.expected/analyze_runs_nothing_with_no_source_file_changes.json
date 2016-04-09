@@ -257,7 +257,7 @@
       "win_chromium_rel_ng",
       "-v",
       "//out/Release",
-      "{\"additional_compile_targets\": [\"chromium_builder_tests\", \"crash_service\"], \"files\": [\"README.md\", \"foo/bar/baz.py\"], \"test_targets\": [\"mini_installer\"]}",
+      "{\"additional_compile_targets\": [\"chromium_builder_tests\"], \"files\": [\"README.md\", \"foo/bar/baz.py\"], \"test_targets\": [\"mini_installer\"]}",
       "/path/to/tmp/json"
     ],
     "cwd": "[SLAVE_BUILD]",
@@ -272,8 +272,7 @@
       "@@@STEP_LOG_END@json.output@@@",
       "@@@STEP_LOG_LINE@analyze_details@{@@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"additional_compile_targets\": [@@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\"@@@",
+      "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"compile_targets\": [], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"self.m.filter.compile_targets\": [], @@@",

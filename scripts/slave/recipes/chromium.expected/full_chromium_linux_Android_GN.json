@@ -269,6 +269,7 @@
       "components_policy_junit_tests",
       "content_junit_tests",
       "content_shell_test_apk",
+      "junit_unit_tests",
       "mojo_test_apk",
       "net_junit_tests",
       "sandbox_linux_unittests_deps",
@@ -480,8 +481,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_android_webview_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",
@@ -501,8 +500,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_chrome_public_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",
@@ -522,8 +519,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_chrome_sync_shell_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",
@@ -543,8 +538,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_content_shell_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",
@@ -564,8 +557,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_mojo_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",
@@ -736,6 +727,29 @@
       "PATH": "[SLAVE_BUILD]/src/third_party/android_tools/sdk/platform-tools:[SLAVE_BUILD]/src/build/android:%(PATH)s"
     },
     "name": "content_junit_tests",
+    "~followup_annotations": [
+      "@@@STEP_TEXT@<br/>failures:<br/>TestB<br/>@@@"
+    ]
+  },
+  {
+    "cmd": [
+      "python",
+      "-u",
+      "[SLAVE_BUILD]/src/build/android/test_runner.py",
+      "junit",
+      "-s",
+      "junit_unit_tests",
+      "--verbose",
+      "--release",
+      "--json-results-file",
+      "/path/to/tmp/json"
+    ],
+    "cwd": "[SLAVE_BUILD]",
+    "env": {
+      "CHROMIUM_OUTPUT_DIR": "[SLAVE_BUILD]/src/out/Release",
+      "PATH": "[SLAVE_BUILD]/src/third_party/android_tools/sdk/platform-tools:[SLAVE_BUILD]/src/build/android:%(PATH)s"
+    },
+    "name": "junit_unit_tests",
     "~followup_annotations": [
       "@@@STEP_TEXT@<br/>failures:<br/>TestB<br/>@@@"
     ]

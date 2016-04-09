@@ -193,8 +193,7 @@
       "ninja",
       "--clobber",
       "--",
-      "chromium_builder_asan",
-      "crash_service"
+      "chromium_builder_asan"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile"

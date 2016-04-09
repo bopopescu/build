@@ -210,7 +210,7 @@
       {
         "close_tree": false,
         "tree_notify": [
-          "chrome-troopers+codesearch@google.com"
+          "chrome-troopers+alerts-staging@google.com"
         ],
 
         "subject_template": "Codesearch build failure on %(builder_name)s",
@@ -856,7 +856,7 @@
         "trooper"
       ],
       "tree_notify": [
-        "chrome-troopers+gnumbd@google.com"
+        "chrome-troopers+alerts-staging@google.com"
       ],
       "status_template": "Auto-closed (Infra Gnumbd cron \"%(builder_name)s\" %(build_url)s failed)",
       "subject_template": "Tree-closing infra failure on %(builder_name)s"

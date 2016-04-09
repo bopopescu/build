@@ -130,25 +130,6 @@
     ]
   },
   {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\runtest.py",
-      "--target",
-      "Release_x64",
-      "--factory-properties",
-      "{\"BUILD_CONFIG\": \"Release\", \"buildername\": \"Win64 Release (GN)\", \"mastername\": \"client.libyuv\", \"recipe\": \"libyuv/libyuv\", \"revision\": \"12345\", \"slavename\": \"slavename\"}",
-      "--build-properties",
-      "{\"BUILD_CONFIG\": \"Release\", \"buildername\": \"Win64 Release (GN)\", \"mastername\": \"client.libyuv\", \"recipe\": \"libyuv/libyuv\", \"revision\": \"12345\", \"slavename\": \"slavename\"}",
-      "--step-name=libyuv_unittest",
-      "--builder-name=Win64 Release (GN)",
-      "--slave-name=slavename",
-      "libyuv_unittest.exe"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "libyuv_unittest"
-  },
-  {
     "name": "$result",
     "recipe_result": null,
     "status_code": 0

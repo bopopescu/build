@@ -795,9 +795,8 @@ def RunSteps(api):
     api.chromium.compile(targets=['all'])
   else:
     api.chromium.compile()
-
-  if api.chromium.c.TARGET_PLATFORM in ('win', 'mac', 'linux'):
-    api.chromium.runtest('libyuv_unittest')
+    if api.chromium.c.TARGET_PLATFORM in ('win', 'mac', 'linux'):
+      api.chromium.runtest('libyuv_unittest')
 
 
 def _sanitize_nonalpha(text):

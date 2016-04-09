@@ -557,8 +557,6 @@
       "instrumentation",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "-A",
@@ -583,13 +581,7 @@
     "env": {
       "CHROMIUM_OUTPUT_DIR": "[SLAVE_BUILD]/src/out/Release"
     },
-    "name": "Instrumentation test SmallTest",
-    "~followup_annotations": [
-      "@@@STEP_LOG_LINE@logcat@logging...@@@",
-      "@@@STEP_LOG_LINE@logcat@beep@@@",
-      "@@@STEP_LOG_LINE@logcat@boop\bbop@@@",
-      "@@@STEP_LOG_END@logcat@@@"
-    ]
+    "name": "Instrumentation test SmallTest"
   },
   {
     "cmd": [

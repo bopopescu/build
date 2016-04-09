@@ -75,10 +75,6 @@ B('WebKit Mac10.11 (retina)', 'f_webkit_rel_tests_1011_retina',
   scheduler='s5_webkit_rel_trigger')
 F('f_webkit_rel_tests_1011_retina', m_annotator.BaseFactory('chromium'))
 
-B('WebKit Mac non-Oilpan', 'f_webkit_mac_oilpan_rel',
-  scheduler='global_scheduler', category='oilpan')
-F('f_webkit_mac_oilpan_rel', m_annotator.BaseFactory('chromium'))
-
 
 ################################################################################
 ## Debug
@@ -108,10 +104,6 @@ F('f_webkit_mac_dbg', m_annotator.BaseFactory(
 B('WebKit Mac10.11 (dbg)', 'f_webkit_dbg_tests',
     scheduler='s5_webkit_dbg_trigger')
 F('f_webkit_dbg_tests', m_annotator.BaseFactory('chromium'))
-
-B('WebKit Mac non-Oilpan (dbg)', 'f_webkit_mac_oilpan_dbg',
-    scheduler='global_scheduler', category='oilpan')
-F('f_webkit_mac_oilpan_dbg', m_annotator.BaseFactory('chromium'))
 
 
 ################################################################################

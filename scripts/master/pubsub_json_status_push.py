@@ -86,7 +86,8 @@ class PubSubClient(object):
           self.service_account_file, scope=PUBSUB_SCOPES)
     except auth.Error as e:
       log.err(
-          'Could not load credentials %s: %s.' % (self.service_account_file, e))
+          'PubSub: Could not load credentials %s: %s.' % (
+              self.service_account_file, e))
       raise e
     self.client = self._create_pubsub_client(credentials=self.credentials)
 
@@ -119,32 +120,36 @@ class PubSubClient(object):
     # TODO(hinoka): Sign messages so that they can be verified to originate
     # from buildbot.
     body = { 'messages': [{'data': base64.b64encode(data)}] }
-    log.msg('Sending message to topic %s' % topic)
+    log.msg('PubSub: Sending message to topic %s' % topic)
 
     @exponential_retry(retries=4, delay=1)
     def _run():
       client.projects().topics().publish(topic=topic, body=body).execute()
     _run()
 
-    log.msg('Sending message to topic %s successful' % topic)
+    log.msg('PubSub: Sending message to topic %s successful' % topic)
 
   def _runner(self):
     while True:
       try:
-        # Block, and timeout if it's exceeded 5 seconds.
-        data = self.queue.get(True, 5)
-      except Queue.Empty:
-        if not parent_is_alive():
-          self.queue.put(None)
-        continue
+        try:
+          # Block, and timeout if it's exceeded 5 seconds.
+          data = self.queue.get(True, 5)
+        except Queue.Empty:
+          if not parent_is_alive():
+            log.msg('PubSub: Parent has died, exiting.')
+            self.queue.put(None)
+          continue
 
-      if data is None:
-        break
-      try:
-        self._send_data(self.client, self.topic_url, data)
+        if data is None:
+          log.msg('PubSub: Received exit signal, quitting.')
+          break
+        try:
+          self._send_data(self.client, self.topic_url, data)
+        except Exception as e:
+          log.err('PubSub: Encountered error while sending data: %s' % e)
       except Exception as e:
-        log.err('Encountered error while sending data: %s' % e)
-        continue
+          log.err('PubSub: Encountered error: %s' % e)
 
 
   @staticmethod
@@ -213,7 +218,7 @@ class StatusPush(StatusReceiverMultiService):
 
     topic_url = getattr(activeMaster, 'pubsub_topic_url', None)
     if not topic_url:
-      log.msg('Missing pubsub_topic_url, not enabling.')
+      log.msg('PubSub: Missing pubsub_topic_url, not enabling.')
       return None
 
     # Set the master name, for indexing purposes.
@@ -298,7 +303,7 @@ class StatusPush(StatusReceiverMultiService):
     # Load all build information for builds that we're pushing.
     builds = sorted(updated_builds)
     if self.verbose:
-      log.msg('Pushing status for builds: %s' % (builds,))
+      log.msg('PusSub: Pushing status for builds: %s' % (builds,))
     loaded_builds = yield defer.DeferredList([self._loadBuild(b)
                                               for b in builds])
 
@@ -335,7 +340,7 @@ class StatusPush(StatusReceiverMultiService):
     self._updated_builds.clear()
 
     if self.verbose:
-      log.msg('Status push timer expired. Pushing updates for: %s' % (
+      log.msg('PubSub: Status push timer expired. Pushing updates for: %s' % (
               sorted(updates)))
 
     # Upload them. Reschedule our send timer after this push completes. If it
@@ -359,7 +364,7 @@ class StatusPush(StatusReceiverMultiService):
     if self._pushTimer:
       return
     if self.verbose:
-      log.msg('Scheduling push timer in: %s' % (self.pushInterval,))
+      log.msg('PubSub: Scheduling push timer in: %s' % (self.pushInterval,))
     self._pushTimer = reactor.callLater(self.pushInterval.total_seconds(),
         self._pushTimerExpired)
 

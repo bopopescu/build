@@ -160,7 +160,7 @@
     "env": {
       "GYP_CHROMIUM_NO_ACTION": "1",
       "GYP_CROSSCOMPILE": "1",
-      "GYP_DEFINES": "OS=android component=static_library disable_file_support=1 disable_ftp_support=1 enable_bidirectional_stream=1 enable_websockets=0 fastbuild=1 gomadir='[BUILD]/goma' target_arch=arm use_goma=1",
+      "GYP_DEFINES": "OS=android component=static_library disable_brotli_filter=1 disable_file_support=1 disable_ftp_support=1 enable_bidirectional_stream=1 enable_websockets=0 fastbuild=1 gomadir='[BUILD]/goma' target_arch=arm use_goma=1 use_platform_icu_alternatives=1",
       "PATH": "[SLAVE_BUILD]/src/third_party/android_tools/sdk/platform-tools:[SLAVE_BUILD]/src/build/android:%(PATH)s:RECIPE_PACKAGE_REPO[depot_tools]"
     },
     "name": "gclient runhooks"
@@ -499,8 +499,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_cronet_sample_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--verbose",
       "--num-retries",
       "0"
@@ -515,8 +513,6 @@
       "[SLAVE_BUILD]/src/out/Release/bin/run_cronet_test_instrumentation_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--verbose",
       "--num-retries",
       "0"

@@ -178,8 +178,7 @@
       "fallback",
       "--",
       "chrome",
-      "chromium_builder_perf",
-      "crash_service"
+      "chromium_builder_perf"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile",
@@ -208,17 +207,6 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "package build"
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Release_x64"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "start_crash_service"
   },
   {
     "allow_subannotations": true,

@@ -281,8 +281,7 @@
       "[BUILD]\\goma",
       "--",
       "browser_tests",
-      "browser_tests_run",
-      "crash_service"
+      "browser_tests_run"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "compile",
@@ -347,17 +346,6 @@
       "@@@STEP_LOG_END@json.output@@@",
       "@@@SET_BUILD_PROPERTY@swarm_hashes@{\"dummy_target_1\": \"[dummy hash for dummy_target_1]\", \"dummy_target_2\": \"[dummy hash for dummy_target_2]\"}@@@"
     ]
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Debug_x64"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "start_crash_service"
   },
   {
     "cmd": [

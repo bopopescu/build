@@ -147,12 +147,6 @@ def goma_setup(options, env):
   env['GOMA_BURST_MAX_SUBPROCS_LOW'] = max_subprocs
   env['GOMA_BURST_MAX_SUBPROCS_HEAVY'] = max_heavy_subprocs
 
-  # Allow to wait initial ping 30 seconds with 10 seconds interval.
-  # Since retrying should cost more than 30 seconds, it should be better
-  # to wait initial ping longer than default (10 seconds).
-  env['GOMA_PING_TIMEOUT_SEC'] = '30'
-  env['GOMA_PING_RETRY_INTERVAL'] = '10'
-
   # Caches CRLs in GOMA_CACHE_DIR.
   # Since downloading CRLs is usually slow, caching them may improves
   # compiler_proxy start time.

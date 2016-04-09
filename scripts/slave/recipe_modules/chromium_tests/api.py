@@ -322,15 +322,7 @@ class ChromiumTestsApi(recipe_api.RecipeApi):
         "bot_db argument %r was not a BotConfigAndTestDB" % (bot_db)
 
     compile_targets = bot_config.get_compile_targets(self, bot_db, tests)
-
-    # Only add crash_service when we have explicit compile targets.
-    compile_targets = set(compile_targets)
-    if (self.m.platform.is_win and
-        compile_targets and
-        'all' not in compile_targets):
-      compile_targets.add('crash_service')
-
-    return sorted(compile_targets)
+    return sorted(set(compile_targets))
 
   def transient_check(self, update_step, command):
     """Runs command, checking for transience if this is a try job.
@@ -564,9 +556,6 @@ class ChromiumTestsApi(recipe_api.RecipeApi):
           perf_setup=perf_setup,
           remove_system_webview=remove_system_webview)
 
-    if self.m.platform.is_win:
-      self.m.chromium.crash_handler()
-
     try:
       yield
     finally:
@@ -706,13 +695,6 @@ class ChromiumTestsApi(recipe_api.RecipeApi):
         cros_board=self.m.chromium.c.TARGET_CROS_BOARD)
 
     compile_targets = self.m.filter.compile_targets[:]
-
-    # Add crash_service to compile_targets. This is done after filtering compile
-    # targets out because crash_service should always be there on windows.
-    # TODO(akuegel): Need to solve this in a better way. crbug.com/478053
-    if (self.m.platform.is_win and compile_targets and
-        'crash_service' not in compile_targets):
-      compile_targets.extend(['crash_service'])
 
     # Emit more detailed output useful for debugging.
     analyze_details = {

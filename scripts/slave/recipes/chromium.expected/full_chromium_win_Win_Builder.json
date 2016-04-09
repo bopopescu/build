@@ -273,7 +273,6 @@
       "browser_tests",
       "browser_tests_run",
       "chromium_builder_tests",
-      "crash_service",
       "mini_installer"
     ],
     "cwd": "[SLAVE_BUILD]",

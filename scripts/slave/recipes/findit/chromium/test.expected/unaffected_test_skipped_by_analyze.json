@@ -465,8 +465,7 @@
       "@@@STEP_LOG_LINE@analyze_details@  \"additional_compile_targets\": [], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"compile_targets\": [@@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"affected_tests\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"affected_tests_run\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\"@@@",
+      "@@@STEP_LOG_LINE@analyze_details@    \"affected_tests_run\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"self.m.filter.compile_targets\": [@@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"affected_tests\", @@@",
@@ -569,8 +568,7 @@
       "--ninja-ensure-up-to-date",
       "--",
       "affected_tests",
-      "affected_tests_run",
-      "crash_service"
+      "affected_tests_run"
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "test r1.compile",
@@ -618,20 +616,6 @@
       "@@@STEP_LOG_LINE@json.output@  \"affected_tests\": \"[dummy hash for affected_tests]\"@@@",
       "@@@STEP_LOG_LINE@json.output@}@@@",
       "@@@STEP_LOG_END@json.output@@@"
-    ]
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Release"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "test r1.start_crash_service",
-    "~followup_annotations": [
-      "@@@STEP_NEST_LEVEL@1@@@"
     ]
   },
   {

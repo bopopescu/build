@@ -679,10 +679,8 @@ class AndroidApi(recipe_api.RecipeApi):
                                 device_flags=None,
                                 wrapper_script_suite_name=None,
                                 **kwargs):
-    logcat_output_file = self.m.raw_io.output()
     args = [
       '--blacklist-file', self.blacklist_file,
-      '--logcat-output-file', logcat_output_file,
     ]
     if tool:
       args.append('--tool=%s' % tool)
@@ -732,9 +730,6 @@ class AndroidApi(recipe_api.RecipeApi):
         args=args,
         wrapper_script_suite_name=wrapper_script_suite_name,
         **kwargs)
-    if step_result.raw_io.output:
-      step_result.presentation.logs['logcat'] = (
-          step_result.raw_io.output.splitlines())
     return step_result
 
   def launch_gce_instances(self, snapshot='clean-17-l-phone-image-no-popups',

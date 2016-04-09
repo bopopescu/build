@@ -256,17 +256,14 @@
       "@@@STEP_LOG_END@excluded_files@@@",
       "@@@STEP_LOG_LINE@analyze_details@{@@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"additional_compile_targets\": [@@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\"@@@",
+      "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"compile_targets\": [@@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\", @@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"mini_installer\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"self.m.filter.compile_targets\": [@@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"chromium_builder_tests\", @@@",
-      "@@@STEP_LOG_LINE@analyze_details@    \"crash_service\", @@@",
       "@@@STEP_LOG_LINE@analyze_details@    \"mini_installer\"@@@",
       "@@@STEP_LOG_LINE@analyze_details@  ], @@@",
       "@@@STEP_LOG_LINE@analyze_details@  \"self.m.filter.test_targets\": [@@@",
@@ -339,7 +336,6 @@
       "--ninja-ensure-up-to-date",
       "--",
       "chromium_builder_tests",
-      "crash_service",
       "mini_installer"
     ],
     "cwd": "[SLAVE_BUILD]",
@@ -357,17 +353,6 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "name": "mark: before_tests"
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "RECIPE_PACKAGE_REPO[build]\\scripts\\slave\\chromium\\run_crash_handler.py",
-      "--target",
-      "Release"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "name": "start_crash_service"
   },
   {
     "cmd": [

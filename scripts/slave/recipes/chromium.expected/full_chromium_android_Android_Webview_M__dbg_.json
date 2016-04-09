@@ -451,8 +451,6 @@
       "[SLAVE_BUILD]/src/out/Debug/bin/run_system_webview_shell_layout_test_apk",
       "--blacklist-file",
       "[SLAVE_BUILD]/src/out/bad_devices.json",
-      "--logcat-output-file",
-      "/path/to/tmp/",
       "--flakiness-dashboard-server",
       "test-results.appspot.com",
       "--verbose",

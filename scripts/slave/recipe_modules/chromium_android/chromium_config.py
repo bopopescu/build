@@ -69,10 +69,12 @@ def dartium_builder(c):
 
 @CONFIG_CTX()
 def cronet_builder(c):
+  c.gyp_env.GYP_DEFINES['disable_brotli_filter'] = 1
   c.gyp_env.GYP_DEFINES['disable_file_support'] = 1
   c.gyp_env.GYP_DEFINES['disable_ftp_support'] = 1
   c.gyp_env.GYP_DEFINES['enable_bidirectional_stream'] = 1
   c.gyp_env.GYP_DEFINES['enable_websockets'] = 0
+  c.gyp_env.GYP_DEFINES['use_platform_icu_alternatives'] = 1
   c.compile_py.clobber = True
   # TODO(jbudorick): Remove {cronet,net}_unittests_apk targets after
   # gn switch is finished.
@@ -180,11 +182,6 @@ def incremental_coverage_builder_tests(c):
 @CONFIG_CTX(includes=['main_builder'])
 def non_device_wipe_provisioning(c):
   pass
-
-@CONFIG_CTX(includes=['main_builder'])
-def oilpan_builder(c):
-  gyp_defs = c.gyp_env.GYP_DEFINES
-  gyp_defs['enable_oilpan'] = 0
 
 # TODO(zty): figure out what perf builder really wants and use that instead.
 # e.g. official
