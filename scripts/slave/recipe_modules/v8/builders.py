@@ -1237,7 +1237,7 @@ BUILDERS = {
         'tests': [V8Testing],
         'testing': {'platform': 'linux'},
       },
-      'V8 Linux64 ASAN': {
+      'V8 Linux64 ASAN NOGOMA': {
         'chromium_apply_config': ['v8_ninja', 'clang', 'asan', 'goma'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Release',
