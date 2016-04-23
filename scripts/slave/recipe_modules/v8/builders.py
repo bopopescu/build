@@ -1244,10 +1244,7 @@ BUILDERS = {
           'TARGET_BITS': 64,
         },
         'bot_type': 'builder_tester',
-        'enable_swarming': True,
-        'swarming_dimensions': {
-          'os': 'Ubuntu-14.04',
-        },
+        'enable_swarming': False,
         'tests': [V8Testing_2, Test262, Ignition],
         'testing': {'platform': 'linux'},
         'triggers': [
