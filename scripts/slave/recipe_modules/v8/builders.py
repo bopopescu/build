@@ -1245,7 +1245,7 @@ BUILDERS = {
         },
         'bot_type': 'builder_tester',
         'enable_swarming': False,
-        'tests': [V8Testing_2, Test262, Ignition],
+        'tests': [Mjsunit],
         'testing': {'platform': 'linux'},
         'triggers': [
           'V8 Linux64 ASAN no inline - release builder',
