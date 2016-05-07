@@ -1238,21 +1238,21 @@ BUILDERS = {
         'testing': {'platform': 'linux'},
       },
       'V8 Linux64 ASAN NOGOMA': {
-        'chromium_apply_config': ['v8_ninja', 'clang', 'asan'],
+        'chromium_apply_config': ['v8_ninja', 'clang', 'asan','asan_symbolized'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Release',
           'TARGET_BITS': 64,
         },
         'bot_type': 'builder_tester',
         'enable_swarming': False,
-        'tests': [Mjsunit],
+        'tests': [],
         'testing': {'platform': 'linux'},
         'triggers': [
-          'V8 Linux64 ASAN no inline - release builder',
-          'V8 Linux64 ASAN - debug builder',
-          'V8 Linux64 ASAN arm64 - debug builder',
-          'V8 Linux ASAN arm - debug builder',
-          'V8 Linux ASAN mipsel - debug builder',
+          #'V8 Linux64 ASAN no inline - release builder',
+          #'V8 Linux64 ASAN - debug builder',
+          #'V8 Linux64 ASAN arm64 - debug builder',
+          #'V8 Linux ASAN arm - debug builder',
+          #'V8 Linux ASAN mipsel - debug builder',
         ],
       },
       'V8 Linux64 ASAN no inline - release builder': {
