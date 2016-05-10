@@ -1241,11 +1241,11 @@ BUILDERS = {
         'chromium_apply_config': ['v8_ninja', 'clang', 'asan','asan_symbolized','no_snapshot'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Debug',
-          'TARGET_BITS': 32,
+          'TARGET_BITS': 64,
         },
         'bot_type': 'builder_tester',
         'enable_swarming': False,
-        'tests': [Mjsunit_2],
+        'tests': [],
         'testing': {'platform': 'linux'},
         'triggers': [
           #'V8 Linux64 ASAN no inline - release builder',
