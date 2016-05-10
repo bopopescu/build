@@ -1238,7 +1238,7 @@ BUILDERS = {
         'testing': {'platform': 'linux'},
       },
       'V8 Linux64 ASAN NOGOMA': {
-        'chromium_apply_config': ['v8_ninja', 'clang', 'asan','asan_symbolized','no_snapshot'],
+        'chromium_apply_config': ['v8_ninja', 'clang', 'asan','asan_symbolized','no_snapshot','default_target_d8'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Debug',
           'TARGET_BITS': 64,
