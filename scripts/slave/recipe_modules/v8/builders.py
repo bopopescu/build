@@ -1240,8 +1240,8 @@ BUILDERS = {
       'V8 Linux64 ASAN NOGOMA': {
         'chromium_apply_config': ['v8_ninja', 'clang', 'asan','asan_symbolized'],
         'v8_config_kwargs': {
-          'BUILD_CONFIG': 'Release',
-          'TARGET_BITS': 64,
+          'BUILD_CONFIG': 'Debug',
+          'TARGET_BITS': 32,
         },
         'bot_type': 'builder_tester',
         'enable_swarming': False,
