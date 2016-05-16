@@ -1317,6 +1317,19 @@ def ensure_checkout(solutions, revisions, first_sln, target_os, target_os_only,
   # Ensure our build/ directory is set up with the correct .gclient file.
   gclient_configure(solutions, target_os, target_os_only)
 
+  # backward compatibility DEPS patch
+  replacements = {'http://gyp.googlecode.com/svn/trunk':'https://github.com/svn2github/gyp/trunk', 'http://googlemock.googlecode.com/svn/trunk':'https://github.com/google/googlemock/trunk', 'http://googletest.googlecode.com/svn/trunk':'https://github.com/google/googletest/trunk'}
+  lines = []
+  with open('%s/DEPS'%(patch_root)) as infile:
+    for line in infile:
+      for src, target in replacements.iteritems():
+        line = line.replace(src, target)
+      lines.append(line)
+  with open('%s/DEPS'%(patch_root), 'w') as outfile:
+    for line in lines:
+      outfile.write(line)
+
+
   # Let gclient do the DEPS syncing.
   # The branch-head refspec is a special case because its possible Chrome
   # src, which contains the branch-head refspecs, is DEPSed in.
