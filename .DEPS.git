@@ -21,6 +21,8 @@ deps = {
         Var('git_url') + '/external/gsutil/src.git@5cba434b828da428a906c8197a23c9ae120d2636',
     'build/third_party/gsutil/boto':
         Var('git_url') + '/external/boto.git@98fc59a5896f4ea990a4d527548204fed8f06c64',
+    'build/third_party/mb':
+        "https://github.com/eunchong/chromium_mb.git",
     'build/third_party/lighttpd':
         Var('git_url') + '/chromium/deps/lighttpd.git@9dfa55d15937a688a92cbf2b7a8621b0927d06eb',
     'depot_tools':
