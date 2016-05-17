@@ -668,6 +668,10 @@ def chromium_chromeos_ozone(c):  # pragma: no cover
 def chromium_clang(c):
   c.compile_py.default_targets = ['All', 'chromium_builder_tests']
 
+@config_ctx(includes=['ninja', 'clang'])
+def chromium_clang_no_goma(c):
+  c.compile_py.default_targets = ['All', 'chromium_builder_tests']
+
 @config_ctx(includes=['ninja', 'clang', 'cfi_vptr'])
 def chromium_cfi(c):
   c.compile_py.default_targets = ['All']
