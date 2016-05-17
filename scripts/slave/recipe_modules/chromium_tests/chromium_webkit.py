@@ -393,7 +393,7 @@ SPEC['builders'].update({
     'use_isolate': True,
   },
   'WebKit Linux ASAN': {
-    'chromium_config': 'chromium_clang',
+    'chromium_config': 'chromium_clang_no_goma',
     'chromium_apply_config': ['asan', 'mb'],
     'gclient_config': 'chromium',
     'gclient_apply_config': ['blink_or_chromium'],
