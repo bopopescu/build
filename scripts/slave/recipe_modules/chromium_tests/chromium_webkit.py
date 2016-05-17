@@ -417,8 +417,8 @@ SPEC['builders'].update({
     'testing': {
       'platform': 'linux',
     },
-    'enable_swarming': True,
-    'use_isolate': True,
+    'enable_swarming': False,
+    'use_isolate': False,
   },
   'WebKit Linux MSAN': {
     'chromium_config': 'chromium_clang',
