@@ -537,7 +537,7 @@ class ChromiumApi(recipe_api.RecipeApi):
             '--args=%s' % ' '.join(gn_args),
         ])
 
-  def run_mb(self, mastername, buildername, use_goma=True,
+  def run_mb(self, mastername, buildername, use_goma=False,
              mb_config_path=None, isolated_targets=None, name=None,
              build_dir=None):
     mb_config_path = (mb_config_path or
