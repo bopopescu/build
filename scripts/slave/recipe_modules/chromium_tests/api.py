@@ -7,6 +7,7 @@ import contextlib
 import copy
 import itertools
 import json
+import os
 
 from recipe_engine.types import freeze
 from recipe_engine import recipe_api
