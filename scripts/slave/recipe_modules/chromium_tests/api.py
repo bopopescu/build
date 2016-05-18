@@ -474,7 +474,7 @@ class ChromiumTestsApi(recipe_api.RecipeApi):
       mb_buildername = mb_buildername or self.m.properties['buildername']
       self.m.chromium.run_mb(mb_mastername, mb_buildername,
                              isolated_targets=isolated_targets,
-			     mb_config_path=os.path.join(self.m.chromium.c.build_dir.join(''),'..','..','..','..','..','third_party','mb'),
+                             mb_config_path=os.path.join(str(self.m.chromium.c.build_dir.join('')),'..','..','..','..','..','third_party','mb','mb_config.pyl'),
                              name='generate_build_files%s' % name_suffix)
 
     self.m.chromium.compile(compile_targets, name='compile%s' % name_suffix)
