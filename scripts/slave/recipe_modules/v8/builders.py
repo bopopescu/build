@@ -1140,6 +1140,7 @@ BUILDERS = {
       },
 ####### Category: Misc
       'V8 Fuzzer': {
+	'chromium_apply_config': ['jsfunfuzz'],
         'v8_config_kwargs': {
           'BUILD_CONFIG': 'Debug',
           'TARGET_BITS': 64,
