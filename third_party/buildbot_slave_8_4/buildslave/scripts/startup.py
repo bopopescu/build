@@ -19,7 +19,7 @@ import os, sys, time
 class Follower:
     def follow(self):
         from twisted.internet import reactor
-        from buildslave.scripts.logwatcher import LogWatcher
+        from buildsubordinate.scripts.logwatcher import LogWatcher
         self.rc = 0
         print "Following twistd.log until startup finished.."
         lw = LogWatcher("twistd.log")
@@ -36,40 +36,40 @@ class Follower:
 
     def _failure(self, why):
         from twisted.internet import reactor
-        from buildslave.scripts.logwatcher import BuildmasterTimeoutError, \
-             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
-        if why.check(BuildmasterTimeoutError):
+        from buildsubordinate.scripts.logwatcher import BuildmainTimeoutError, \
+             ReconfigError, BuildsubordinateTimeoutError, BuildSubordinateDetectedError
+        if why.check(BuildmainTimeoutError):
             print """
-The buildslave took more than 10 seconds to start, so we were unable to
+The buildsubordinate took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """
-        elif why.check(BuildslaveTimeoutError):
+        elif why.check(BuildsubordinateTimeoutError):
             print """
-The buildslave took more than 10 seconds to start and/or connect to the
-buildslave, so we were unable to confirm that it started and connected
+The buildsubordinate took more than 10 seconds to start and/or connect to the
+buildsubordinate, so we were unable to confirm that it started and connected
 correctly. Please 'tail twistd.log' and look for a line that says 'message
-from master: attached' to verify correct startup. If you see a bunch of
-messages like 'will retry in 6 seconds', your buildslave might not have the
-correct hostname or portnumber for the buildslave, or the buildslave might
+from main: attached' to verify correct startup. If you see a bunch of
+messages like 'will retry in 6 seconds', your buildsubordinate might not have the
+correct hostname or portnumber for the buildsubordinate, or the buildsubordinate might
 not be running. If you see messages like
    'Failure: twisted.cred.error.UnauthorizedLogin'
-then your buildslave might be using the wrong botname or password. Please
-correct these problems and then restart the buildslave.
+then your buildsubordinate might be using the wrong botname or password. Please
+correct these problems and then restart the buildsubordinate.
 """
         elif why.check(ReconfigError):
             print """
-The buildslave appears to have encountered an error in the master.cfg config
+The buildsubordinate appears to have encountered an error in the main.cfg config
 file during startup. It is probably running with an empty configuration right
-now. Please inspect and fix master.cfg, then restart the buildslave.
+now. Please inspect and fix main.cfg, then restart the buildsubordinate.
 """
-        elif why.check(BuildSlaveDetectedError):
+        elif why.check(BuildSubordinateDetectedError):
             print """
-Buildslave is starting up, not following logfile.
+Buildsubordinate is starting up, not following logfile.
 """
         else:
             print """
-Unable to confirm that the buildslave started correctly. You may need to
+Unable to confirm that the buildsubordinate started correctly. You may need to
 stop it, fix the config file, and restart.
 """
             print why

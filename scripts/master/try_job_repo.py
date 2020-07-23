@@ -4,7 +4,7 @@
 
 from twisted.internet import defer
 
-from master.try_job_base import TryJobBase
+from main.try_job_base import TryJobBase
 
 
 class TryJobRepoBase(TryJobBase):
@@ -22,12 +22,12 @@ class TryJobRepoBase(TryJobBase):
   def setServiceParent(self, parent):
     TryJobBase.setServiceParent(self, parent)
     if self.watcher:
-      self.watcher.master = self.master
+      self.watcher.main = self.main
       self.watcher.setServiceParent(self)
 
   @defer.deferredGenerator
   def addJob(self, options):
-    """Submits a job to master to process.
+    """Submits a job to main to process.
 
     Resolves revision to LKGR if needed.
     """
@@ -38,7 +38,7 @@ class TryJobRepoBase(TryJobBase):
       yield wfd
       wfd.getResult()
 
-    wfd = defer.waitForDeferred(self.master.addChange(
+    wfd = defer.waitForDeferred(self.main.addChange(
         author=','.join(options['email']),
         revision=options['revision'],
         comments=''))

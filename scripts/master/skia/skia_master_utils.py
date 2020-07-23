@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 
-"""Skia-specific utilities for setting up build masters."""
+"""Skia-specific utilities for setting up build mains."""
 
 
 from buildbot.changes import filter as change_filter
@@ -15,14 +15,14 @@ from buildbot.status.status_push import HttpStatusPush
 from common import chromium_utils
 from common.skia import builder_name_schema
 from common.skia import global_constants
-from master import master_utils
-from master import slaves_list
-from master import status_logger
-from master.builders_pools import BuildersPools
-from master.factory import annotator_factory
-from master.gitiles_poller import GitilesPoller
-from master.skia import status_json
-from master.skia import skia_notifier
+from main import main_utils
+from main import subordinates_list
+from main import status_logger
+from main.builders_pools import BuildersPools
+from main.factory import annotator_factory
+from main.gitiles_poller import GitilesPoller
+from main.skia import status_json
+from main.skia import skia_notifier
 from twisted.python import log
 
 import collections
@@ -35,12 +35,12 @@ DEFAULT_DO_TRYBOT = True
 DEFAULT_RECIPE = 'skia/skia'
 DEFAULT_TRYBOT_ONLY = False
 BUILDBUCKET_SCHEDULER_NAME = 'buildbucket'
-MASTER_ONLY_SCHEDULER_NAME = 'skia_master_only'
+MASTER_ONLY_SCHEDULER_NAME = 'skia_main_only'
 PERIODIC_15MINS_SCHEDULER_NAME = 'skia_periodic_15mins'
 NIGHTLY_SCHEDULER_NAME = 'skia_nightly'
 WEEKLY_SCHEDULER_NAME = 'skia_weekly'
 FAKE_TRY_SCHEDULER_NAME = 'skia_trybots'
-MASTER_BRANCH = 'master'
+MASTER_BRANCH = 'main'
 POLLING_BRANCH = re.compile('refs/heads/(?!infra/config).+')
 SLAVE_WORKDIR = 'workdir'
 
@@ -106,8 +106,8 @@ def CanMergeBuildRequests(req1, req2):
   return True
 
 
-def SetupBuildersAndSchedulers(c, builders, slaves, ActiveMaster):
-  """Set up builders and schedulers for the build master."""
+def SetupBuildersAndSchedulers(c, builders, subordinates, ActiveMain):
+  """Set up builders and schedulers for the build main."""
   # List of dicts for every builder.
   builder_dicts = []
 
@@ -143,12 +143,12 @@ def SetupBuildersAndSchedulers(c, builders, slaves, ActiveMaster):
     builder_dict = {
       'name': builder_name,
       'auto_reboot': builder.get('auto_reboot', DEFAULT_AUTO_REBOOT),
-      'slavenames': slaves.GetSlavesName(builder=builder['name']),
+      'subordinatenames': subordinates.GetSubordinatesName(builder=builder['name']),
       'category': category,
       'recipe': builder.get('recipe', DEFAULT_RECIPE),
       'properties': properties,
       'mergeRequests': builder.get('can_merge_requests', CanMergeBuildRequests),
-      'slavebuilddir': SLAVE_WORKDIR,
+      'subordinatebuilddir': SLAVE_WORKDIR,
     }
     builder_dicts.append(builder_dict)
 
@@ -191,15 +191,15 @@ def SetupBuildersAndSchedulers(c, builders, slaves, ActiveMaster):
                     ', '.join(nonexistent_parents))
 
   # Create the schedulers.
-  skia_master_only_change_filter = change_filter.ChangeFilter(
-      project='skia', repository=ActiveMaster.repo_url, branch=MASTER_BRANCH)
+  skia_main_only_change_filter = change_filter.ChangeFilter(
+      project='skia', repository=ActiveMain.repo_url, branch=MASTER_BRANCH)
 
   c['schedulers'] = []
 
   s = Scheduler(
       name=MASTER_ONLY_SCHEDULER_NAME,
       treeStableTimer=60,
-      change_filter=skia_master_only_change_filter,
+      change_filter=skia_main_only_change_filter,
       builderNames=builders_by_scheduler[MASTER_ONLY_SCHEDULER_NAME])
   c['schedulers'].append(s)
 
@@ -237,10 +237,10 @@ def SetupBuildersAndSchedulers(c, builders, slaves, ActiveMaster):
   c['schedulers'].append(s)
 
   # Don't add triggerable schedulers for triggered_builders; triggers are now
-  # handled on the slave-side through buildbucket.
+  # handled on the subordinate-side through buildbucket.
 
   # Create the BuildFactorys.
-  annotator = annotator_factory.AnnotatorFactory(ActiveMaster)
+  annotator = annotator_factory.AnnotatorFactory(ActiveMain)
 
   for builder_dict in builder_dicts:
     factory = annotator.BaseFactory(
@@ -253,17 +253,17 @@ def SetupBuildersAndSchedulers(c, builders, slaves, ActiveMaster):
   c['builders'] = builder_dicts
 
 
-def SetupMaster(ActiveMaster):
-  # Buildmaster config dict.
+def SetupMain(ActiveMain):
+  # Buildmain config dict.
   c = {}
 
-  config.DatabaseSetup(c, require_dbconfig=ActiveMaster.is_production_host)
+  config.DatabaseSetup(c, require_dbconfig=ActiveMain.is_production_host)
 
   ####### CHANGESOURCES
 
-  # Polls config.Master.trunk_url for changes
+  # Polls config.Main.trunk_url for changes
   poller = GitilesPoller(
-      repo_url=ActiveMaster.repo_url,
+      repo_url=ActiveMain.repo_url,
       branches=[POLLING_BRANCH],
       pollInterval=10,
       revlinktmpl='https://skia.googlesource.com/skia/+/%s')
@@ -272,9 +272,9 @@ def SetupMaster(ActiveMaster):
 
   ####### SLAVES
 
-  # Load the slave list. We need some information from it in order to
+  # Load the subordinate list. We need some information from it in order to
   # produce the builders.
-  slaves = slaves_list.SlavesList('slaves.cfg', ActiveMaster.project_name)
+  subordinates = subordinates_list.SubordinatesList('subordinates.cfg', ActiveMain.project_name)
 
   ####### BUILDERS
 
@@ -282,52 +282,52 @@ def SetupMaster(ActiveMaster):
   builders = chromium_utils.ParsePythonCfg('builders.cfg')['builders']
 
   # Configure the Builders and Schedulers.
-  SetupBuildersAndSchedulers(c=c, builders=builders, slaves=slaves,
-                             ActiveMaster=ActiveMaster)
+  SetupBuildersAndSchedulers(c=c, builders=builders, subordinates=subordinates,
+                             ActiveMain=ActiveMain)
 
   ####### BUILDSLAVES
 
-  # The 'slaves' list defines the set of allowable buildslaves. List all the
-  # slaves registered to a builder. Remove dupes.
-  c['slaves'] = master_utils.AutoSetupSlaves(c['builders'],
-                                             config.Master.GetBotPassword())
-  master_utils.VerifySetup(c, slaves)
+  # The 'subordinates' list defines the set of allowable buildsubordinates. List all the
+  # subordinates registered to a builder. Remove dupes.
+  c['subordinates'] = main_utils.AutoSetupSubordinates(c['builders'],
+                                             config.Main.GetBotPassword())
+  main_utils.VerifySetup(c, subordinates)
 
   ####### STATUS TARGETS
 
-  c['buildbotURL'] = ActiveMaster.buildbot_url
+  c['buildbotURL'] = ActiveMain.buildbot_url
 
-  # Adds common status and tools to this master.
-  master_utils.AutoSetupMaster(c, ActiveMaster,
-      public_html='../../../build/masters/master.client.skia/public_html',
-      templates=['../../../build/masters/master.client.skia/templates',
-                 '../../../build/masters/master.chromium/templates'],
+  # Adds common status and tools to this main.
+  main_utils.AutoSetupMain(c, ActiveMain,
+      public_html='../../../build/mains/main.client.skia/public_html',
+      templates=['../../../build/mains/main.client.skia/templates',
+                 '../../../build/mains/main.chromium/templates'],
       tagComparator=poller.comparator,
-      enable_http_status_push=ActiveMaster.is_production_host,
+      enable_http_status_push=ActiveMain.is_production_host,
       order_console_by_time=True,
-      console_repo_filter=ActiveMaster.repo_url,
+      console_repo_filter=ActiveMain.repo_url,
       console_builder_filter=lambda b: not builder_name_schema.IsTrybot(b))
 
   with status_json.JsonStatusHelper() as json_helper:
     json_helper.putChild('trybots', status_json.TryBuildersJsonResource)
 
-  if (ActiveMaster.is_production_host and
-      ActiveMaster.project_name != 'SkiaInternal'):
+  if (ActiveMain.is_production_host and
+      ActiveMain.project_name != 'SkiaInternal'):
     # Build result emails.
     c['status'].append(status_logger.StatusEventLogger())
     c['status'].append(skia_notifier.SkiaMailNotifier(
-        fromaddr=ActiveMaster.from_address,
+        fromaddr=ActiveMain.from_address,
         mode='change',
-        relayhost=config.Master.smtp,
-        lookup=master_utils.UsersAreEmails()))
+        relayhost=config.Main.smtp,
+        lookup=main_utils.UsersAreEmails()))
 
     # Try job result emails.
     c['status'].append(skia_notifier.SkiaTryMailNotifier(
-        fromaddr=ActiveMaster.from_address,
+        fromaddr=ActiveMain.from_address,
         subject="try %(result)s for %(reason)s @ r%(revision)s",
         mode='all',
-        relayhost=config.Master.smtp,
-        lookup=master_utils.UsersAreEmails()))
+        relayhost=config.Main.smtp,
+        lookup=main_utils.UsersAreEmails()))
 
     # Push status updates to GrandCentral.
     c['status'].append(HttpStatusPush(

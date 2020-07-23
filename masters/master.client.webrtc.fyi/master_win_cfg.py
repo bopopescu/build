@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='webrtc_windows_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=0,
                             builderNames=[
                                 'Win32 Release (swarming)',
@@ -21,7 +21,7 @@ def Update(c):
   specs = [
     {
       'name': 'Win32 Release (swarming)',
-      'slavebuilddir': 'win_swarming',
+      'subordinatebuilddir': 'win_swarming',
     },
   ]
 
@@ -31,6 +31,6 @@ def Update(c):
         'factory': m_annotator.BaseFactory('webrtc/standalone'),
         'notify_on_missing': True,
         'category': 'win',
-        'slavebuilddir': spec['slavebuilddir'],
+        'subordinatebuilddir': spec['subordinatebuilddir'],
       } for spec in specs
   ])

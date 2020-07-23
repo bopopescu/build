@@ -524,7 +524,7 @@ class NNTPServer(basic.LineReceiver):
     ]
 
     def __init__(self):
-        self.servingSlave = 0
+        self.servingSubordinate = 0
 
 
     def connectionMade(self):
@@ -936,7 +936,7 @@ class NNTPServer(basic.LineReceiver):
     def do_MODE(self, cmd):
         cmd = cmd.strip().upper()
         if cmd == 'READER':
-            self.servingSlave = 0
+            self.servingSubordinate = 0
             self.sendLine('200 Hello, you can post')
         elif cmd == 'STREAM':
             self.sendLine('500 Command not understood')
@@ -957,8 +957,8 @@ class NNTPServer(basic.LineReceiver):
     
     
     def do_SLAVE(self):
-        self.sendLine('202 slave status noted')
-        self.servingeSlave = 1
+        self.sendLine('202 subordinate status noted')
+        self.servingeSubordinate = 1
 
 
     def do_XPATH(self, article):

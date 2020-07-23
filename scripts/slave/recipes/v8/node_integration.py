@@ -35,14 +35,14 @@ BUILDERS = freeze({
 def _build_and_test(api, suffix=''):
   api.step(
     'configure node.js%s' % suffix,
-    [api.path['slave_build'].join('node.js', 'configure')],
-    cwd=api.path['slave_build'].join('node.js'),
+    [api.path['subordinate_build'].join('node.js', 'configure')],
+    cwd=api.path['subordinate_build'].join('node.js'),
   )
 
   api.step(
     'build and test node.js%s' % suffix,
     ['make', '-j8', 'test'],
-    cwd=api.path['slave_build'].join('node.js'),
+    cwd=api.path['subordinate_build'].join('node.js'),
   )
 
 
@@ -60,20 +60,20 @@ def RunSteps(api):
     pass
 
   # Copy the checked-out v8.
-  api.file.rmtree('v8', api.path['slave_build'].join('node.js', 'deps', 'v8'))
+  api.file.rmtree('v8', api.path['subordinate_build'].join('node.js', 'deps', 'v8'))
   api.python(
       name='copy v8 tree',
       script=api.v8.resource('copy_v8.py'),
       args=[
         # Source.
-        api.path['slave_build'].join('v8'),
+        api.path['subordinate_build'].join('v8'),
         # Destination.
-        api.path['slave_build'].join('node.js', 'deps', 'v8'),
+        api.path['subordinate_build'].join('node.js', 'deps', 'v8'),
         # Paths to ignore.
         '.git',
-        api.path['slave_build'].join('v8', 'buildtools'),
-        api.path['slave_build'].join('v8', 'out'),
-        api.path['slave_build'].join('v8', 'third_party'),
+        api.path['subordinate_build'].join('v8', 'buildtools'),
+        api.path['subordinate_build'].join('v8', 'out'),
+        api.path['subordinate_build'].join('v8', 'third_party'),
       ],
   )
 
@@ -86,16 +86,16 @@ def _sanitize_nonalpha(text):
 
 
 def GenTests(api):
-  for mastername, masterconf in BUILDERS.iteritems():
-    for buildername, _ in masterconf['builders'].iteritems():
+  for mainname, mainconf in BUILDERS.iteritems():
+    for buildername, _ in mainconf['builders'].iteritems():
       yield (
           api.test('_'.join([
             'full',
-            _sanitize_nonalpha(mastername),
+            _sanitize_nonalpha(mainname),
             _sanitize_nonalpha(buildername),
           ])) +
           api.properties.generic(
-              mastername=mastername,
+              mainname=mainname,
               buildername=buildername,
               branch='refs/heads/lkgr',
               revision='deadbeef',

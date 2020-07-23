@@ -8,16 +8,16 @@
 import urllib
 
 from common import cros_chromite
-from master.cros import builder_config
+from main.cros import builder_config
 
 # Load all of Chromite's 'cbuildbot' config targets from ToT.
 # NOTE: This uses a pinned Chromite configuration. To update the Chromite
-#       configuration and, thorugh it, the master configuration, the pinned
+#       configuration and, thorugh it, the main configuration, the pinned
 #       hash should be updated in "<build>/scripts/common/cros_chromite.py".
 #       (See cros_chromite.PINS documentation).
-# TODO(dnj): We allow fetching here because neither the CQ nor masters will run
+# TODO(dnj): We allow fetching here because neither the CQ nor mains will run
 #            `gclient runhooks` automatically. I'd prefer it not do this so
-#            master restarts are deterministic and fast. However, since the
+#            main restarts are deterministic and fast. However, since the
 #            loaded configuration is pinned and cached, this shouldn't have a
 #            significant impact in practice.
 configs = cros_chromite.Get()
@@ -29,7 +29,7 @@ all_builders = cbb_builders.union(etc_builders)
 
 # Build a list of configs that contain at least one non-VMTest, non-HWTest
 # Pre-CQ builder. This is used for determining a list of configs that could
-# theoretically run on GCE (we check this for sure in NextSlaveAndBuild).
+# theoretically run on GCE (we check this for sure in NextSubordinateAndBuild).
 precq_builders = set(
     v['_template'] or k for k, v in configs.iteritems() if v.IsPreCqBuilder())
 precq_novmtest_builders = set(
@@ -37,23 +37,23 @@ precq_novmtest_builders = set(
     if v.IsPreCqBuilder() and not v.HasVmTests() and not v.HasHwTests())
 
 
-class TestingSlavePool(object):
+class TestingSubordinatePool(object):
 
-  def __init__(self, testing_slaves=None):
-    self.testing_slaves = set(testing_slaves or ())
+  def __init__(self, testing_subordinates=None):
+    self.testing_subordinates = set(testing_subordinates or ())
 
-  def is_testing_slave(self, slavename):
-    return slavename in self.testing_slaves
+  def is_testing_subordinate(self, subordinatename):
+    return subordinatename in self.testing_subordinates
 
-  def cros_slave_name(self, slavename):
-    """BuildBot Jinja2 template function to style our slave groups into pools.
+  def cros_subordinate_name(self, subordinatename):
+    """BuildBot Jinja2 template function to style our subordinate groups into pools.
 
-    This function is called by our customized 'buildslaves.html' template. Given
-    a slave name, it returns the name to display for that slave.
+    This function is called by our customized 'buildsubordinates.html' template. Given
+    a subordinate name, it returns the name to display for that subordinate.
     """
-    if self.is_testing_slave(slavename):
-      return '%s (Testing)' % (slavename,)
-    return slavename
+    if self.is_testing_subordinate(subordinatename):
+      return '%s (Testing)' % (subordinatename,)
+    return subordinatename
 
 
 def cros_builder_links_pool(name, builders):
@@ -74,18 +74,18 @@ def cros_builder_links_pool(name, builders):
 
 
 def cros_builder_links(builders):
-  """BuildBot Jinja2 template function to style our slave groups into pools.
+  """BuildBot Jinja2 template function to style our subordinate groups into pools.
 
-  This function is called by our customized 'buildslaves.html' template. It is
-  evaluated for each slave, receiving 'builders', a list containing template
-  information for each builder attached to that slave.
+  This function is called by our customized 'buildsubordinates.html' template. It is
+  evaluated for each subordinate, receiving 'builders', a list containing template
+  information for each builder attached to that subordinate.
 
   This function accepts and returns a list containing entries:
     {'name': <name>, 'link': <link>}
 
-  Each entry is then used by the templating engine to populate that slave's
+  Each entry is then used by the templating engine to populate that subordinate's
   builder table cell. This function analyzes the list of builders for a
-  given slave and optionally returns a modified set of links to render.
+  given subordinate and optionally returns a modified set of links to render.
 
   This function summarizes known sets of builders, replacing individual builder
   names/links with concise builder pool names/links.
@@ -102,100 +102,100 @@ def cros_builder_links(builders):
   return builders
 
 
-class NextSlaveAndBuild(object):
-  """Callable BuildBot 'nextSlaveAndBuild' function for ChromeOS try server.
+class NextSubordinateAndBuild(object):
+  """Callable BuildBot 'nextSubordinateAndBuild' function for ChromeOS try server.
 
   This function differs from default assignment:
-  - It preferentially assigns slaves to builds that explicitly request slaves.
+  - It preferentially assigns subordinates to builds that explicitly request subordinates.
   - It prioritizes higher-strata builders when multiple builders are asking
-    for slaves.
-  - It prioritizes slaves with fewer builders (more specialized) over slaves
+    for subordinates.
+  - It prioritizes subordinates with fewer builders (more specialized) over subordinates
     with more builders.
   """
 
-  def __init__(self, testing_slave_pool=None):
+  def __init__(self, testing_subordinate_pool=None):
     """Initializes a new callable object.
 
     Args:
-      testing_slave_pool (None/TestingSlavePool): If not None, the pool of
-          testing slaves.
+      testing_subordinate_pool (None/TestingSubordinatePool): If not None, the pool of
+          testing subordinates.
     """
-    self.testing_slave_pool = testing_slave_pool or TestingSlavePool()
+    self.testing_subordinate_pool = testing_subordinate_pool or TestingSubordinatePool()
 
   @staticmethod
   def get_buildrequest_category(br):
     """Returns (str): the category of builder associated with a build request.
     """
-    builder = br.master.status.getBuilder(br.buildername)
+    builder = br.main.status.getBuilder(br.buildername)
     if not builder:
       return None
     return builder.category
 
-  # Paraphrased from 'buildbot.status.web.slaves.content()'.
+  # Paraphrased from 'buildbot.status.web.subordinates.content()'.
   @staticmethod
-  def get_slave_builders(slave, br):
-    """Returns (list): The names (str) of builders assigned to a slave.
+  def get_subordinate_builders(subordinate, br):
+    """Returns (list): The names (str) of builders assigned to a subordinate.
     """
     builders = []
-    for bname in br.master.status.getBuilderNames():
-      b = br.master.status.getBuilder(bname)
-      for bs in b.getSlaves():
-        if bs.getName() == slave.slavename:
+    for bname in br.main.status.getBuilderNames():
+      b = br.main.status.getBuilder(bname)
+      for bs in b.getSubordinates():
+        if bs.getName() == subordinate.subordinatename:
           builders.append(b)
     return builders
 
-  def is_testing_slave(self, slave):
-    """Returns: True if 'slave' is a testing slave.
+  def is_testing_subordinate(self, subordinate):
+    """Returns: True if 'subordinate' is a testing subordinate.
 
     Args:
-      slave (BuildSlave): The build slave to test.
+      subordinate (BuildSubordinate): The build subordinate to test.
     """
-    return self.testing_slave_pool.is_testing_slave(slave.slavename)
+    return self.testing_subordinate_pool.is_testing_subordinate(subordinate.subordinatename)
 
-  def FilterSlaves(self, cbb_config, slaves):
-    """Filters |slaves| to only contain valid slaves for |cbb_config|.
+  def FilterSubordinates(self, cbb_config, subordinates):
+    """Filters |subordinates| to only contain valid subordinates for |cbb_config|.
 
     Args:
       cbb_config (ChromiteTarget): The config to filter for.
-      slaves: List of BuildSlave objects to filter to filter.
+      subordinates: List of BuildSubordinate objects to filter to filter.
     """
     if (not cbb_config or cbb_config.HasVmTests() or
         cbb_config.HasHwTests()):
-      slaves = [s for s in slaves if not builder_config.IsGCESlave(s.getName())]
-    return slaves
+      subordinates = [s for s in subordinates if not builder_config.IsGCESubordinate(s.getName())]
+    return subordinates
 
-  def __call__(self, slaves, buildrequests):
-    """Called by master to determine which job to run and which slave to use.
+  def __call__(self, subordinates, buildrequests):
+    """Called by main to determine which job to run and which subordinate to use.
 
-    Build requests may have a 'slaves_request' property (list of strings),
+    Build requests may have a 'subordinates_request' property (list of strings),
     established from the try job definition. Such requests allow try jobs to
-    request to be run on specific slaves.
+    request to be run on specific subordinates.
 
     Arguments:
-      slaves: A list of candidate SlaveBuilder objects.
+      subordinates: A list of candidate SubordinateBuilder objects.
       buildrequests: A list of pending BuildRequest objects.
 
     Returns:
-      A (slave, buildrequest) tuple containing the buildrequest to run and
-      the slave to run it on.
+      A (subordinate, buildrequest) tuple containing the buildrequest to run and
+      the subordinate to run it on.
     """
-    # We need to return back a BuilderSlave object, so map slave names to
-    # BuilderSlave objects.
-    slave_dict = dict((bs.slave.slavename, bs) for bs in slaves)
+    # We need to return back a BuilderSubordinate object, so map subordinate names to
+    # BuilderSubordinate objects.
+    subordinate_dict = dict((bs.subordinate.subordinatename, bs) for bs in subordinates)
 
-    # Service builds with explicit slave requests first. A build requesting a
-    # specific set of slaves will only be scheduled on those slaves.
+    # Service builds with explicit subordinate requests first. A build requesting a
+    # specific set of subordinates will only be scheduled on those subordinates.
     remaining = []
     for br in buildrequests:
-      slaves_request = br.properties.getProperty('slaves_request', None)
-      if not slaves_request:
+      subordinates_request = br.properties.getProperty('subordinates_request', None)
+      if not subordinates_request:
         remaining.append(br)
         continue
 
-      # If a list of slaves are requested, the order of the list is the order
+      # If a list of subordinates are requested, the order of the list is the order
       # of preference.
-      for slave_name in slaves_request:
-        s = slave_dict.get(slave_name)
+      for subordinate_name in subordinates_request:
+        s = subordinate_dict.get(subordinate_name)
         if s:
           return s, br
 
@@ -206,23 +206,23 @@ class NextSlaveAndBuild(object):
     # build requests that share a category.
     remaining.sort(key=self.get_buildrequest_category)
 
-    # Get a list of available slaves. We'll sort ascendingly by number of
+    # Get a list of available subordinates. We'll sort ascendingly by number of
     # attached builders with the intention of using more-specialized (fewer
-    # attached builders) slaves before using generic ones.
-    normal_slaves = [s for s in slaves
-                     if not self.is_testing_slave(s.slave)]
+    # attached builders) subordinates before using generic ones.
+    normal_subordinates = [s for s in subordinates
+                     if not self.is_testing_subordinate(s.subordinate)]
 
     for br in remaining:
-      normal_slaves.sort(key=lambda s:
-          -int(builder_config.IsGCESlave(s.slave.slavename)))
+      normal_subordinates.sort(key=lambda s:
+          -int(builder_config.IsGCESubordinate(s.subordinate.subordinatename)))
 
-      # Iterate through slaves and choose the appropriate one.
+      # Iterate through subordinates and choose the appropriate one.
       cbb_config_name = br.properties.getProperty('cbb_config', None)
       cbb_config = configs.get(cbb_config_name)
-      builder = br.master.status.getBuilder(br.buildername)
-      slaves = self.FilterSlaves(cbb_config, builder.getSlaves())
-      for s in normal_slaves:
-        for builder_slave in slaves:
-          if s.slave.slavename == builder_slave.getName():
+      builder = br.main.status.getBuilder(br.buildername)
+      subordinates = self.FilterSubordinates(cbb_config, builder.getSubordinates())
+      for s in normal_subordinates:
+        for builder_subordinate in subordinates:
+          if s.subordinate.subordinatename == builder_subordinate.getName():
             return s, br
     return None, None

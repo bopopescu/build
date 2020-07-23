@@ -100,7 +100,7 @@ def main():
   code = 0
   client_dir = os.path.join(cwd, 'swarming.client')
 
-  # Copy the files in the build slave directory.
+  # Copy the files in the build subordinate directory.
   for item in ('heartbeat.isolate', 'heartbeat.py'):
     shutil.copy(
         os.path.join(ROOT_DIR, 'payload', item),

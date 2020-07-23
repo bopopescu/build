@@ -9,7 +9,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from master import failures_notifier
+from main import failures_notifier
 
 
 class FailuresNotifierTest(unittest.TestCase):

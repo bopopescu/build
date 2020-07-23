@@ -15,21 +15,21 @@
 
 import mock
 
-def make_master():
+def make_main():
     """
-    Create a fake Master instance: a Mock with some convenience
+    Create a fake Main instance: a Mock with some convenience
     implementations:
 
     - Non-caching implementation for C{self.caches}
     """
 
-    fakemaster = mock.Mock(name="fakemaster")
+    fakemain = mock.Mock(name="fakemain")
 
     # set up caches
     def fake_get_cache(name, miss_fn):
-        fake_cache = mock.Mock(name='fakemaster.caches[%r]' % name)
+        fake_cache = mock.Mock(name='fakemain.caches[%r]' % name)
         fake_cache.get = miss_fn
         return fake_cache
-    fakemaster.caches.get_cache = fake_get_cache
+    fakemain.caches.get_cache = fake_get_cache
 
-    return fakemaster
+    return fakemain

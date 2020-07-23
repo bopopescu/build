@@ -21,12 +21,12 @@ from buildbot import interfaces
 
 class ChangeManager(service.MultiService):
     """
-    This is the master-side service which receives file change notifications
+    This is the main-side service which receives file change notifications
     from version-control systems.
 
     It is a Twisted service, which has instances of
     L{buildbot.interfaces.IChangeSource} as child services. These are added by
-    the master with C{addSource}.
+    the main with C{addSource}.
     """
 
     implements(interfaces.IEventSource)
@@ -36,24 +36,24 @@ class ChangeManager(service.MultiService):
 
     def __init__(self):
         service.MultiService.__init__(self)
-        self.master = None
+        self.main = None
         self.lastPruneChanges = 0
 
     def startService(self):
         service.MultiService.startService(self)
-        self.master = self.parent
+        self.main = self.parent
 
     def addSource(self, source):
         assert interfaces.IChangeSource.providedBy(source)
         assert service.IService.providedBy(source)
-        source.master = self.master
+        source.main = self.main
         source.setServiceParent(self)
 
     def removeSource(self, source):
         assert source in self
         d = defer.maybeDeferred(source.disownServiceParent)
-        def unset_master(x):
-            source.master = None
+        def unset_main(x):
+            source.main = None
             return x
-        d.addBoth(unset_master)
+        d.addBoth(unset_main)
         return d

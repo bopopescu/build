@@ -69,7 +69,7 @@ def linux_sdk_multi_steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': 'fastbuild=1 component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -78,12 +78,12 @@ def linux_sdk_multi_steps(api):
     args = ['--target', 'Release', '--clobber', '--compiler=goma',
             'chromium_builder_nacl_sdk']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -154,7 +154,7 @@ def mac_sdk_multi_steps(api):
            'GYP_DEFINES': 'fastbuild=1 component=static_library',
            'LANDMINES_VERBOSE': '1'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -163,12 +163,12 @@ def mac_sdk_multi_steps(api):
     args = ['--target', 'Release', '--clobber', '--build-tool=ninja',
             '--compiler=goma-clang', '--', 'chromium_builder_nacl_sdk']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -188,7 +188,7 @@ def windows_sdk_multi_steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -242,7 +242,7 @@ def windows_sdk_multi_steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': 'fastbuild=1 component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -251,12 +251,12 @@ def windows_sdk_multi_steps(api):
     args = ['--solution', 'all.sln', '--project', 'chromium_builder_nacl_sdk',
             '--target', 'Release', '--clobber', '--compiler=goma']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -300,7 +300,7 @@ def linux_sdk_multirel_steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': 'fastbuild=1 component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -309,12 +309,12 @@ def linux_sdk_multirel_steps(api):
     args = ['--target', 'Release', '--clobber', '--compiler=goma',
             'chromium_builder_tests']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -334,7 +334,7 @@ def windows_sdk_multirel_steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -362,7 +362,7 @@ def windows_sdk_multirel_steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': 'fastbuild=1 component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -371,12 +371,12 @@ def windows_sdk_multirel_steps(api):
     args = ['--solution', 'all.sln', '--project', 'chromium_builder_tests',
             '--target', 'Release', '--clobber', '--compiler=goma']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -421,7 +421,7 @@ def mac_sdk_multirel_steps(api):
            'GYP_DEFINES': 'fastbuild=1 component=static_library',
            'CHROMIUM_GYP_SYNTAX_CHECK': '1'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -430,12 +430,12 @@ def mac_sdk_multirel_steps(api):
     args = ['--target', 'Release', '--clobber', '--build-tool=ninja',
             '--compiler=goma-clang', '--', 'chromium_builder_tests']
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # annotated_steps step
     api.python(
         "annotated_steps",
-        api.path["build"].join("scripts", "slave", "chromium",
+        api.path["build"].join("scripts", "subordinate", "chromium",
                                "nacl_sdk_buildbot_run.py"),
         args=
         ['--build-properties=%s' % api.json.dumps(build_properties,
@@ -470,48 +470,48 @@ def RunSteps(api):
 
 def GenTests(api):
     yield (api.test('linux_sdk_multi') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='linux-sdk-multi') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('mac_sdk_multi') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='mac-sdk-multi') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('windows_sdk_multi') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='windows-sdk-multi') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('linux_sdk_multirel') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='linux-sdk-multirel') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('linux_sdk_asan_multi') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='linux-sdk-asan-multi') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('windows_sdk_multirel') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='windows-sdk-multirel') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('mac_sdk_multirel') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='mac-sdk-multirel') +
            api.properties(revision='123456789abcdef') + api.properties(
                got_revision='123456789abcdef') + api.properties(
-                   buildnumber='42') + api.properties(slavename='TestSlave'))
+                   buildnumber='42') + api.properties(subordinatename='TestSubordinate'))
     yield (api.test('builder_not_in_dispatch_directory') + api.properties(
-        mastername='client.nacl.sdk') + api.properties(
+        mainname='client.nacl.sdk') + api.properties(
             buildername='nonexistent_builder') + api.properties(
-                slavename='TestSlave'))
+                subordinatename='TestSubordinate'))

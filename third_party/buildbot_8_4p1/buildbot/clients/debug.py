@@ -24,12 +24,12 @@ import gtk.glade #@UnresolvedImport
 import re
 
 class DebugWidget:
-    def __init__(self, master="localhost:8007", passwd="debugpw"):
+    def __init__(self, main="localhost:8007", passwd="debugpw"):
         self.connected = 0
         try:
-            host, port = re.search(r'(.+):(\d+)', master).groups()
+            host, port = re.search(r'(.+):(\d+)', main).groups()
         except:
-            print "unparseable master location '%s'" % master
+            print "unparseable main location '%s'" % main
             print " expecting something more like localhost:8007"
             raise
         self.host = host
@@ -43,8 +43,8 @@ class DebugWidget:
         self.connectbutton = g('connectbutton')
         self.connectlabel = g('connectlabel')
         g('window1').connect('destroy', lambda win: gtk.main_quit())
-        # put the master info in the window's titlebar
-        g('window1').set_title("Buildbot Debug Tool: %s" % master)
+        # put the main info in the window's titlebar
+        g('window1').set_title("Buildbot Debug Tool: %s" % main)
         c = xml.signal_connect
         c('do_connect', self.do_connect)
         c('do_reload', self.do_reload)

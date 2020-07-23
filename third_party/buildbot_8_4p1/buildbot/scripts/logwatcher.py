@@ -22,13 +22,13 @@ from twisted.protocols.basic import LineOnlyReceiver
 class FakeTransport:
     disconnecting = False
 
-class BuildmasterTimeoutError(Exception):
+class BuildmainTimeoutError(Exception):
     pass
-class BuildslaveTimeoutError(Exception):
+class BuildsubordinateTimeoutError(Exception):
     pass
 class ReconfigError(Exception):
     pass
-class BuildSlaveDetectedError(Exception):
+class BuildSubordinateDetectedError(Exception):
     pass
 
 class TailProcess(protocol.ProcessProtocol):
@@ -49,7 +49,7 @@ class LogWatcher(LineOnlyReceiver):
         self.transport = FakeTransport()
         self.pp = TailProcess()
         self.pp.lw = self
-        self.processtype = "buildmaster"
+        self.processtype = "buildmain"
         self.timer = None
 
     def start(self):
@@ -77,10 +77,10 @@ class LogWatcher(LineOnlyReceiver):
 
     def timeout(self):
         self.timer = None
-        if self.processtype == "buildmaster":
-            e = BuildmasterTimeoutError()
+        if self.processtype == "buildmain":
+            e = BuildmainTimeoutError()
         else:
-            e = BuildslaveTimeoutError()
+            e = BuildsubordinateTimeoutError()
         self.finished(Failure(e))
 
     def finished(self, results):
@@ -102,15 +102,15 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
         if "loading configuration from" in line:
             self.in_reconfig = True
-        if "Creating BuildSlave" in line:
-            self.processtype = "buildslave"
+        if "Creating BuildSubordinate" in line:
+            self.processtype = "buildsubordinate"
 
         if self.in_reconfig:
             print line
 
-        if "message from master: attached" in line:
-            return self.finished("buildslave")
+        if "message from main: attached" in line:
+            return self.finished("buildsubordinate")
         if "I will keep using the previous config file" in line:
             return self.finished(Failure(ReconfigError()))
         if "configuration update complete" in line:
-            return self.finished("buildmaster")
+            return self.finished("buildmain")

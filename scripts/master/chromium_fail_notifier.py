@@ -10,7 +10,7 @@ inherit from it.
 
 from buildbot.status.builder import FAILURE
 
-from master.chromium_notifier import ChromiumNotifier
+from main.chromium_notifier import ChromiumNotifier
 
 class ChromiumFailNotifier(ChromiumNotifier):
   """This is a status notifier emails on step failures. """

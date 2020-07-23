@@ -8,7 +8,7 @@ import re
 
 import buildbot
 from buildbot import interfaces, util
-from buildbot.buildslave import BuildSlave
+from buildbot.buildsubordinate import BuildSubordinate
 from buildbot.interfaces import IRenderable
 from buildbot.status import mail
 from buildbot.status.builder import BuildStatus
@@ -16,17 +16,17 @@ from buildbot.status.status_push import HttpStatusPush
 from twisted.python import log
 from zope.interface import implements
 
-from master.autoreboot_buildslave import AutoRebootBuildSlave
+from main.autoreboot_buildsubordinate import AutoRebootBuildSubordinate
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.baseweb import WebStatus
 
-import master.chromium_status_bb8 as chromium_status
+import main.chromium_status_bb8 as chromium_status
 
 from common import chromium_utils
-from master import buildbucket
-from master import cbe_json_status_push
-from master import pubsub_json_status_push
-from master import status_logger
+from main import buildbucket
+from main import cbe_json_status_push
+from main import pubsub_json_status_push
+from main import status_logger
 import config
 
 
@@ -50,11 +50,11 @@ def HackMaxTime(maxTime=8*60*60):
   adding steps."""
   from buildbot.process.buildstep import RemoteShellCommand
   assert RemoteShellCommand.__init__.func_defaults == (None, 1, 1, 1200, None,
-      {}, 'slave-config', True)
+      {}, 'subordinate-config', True)
   RemoteShellCommand.__init__.im_func.func_defaults = (None, 1, 1, 1200,
-      maxTime, {}, 'slave-config', True)
+      maxTime, {}, 'subordinate-config', True)
   assert RemoteShellCommand.__init__.func_defaults == (None, 1, 1, 1200,
-      maxTime, {}, 'slave-config', True)
+      maxTime, {}, 'subordinate-config', True)
 
 HackMaxTime()
 
@@ -75,115 +75,115 @@ class InvalidConfig(Exception):
   pass
 
 
-def AutoSetupSlaves(builders, bot_password, max_builds=1,
+def AutoSetupSubordinates(builders, bot_password, max_builds=1,
                     missing_recipients=None,
                     preferred_builder_dict=None,
                     missing_timeout=300):
-  """Helper function for master.cfg to quickly setup c['slaves']."""
+  """Helper function for main.cfg to quickly setup c['subordinates']."""
   missing_recipients = missing_recipients or []
 
-  slaves_dict = {}
+  subordinates_dict = {}
   for builder in builders:
     auto_reboot = builder.get('auto_reboot', True)
     notify_on_missing = builder.get('notify_on_missing', False)
-    slavenames = builder.get('slavenames', [])[:]
-    if 'slavename' in builder:
-      slavenames.append(builder['slavename'])
-    for slavename in slavenames:
+    subordinatenames = builder.get('subordinatenames', [])[:]
+    if 'subordinatename' in builder:
+      subordinatenames.append(builder['subordinatename'])
+    for subordinatename in subordinatenames:
       properties = {}
       if preferred_builder_dict:
-        preferred_builder = preferred_builder_dict.get(slavename)
+        preferred_builder = preferred_builder_dict.get(subordinatename)
         if preferred_builder:
           properties['preferred_builder'] = preferred_builder
-      slaves_dict[slavename] = (auto_reboot, notify_on_missing, properties)
+      subordinates_dict[subordinatename] = (auto_reboot, notify_on_missing, properties)
 
-  slaves = []
-  for (slavename,
-       (auto_reboot, notify_on_missing, properties)) in slaves_dict.iteritems():
+  subordinates = []
+  for (subordinatename,
+       (auto_reboot, notify_on_missing, properties)) in subordinates_dict.iteritems():
     if auto_reboot:
-      slave_class = AutoRebootBuildSlave
+      subordinate_class = AutoRebootBuildSubordinate
     else:
-      slave_class = BuildSlave
+      subordinate_class = BuildSubordinate
 
     if notify_on_missing:
-      slaves.append(slave_class(slavename, bot_password, max_builds=max_builds,
+      subordinates.append(subordinate_class(subordinatename, bot_password, max_builds=max_builds,
                                 properties=properties,
                                 notify_on_missing=missing_recipients,
                                 missing_timeout=missing_timeout))
     else:
-      slaves.append(slave_class(slavename, bot_password,
+      subordinates.append(subordinate_class(subordinatename, bot_password,
                                 properties=properties, max_builds=max_builds))
 
-  return slaves
+  return subordinates
 
 
-# TODO(phajdan.jr): Make enforce_sane_slave_pools unconditional,
+# TODO(phajdan.jr): Make enforce_sane_subordinate_pools unconditional,
 # http://crbug.com/435559 . No new code should use it.
-def VerifySetup(c, slaves, enforce_sane_slave_pools=True):
-  """Verify all the available slaves in the slave configuration are used and
-  that all the builders have a slave."""
-  # Extract the list of slaves associated to a builder and make sure each
-  # builder has its slaves connected.
-  # Verify each builder has at least one slave.
-  builders_slaves = set()
-  slaves_name = [s.slavename for s in c['slaves']]
-  slave_mapping = {}
+def VerifySetup(c, subordinates, enforce_sane_subordinate_pools=True):
+  """Verify all the available subordinates in the subordinate configuration are used and
+  that all the builders have a subordinate."""
+  # Extract the list of subordinates associated to a builder and make sure each
+  # builder has its subordinates connected.
+  # Verify each builder has at least one subordinate.
+  builders_subordinates = set()
+  subordinates_name = [s.subordinatename for s in c['subordinates']]
+  subordinate_mapping = {}
   for b in c['builders']:
-    builder_slaves = set()
-    slavename = b.get('slavename')
-    if slavename:
-      builder_slaves.add(slavename)
-    slavenames = b.get('slavenames', [])
-    for s in slavenames:
-      builder_slaves.add(s)
-    if not slavename and not slavenames:
-      raise InvalidConfig('Builder %s has no slave' % b['name'])
+    builder_subordinates = set()
+    subordinatename = b.get('subordinatename')
+    if subordinatename:
+      builder_subordinates.add(subordinatename)
+    subordinatenames = b.get('subordinatenames', [])
+    for s in subordinatenames:
+      builder_subordinates.add(s)
+    if not subordinatename and not subordinatenames:
+      raise InvalidConfig('Builder %s has no subordinate' % b['name'])
     # Now test.
-    for s in builder_slaves:
-      if not s in slaves_name:
-        raise InvalidConfig('Builder %s using undefined slave %s' % (b['name'],
+    for s in builder_subordinates:
+      if not s in subordinates_name:
+        raise InvalidConfig('Builder %s using undefined subordinate %s' % (b['name'],
                                                                      s))
-    slave_mapping[b['name']] = builder_slaves
-    builders_slaves |= builder_slaves
-  if len(builders_slaves) != len(slaves_name):
-    raise InvalidConfig('Same slave defined multiple times')
+    subordinate_mapping[b['name']] = builder_subordinates
+    builders_subordinates |= builder_subordinates
+  if len(builders_subordinates) != len(subordinates_name):
+    raise InvalidConfig('Same subordinate defined multiple times')
 
-  slaves_by_name = {chromium_utils.EntryToSlaveName(s): s
-                    for s in slaves.GetSlaves()}
+  subordinates_by_name = {chromium_utils.EntryToSubordinateName(s): s
+                    for s in subordinates.GetSubordinates()}
 
-  # Make sure slave pools are either equal or disjoint. This makes capacity
+  # Make sure subordinate pools are either equal or disjoint. This makes capacity
   # analysis and planning simpler, easier, and more reliable.
-  if enforce_sane_slave_pools:
-    for b1, b1_slaves in slave_mapping.iteritems():
-      for b2, b2_slaves in slave_mapping.iteritems():
-        if b1_slaves != b2_slaves and not b1_slaves.isdisjoint(b2_slaves):
+  if enforce_sane_subordinate_pools:
+    for b1, b1_subordinates in subordinate_mapping.iteritems():
+      for b2, b2_subordinates in subordinate_mapping.iteritems():
+        if b1_subordinates != b2_subordinates and not b1_subordinates.isdisjoint(b2_subordinates):
           raise InvalidConfig(
-              'Builders %r and %r should have either equal or disjoint slave '
+              'Builders %r and %r should have either equal or disjoint subordinate '
               'pools' % (b1, b2))
 
-      # Explicitly specified slave pools must be consistent.
+      # Explicitly specified subordinate pools must be consistent.
       b1_pool = None
-      for slave in b1_slaves:
-        pool = chromium_utils.EntryToSlavePool(slaves_by_name.get(slave, {}))
+      for subordinate in b1_subordinates:
+        pool = chromium_utils.EntryToSubordinatePool(subordinates_by_name.get(subordinate, {}))
         if b1_pool is None:
           b1_pool = pool
         if b1_pool != pool:
           raise InvalidConfig(
-            'Slave %s for build %r belongs to pool %s, but expected %s' % (
-                slave, b1, pool, b1_pool))
+            'Subordinate %s for build %r belongs to pool %s, but expected %s' % (
+                subordinate, b1, pool, b1_pool))
 
-  # Make sure each slave has their builder.
+  # Make sure each subordinate has their builder.
   builders_name = [b['name'] for b in c['builders']]
-  for s in c['slaves']:
-    name = s.slavename
-    if not name in builders_slaves:
-      raise InvalidConfig('Slave %s not associated with any builder' % name)
+  for s in c['subordinates']:
+    name = s.subordinatename
+    if not name in builders_subordinates:
+      raise InvalidConfig('Subordinate %s not associated with any builder' % name)
 
-  # Make sure every defined slave is used.
-  for s in slaves.GetSlaves():
-    name = chromium_utils.EntryToSlaveName(s)
-    if not name in slaves_name:
-      raise InvalidConfig('Slave %s defined in your slaves_list is not '
+  # Make sure every defined subordinate is used.
+  for s in subordinates.GetSubordinates():
+    name = chromium_utils.EntryToSubordinateName(s)
+    if not name in subordinates_name:
+      raise InvalidConfig('Subordinate %s defined in your subordinates_list is not '
                           'referenced at all' % name)
     builders = s.get('builder', [])
     if not isinstance(builders, (list, tuple)):
@@ -194,7 +194,7 @@ def VerifySetup(c, slaves, enforce_sane_slave_pools=True):
     builders.extend(testers)
     for b in builders:
       if not b in builders_name:
-        raise InvalidConfig('Slave %s uses non-existent builder %s' % (name,
+        raise InvalidConfig('Subordinate %s uses non-existent builder %s' % (name,
                                                                        b))
 
 class UsersAreEmails(util.ComparableMixin):
@@ -225,9 +225,9 @@ class FilterDomain(util.ComparableMixin):
     available.
     permitted_domains is a whitelist of domains that emails will be sent to."""
     # pylint: disable=E1101
-    self.domain = domain or config.Master.master_domain
+    self.domain = domain or config.Main.main_domain
     self.permitted_domains = (permitted_domains or
-                              config.Master.permitted_domains)
+                              config.Main.permitted_domains)
     if self.permitted_domains:
       assert isinstance(self.permitted_domains, tuple), (
           'permitted_domains must be a tuple, now it is a %s (value: %s)' %
@@ -274,16 +274,16 @@ def CreateWebStatus(port, templates=None, tagComparator=None,
   return webstatus
 
 
-def GetMastername():
-  # Get the master name from the directory name. Remove leading "master.".
-  return re.sub('^master.', '', os.path.basename(os.getcwd()))
+def GetMainname():
+  # Get the main name from the directory name. Remove leading "main.".
+  return re.sub('^main.', '', os.path.basename(os.getcwd()))
 
 
 class WrongHostException(Exception):
   pass
 
 
-def AutoSetupMaster(c, active_master, mail_notifier=False,
+def AutoSetupMain(c, active_main, mail_notifier=False,
                     mail_notifier_mode=None,
                     public_html=None, templates=None,
                     order_console_by_time=False,
@@ -293,7 +293,7 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
                     console_repo_filter=None,
                     console_builder_filter=None,
                     web_template_globals=None):
-  """Add common settings and status services to a master.
+  """Add common settings and status services to a main.
 
   If you wonder what all these mean, PLEASE go check the official doc!
   http://buildbot.net/buildbot/docs/0.7.12/ or
@@ -301,20 +301,20 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
 
   - Default number of logs to keep
   - WebStatus and MailNotifier
-  - Debug ssh port. Just add a file named .manhole beside master.cfg and
+  - Debug ssh port. Just add a file named .manhole beside main.cfg and
     simply include one line containing 'port = 10101', then you can
     'ssh localhost -p' and you can access your buildbot from the inside."""
-  if active_master.in_production and not active_master.is_production_host:
-    log.err('ERROR: Trying to start the master on the wrong host.')
+  if active_main.in_production and not active_main.is_production_host:
+    log.err('ERROR: Trying to start the main on the wrong host.')
     log.err('ERROR: This machine is %s, expected %s.' % (
-        active_master.current_host, active_master.master_host))
+        active_main.current_host, active_main.main_host))
     raise WrongHostException
 
-  c['slavePortnum'] = active_master.slave_port
-  c['projectName'] = active_master.project_name
-  c['projectURL'] = config.Master.project_url
+  c['subordinatePortnum'] = active_main.subordinate_port
+  c['projectName'] = active_main.project_name
+  c['projectURL'] = config.Main.project_url
 
-  c['properties'] = {'mastername': GetMastername()}
+  c['properties'] = {'mainname': GetMainname()}
   if 'buildbotURL' in c:
     c['properties']['buildbotURL'] = c['buildbotURL']
 
@@ -325,9 +325,9 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
   if mail_notifier:
     # pylint: disable=E1101
     c['status'].append(mail.MailNotifier(
-        fromaddr=active_master.from_address,
+        fromaddr=active_main.from_address,
         mode=mail_notifier_mode or 'problem',
-        relayhost=config.Master.smtp,
+        relayhost=config.Main.smtp,
         lookup=FilterDomain()))
 
   # Add in the pubsub pusher, which pushes all status updates to a pubsub
@@ -335,13 +335,13 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
   # This will fail on a production host if it cannot find the service
   # account file.
   pubsub_pusher = pubsub_json_status_push.StatusPush.CreateStatusPush(
-      activeMaster=active_master)
+      activeMain=active_main)
   if pubsub_pusher:
     c['status'].append(pubsub_pusher)
   else:
     log.msg('Pubsub not enabled.')
 
-  # For all production masters, notify our health-monitoring webapp.
+  # For all production mains, notify our health-monitoring webapp.
   if enable_http_status_push:
     blacklist = (
         'buildETAUpdate',
@@ -356,8 +356,8 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
         'logStarted',
         'requestCancelled',
         'requestSubmitted',
-        'slaveConnected',
-        'slaveDisconnected',
+        'subordinateConnected',
+        'subordinateDisconnected',
         'stepETAUpdate',
         'stepFinished',
         'stepStarted',
@@ -369,11 +369,11 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
         blackList=blacklist))
 
   # Enable Chrome Build Extract status push if configured. This requires the
-  # configuration file to be defined and valid for this master.
+  # configuration file to be defined and valid for this main.
   status_push = None
   try:
     status_push = cbe_json_status_push.StatusPush.load(
-        active_master,
+        active_main,
         pushInterval=30, # Push every 30 seconds.
     )
   except cbe_json_status_push.ConfigError as e:
@@ -391,7 +391,7 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
   # services Buildbot should be able to provide over HTTP.
   if buildbot.version == '0.8.4p1':
     kwargs['provide_feeds'] = ['json']
-  if active_master.master_port:
+  if active_main.main_port:
     # Actions we want to allow must be explicitly listed here.
     # Deliberately omitted are:
     #   - gracefulShutdown
@@ -403,7 +403,7 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
                   stopAllBuilds=True,
                   cancelPendingBuild=True)
     c['status'].append(CreateWebStatus(
-        active_master.master_port,
+        active_main.main_port,
         tagComparator=tagComparator,
         customEndpoints=customEndpoints,
         authz=authz,
@@ -413,9 +413,9 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
         console_builder_filter=console_builder_filter,
         web_template_globals=web_template_globals,
         **kwargs))
-  if active_master.master_port_alt:
+  if active_main.main_port_alt:
     c['status'].append(CreateWebStatus(
-        active_master.master_port_alt,
+        active_main.main_port_alt,
         tagComparator=tagComparator,
         customEndpoints=customEndpoints,
         num_events_max=3000,
@@ -431,7 +431,7 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
   # Keep last build logs, the default is too low.
   c['buildHorizon'] = 1000
   c['logHorizon'] = 500
-  # Must be at least 2x the number of slaves.
+  # Must be at least 2x the number of subordinates.
   c['eventHorizon'] = 200
   # Tune cache sizes to speed up web UI.
   c['caches'] = {
@@ -471,11 +471,11 @@ def AutoSetupMaster(c, active_master, mail_notifier=False,
       c['manhole'] = manhole.AuthorizedKeysManhole(interface,
           os.path.expanduser("~/.ssh/authorized_keys"))
 
-  if active_master.buildbucket_bucket and active_master.service_account_path:
-    SetupBuildbucket(c, active_master)
+  if active_main.buildbucket_bucket and active_main.service_account_path:
+    SetupBuildbucket(c, active_main)
 
 
-def SetupBuildbucket(c, active_master):
+def SetupBuildbucket(c, active_main):
   def params_hook(params, build):
     config_hook = c.get('buildbucket_params_hook')
     if callable(config_hook):
@@ -496,8 +496,8 @@ def SetupBuildbucket(c, active_master):
 
   buildbucket.setup(
       c,
-      active_master,
-      buckets=[active_master.buildbucket_bucket],
+      active_main,
+      buckets=[active_main.buildbucket_bucket],
       build_params_hook=params_hook,
       max_lease_count=buildbucket.NO_LEASE_LIMIT,
   )
@@ -512,7 +512,7 @@ def DumpSetup(c, important=None, filename='config.current.txt'):
 
      Note that the heuristics of how to find classes that you want expanded
      is not too hard to fool, but it seems to handle it usefully for
-     normal master configs.
+     normal main configs.
 
      c         The config: same as the rest of the utilities here.
      important Array of classes to also expand.
@@ -644,18 +644,18 @@ class ConditionalProperty(util.ComparableMixin):
     return IRenderable(renderer).getRenderingFor(build)
 
 
-class PreferredBuilderNextSlaveFunc(object):
+class PreferredBuilderNextSubordinateFunc(object):
   """
-  This object, when used as a Builder's 'nextSlave' function, will choose
-  a slave builder whose 'preferred_builder' value is the same as the builder
+  This object, when used as a Builder's 'nextSubordinate' function, will choose
+  a subordinate builder whose 'preferred_builder' value is the same as the builder
   name. If there is no such a builder, a builder is randomly chosen.
   """
 
-  def __call__(self, builder, slave_builders):
-    if not slave_builders:
+  def __call__(self, builder, subordinate_builders):
+    if not subordinate_builders:
       return None
 
-    preferred_slaves = [
-        s for s in slave_builders
-        if s.slave.properties.getProperty('preferred_builder') == builder.name]
-    return random.choice(preferred_slaves or slave_builders)
+    preferred_subordinates = [
+        s for s in subordinate_builders
+        if s.subordinate.properties.getProperty('preferred_builder') == builder.name]
+    return random.choice(preferred_subordinates or subordinate_builders)

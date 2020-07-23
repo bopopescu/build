@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class WebPorts(Master.NaClBase):
+class WebPorts(Main.NaClBase):
   project_name = 'WebPorts'
-  master_port = 8035
-  slave_port = 8135
-  master_port_alt = 8235
+  main_port = 8035
+  subordinate_port = 8135
+  main_port_alt = 8235
   base_app_url = 'https://naclports-status.appspot.com'
   tree_status_url = base_app_url + '/status'
   store_revisions_url = base_app_url + '/revisions'

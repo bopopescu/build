@@ -18,10 +18,10 @@ import os
 from shutil import copy, rmtree
 from tempfile import mkdtemp
 from twisted.internet import defer
-from buildbot import master
+from buildbot import main
 
 class ConfigLoader(object):
-    def __init__(self, basedir=os.getcwd(), configFileName="master.cfg"):
+    def __init__(self, basedir=os.getcwd(), configFileName="main.cfg"):
         self.basedir = os.path.abspath(basedir)
         self.configFileName = os.path.abspath(os.path.join(basedir, configFileName))
 
@@ -41,8 +41,8 @@ class ConfigLoader(object):
             # imports work
             sys.path.append(self.basedir)
 
-            bmaster = master.BuildMaster(self.basedir, self.configFileName)
-            return bmaster.loadConfig(open(self.configFileName, "r"), checkOnly=True)
+            bmain = main.BuildMain(self.basedir, self.configFileName)
+            return bmain.loadConfig(open(self.configFileName, "r"), checkOnly=True)
         d.addCallback(loadcfg)
 
         def cleanup(v):

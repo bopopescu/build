@@ -23,11 +23,11 @@ from twisted.trial import unittest
 from twisted.internet import task, defer, reactor
 from twisted.python import runtime, util, log
 
-from buildslave.test.util.misc import nl, BasedirMixin
-from buildslave.test.util import compat
-from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
-from buildslave.exceptions import AbandonChain
-from buildslave import runprocess
+from buildsubordinate.test.util.misc import nl, BasedirMixin
+from buildsubordinate.test.util import compat
+from buildsubordinate.test.fake.subordinatebuilder import FakeSubordinateBuilder
+from buildsubordinate.exceptions import AbandonChain
+from buildsubordinate import runprocess
 
 def stdoutCommand(output):
     return [sys.executable, '-c', 'import sys; sys.stdout.write("%s\\n")' % output]
@@ -59,7 +59,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def testStart(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
 
         d = s.start()
@@ -70,7 +70,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testNoStdout(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir, sendStdout=False)
 
         d = s.start()
@@ -81,7 +81,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testKeepStdout(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir, keepStdout=True)
 
         d = s.start()
@@ -93,7 +93,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testStderr(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stderrCommand("hello"), self.basedir)
 
         d = s.start()
@@ -104,7 +104,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testNoStderr(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stderrCommand("hello"), self.basedir, sendStderr=False)
 
         d = s.start()
@@ -115,7 +115,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testKeepStderr(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stderrCommand("hello"), self.basedir, keepStderr=True)
 
         d = s.start()
@@ -127,7 +127,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testStringCommand(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         # careful!  This command must execute the same on windows and UNIX
         s = runprocess.RunProcess(b, 'echo hello', self.basedir)
 
@@ -139,7 +139,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testCommandTimeout(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, timeout=5)
         clock = task.Clock()
         s._reactor = clock
@@ -152,7 +152,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testCommandMaxTime(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, sleepCommand(10), self.basedir, maxTime=5)
         clock = task.Clock()
         s._reactor = clock
@@ -165,7 +165,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def test_stdin_closed(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b,
                 scriptCommand('assert_stdin_closed'),
                 self.basedir,
@@ -181,7 +181,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     @compat.usesFlushLoggedErrors
     def testBadCommand(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, ['command_that_doesnt_exist.exe'], self.basedir)
         s.workdir = 1 # cause an exception
         d = s.start()
@@ -189,7 +189,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
-            # actually gets propogated back to the master.
+            # actually gets propogated back to the main.
             for u in b.updates:
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
@@ -200,7 +200,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testLogEnviron(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                             environ={"FOO": "BAR"})
 
@@ -212,7 +212,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testNoLogEnviron(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                             environ={"FOO": "BAR"}, logEnviron=False)
 
@@ -224,7 +224,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testEnvironExpandVar(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         environ = {"EXPND": "-${PATH}-",
                    "DOESNT_EXPAND": "-${---}-",
                    "DOESNT_FIND": "-${DOESNT_EXISTS}-"}
@@ -240,7 +240,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     def testUnsetEnvironVar(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                             environ={"PATH":None})
 
@@ -340,7 +340,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile = self.newPidfile()
         self.pid = None
 
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b,
                 scriptCommand('write_pidfile_and_sleep', pidfile),
                 self.basedir)
@@ -381,7 +381,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b,
                 scriptCommand('spawn_child', parent_pidfile, child_pidfile),
                 self.basedir,
@@ -433,7 +433,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         child_pidfile = self.newPidfile()
         self.child_pid = None
 
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b,
                 scriptCommand('double_fork', parent_pidfile, child_pidfile),
                 self.basedir,
@@ -471,13 +471,13 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def testSendStatus(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         s.sendStatus({'stdout': nl('hello\n')})
         self.failUnlessEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
 
     def testSendBuffered(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stdout', 'world')
@@ -485,7 +485,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         self.failUnlessEqual(b.updates, [{'stdout': 'hello world'}], b.show())
 
     def testSendBufferedInterleaved(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stderr', 'DIEEEEEEE')
@@ -498,7 +498,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
             ])
 
     def testSendChunked(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         data = "x" * (runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
         s._addToBuffers('stdout', data)
@@ -506,7 +506,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         self.failUnlessEqual(len(b.updates), 2)
 
     def testSendNotimeout(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
         s._addToBuffers('stdout', data)
@@ -520,7 +520,7 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def makeRP(self):
-        b = FakeSlaveBuilder(False, self.basedir)
+        b = FakeSubordinateBuilder(False, self.basedir)
         rp = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         return rp
 

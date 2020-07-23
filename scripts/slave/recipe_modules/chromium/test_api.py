@@ -13,8 +13,8 @@ class ChromiumTestApi(recipe_test_api.RecipeTestApi):
     def _sanitize_nonalpha(text):
       return ''.join(c if c.isalnum() else '_' for c in text)
 
-    for mastername in builder_dict:
-      for buildername in builder_dict[mastername]['builders']:
+    for mainname in builder_dict:
+      for buildername in builder_dict[mainname]['builders']:
         if 'mac' in buildername or 'Mac' in buildername:
           platform_name = 'mac'
         elif 'win' in buildername or 'Win' in buildername:
@@ -22,16 +22,16 @@ class ChromiumTestApi(recipe_test_api.RecipeTestApi):
         else:
           platform_name = 'linux'
         test = (
-            self.test('full_%s_%s' % (_sanitize_nonalpha(mastername),
+            self.test('full_%s_%s' % (_sanitize_nonalpha(mainname),
                                       _sanitize_nonalpha(buildername))) +
             self.m.platform.name(platform_name)
         )
-        if mastername.startswith('tryserver'):
+        if mainname.startswith('tryserver'):
           test += self.m.properties.tryserver(buildername=buildername,
-                                              mastername=mastername)
+                                              mainname=mainname)
         else:
           test += self.m.properties.generic(buildername=buildername,
-                                            mastername=mastername)
+                                            mainname=mainname)
 
         yield test
 

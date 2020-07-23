@@ -2,21 +2,21 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Utility class to build the webm master BuildFactory's.
+"""Utility class to build the webm main BuildFactory's.
 
 Based on gclient_factory.py and adds webm-specific steps."""
 
-from master.factory import gclient_factory
-from master.factory import webm_commands
-from master.factory.build_factory import BuildFactory
+from main.factory import gclient_factory
+from main.factory import webm_commands
+from main.factory.build_factory import BuildFactory
 
 import config
 
 
 class WebMFactory(object):
-  """Encapsulates data and methods common to the webm master.cfg file."""
+  """Encapsulates data and methods common to the webm main.cfg file."""
 
-  DEFAULT_TARGET_PLATFORM = config.Master.default_platform
+  DEFAULT_TARGET_PLATFORM = config.Main.default_platform
 
   def __init__(self, build_dir, target_platform=None):
     self._build_dir = build_dir
@@ -39,7 +39,7 @@ class WebMFactory(object):
     # if R('unit_tests'):  f.AddUnitTests()
 
   def WebMFactory(self, target='Release', clobber=False,
-                  tests=None, mode=None, slave_type='BuilderTester',
+                  tests=None, mode=None, subordinate_type='BuilderTester',
                   options=None, compile_timeout=1200, build_url=None,
                   project=None, factory_properties=None):
     factory_properties = factory_properties or {}

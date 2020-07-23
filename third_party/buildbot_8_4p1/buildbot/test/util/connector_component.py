@@ -15,7 +15,7 @@
 
 from buildbot.db import model
 from buildbot.test.util import db
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemain
 
 class FakeDBConnector(object):
     pass
@@ -38,7 +38,7 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
             self.db = FakeDBConnector()
             self.db.pool = self.db_pool
             self.db.model = model.Model(self.db)
-            self.db.master = fakemaster.make_master()
+            self.db.main = fakemain.make_main()
         d.addCallback(finish_setup)
         return d
 

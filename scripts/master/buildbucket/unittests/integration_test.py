@@ -19,8 +19,8 @@ import unittest
 import test_env  # pylint: disable=W0611
 
 from buildbot.status import builder as build_results
-from master.buildbucket import common, integration
-from master.unittests.deferred_resource_test import run_deferred
+from main.buildbucket import common, integration
+from main.unittests.deferred_resource_test import run_deferred
 from mock import Mock, call, ANY
 from twisted.internet import defer, reactor
 import apiclient
@@ -32,13 +32,13 @@ BUILDSET_TAG = 'buildset:%s' % BUILDSET
 LEASE_KEY = 42
 
 
-def fake_buildbot(one_slave=False):
+def fake_buildbot(one_subordinate=False):
   buildbot = Mock()
 
-  # Slaves
-  buildbot.get_connected_slaves.return_value = [buildbot.slave]
-  if not one_slave:
-    buildbot.get_connected_slaves.return_value.append(buildbot.slave2)
+  # Subordinates
+  buildbot.get_connected_subordinates.return_value = [buildbot.subordinate]
+  if not one_subordinate:
+    buildbot.get_connected_subordinates.return_value.append(buildbot.subordinate2)
 
   # Builders
   builders = {
@@ -85,7 +85,7 @@ class IntegratorTest(unittest.TestCase):
       'author': {'email': 'johndoe@chromium.org'},
       'message': 'hello world',
       'revision': 'deadbeef',
-      'branch': 'master',
+      'branch': 'main',
       'create_ts': 1419984000000000,  # 2014-11-31
       'project': 'chromium',
       'repoUrl': 'http://chromium.googlesource.com/chromium/src'
@@ -389,7 +389,7 @@ class IntegratorTest(unittest.TestCase):
       self.assertEqual(self.buildbucket.api.lease.call_count, 2)
 
   def test_max_one_lease(self):
-    bb = fake_buildbot(one_slave=True)
+    bb = fake_buildbot(one_subordinate=True)
     with self.create_integrator(bb, max_lease_count=1):
       with self.mock_build_peek():
         run_deferred(self.integrator.poll_builds())
@@ -411,9 +411,9 @@ class IntegratorTest(unittest.TestCase):
       # Assert added one buildset of two.
       self.assertEqual(bb.add_build_request.call_count, 1)
 
-  def test_nothing_is_scheduled_if_builders_do_not_have_connected_slaves(self):
+  def test_nothing_is_scheduled_if_builders_do_not_have_connected_subordinates(self):
     with self.create_integrator():
-      self.buildbot.get_connected_slaves.return_value = []
+      self.buildbot.get_connected_subordinates.return_value = []
 
       run_deferred(self.integrator.poll_builds())
 
@@ -605,7 +605,7 @@ class IntegratorTest(unittest.TestCase):
     with self.create_integrator():
       build = self.mock_existing_build()
 
-      # A build is marked during master stop.
+      # A build is marked during main stop.
       self.integrator.stop()
       run_deferred(self.integrator.on_build_finished(build, 'RETRY'))
       # Do not delete lease for RETRY builds.

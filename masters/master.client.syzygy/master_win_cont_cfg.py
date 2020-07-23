@@ -2,12 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master import master_config
-from master.factory import annotator_factory
+from main import main_config
+from main.factory import annotator_factory
 
 
 defaults = {'category': 'continuous'}
-helper = master_config.Helper(defaults)
+helper = main_config.Helper(defaults)
 B = helper.Builder
 D = helper.Dependent
 F = helper.Factory
@@ -16,7 +16,7 @@ AF = annotator_factory.AnnotatorFactory()
 
 
 # Continous build scheduler for Syzygy.
-S('syzygy_cont', branch='master', treeStableTimer=60)
+S('syzygy_cont', branch='main', treeStableTimer=60)
 
 
 # Windows continuous Release builder.
@@ -37,5 +37,5 @@ B('Syzygy Coverage', 'f_syzygy_win_cov', scheduler='syzygy_cont',
 F('f_syzygy_win_cov', AF.BaseFactory(recipe='syzygy/coverage'))
 
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   return helper.Update(c)

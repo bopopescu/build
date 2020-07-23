@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumMemory(Master.Master1):
+class ChromiumMemory(Main.Main1):
   project_name = 'Chromium Memory'
-  master_port = 8012
-  slave_port = 8112
-  master_port_alt = 8212
+  main_port = 8012
+  subordinate_port = 8112
+  main_port_alt = 8212
   buildbot_url = 'http://build.chromium.org/p/chromium.memory/'

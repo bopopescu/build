@@ -6,7 +6,7 @@
 
 Usage:
   upload_test_results('test-results.appspot.com',
-                      [('master', 'chromium.webkit')],
+                      [('main', 'chromium.webkit')],
                       ['times_ms.json', 'full_results.json'],
                       timeout_secs=120)
 """

@@ -22,7 +22,7 @@ from twisted.internet import reactor
 
 class StatusClient(pb.Referenceable):
     """To use this, call my .connected method with a RemoteReference to the
-    buildmaster's StatusClientPerspective object.
+    buildmain's StatusClientPerspective object.
     """
 
     def __init__(self, events):
@@ -76,10 +76,10 @@ class StatusClient(pb.Referenceable):
         print "logChunk[%s]: %s" % (ChunkTypes[channel], text)
 
 class TextClient:
-    def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
+    def __init__(self, main, events="steps", username="statusClient", passwd="clientpw"):
         """
-        @type  master: string
-        @param master: a host:port string to masters L{buildbot.status.client.PBListener}
+        @type  main: string
+        @param main: a host:port string to mains L{buildbot.status.client.PBListener}
 
         @type  username: string
         @param username: 
@@ -96,7 +96,7 @@ class TextClient:
          - 'logs': also announce stepETAUpdate, logStarted, logFinished
          - 'full': also announce log contents
         """        
-        self.master = master
+        self.main = main
         self.username = username
         self.passwd = passwd
         self.listener = StatusClient(events)
@@ -108,10 +108,10 @@ class TextClient:
 
     def startConnecting(self):
         try:
-            host, port = re.search(r'(.+):(\d+)', self.master).groups()
+            host, port = re.search(r'(.+):(\d+)', self.main).groups()
             port = int(port)
         except:
-            print "unparseable master location '%s'" % self.master
+            print "unparseable main location '%s'" % self.main
             print " expecting something more like localhost:8007"
             raise
         cf = pb.PBClientFactory()
@@ -127,13 +127,13 @@ class TextClient:
         if why.check(error.UnauthorizedLogin):
             print """
 Unable to login.. are you sure we are connecting to a
-buildbot.status.client.PBListener port and not to the slaveport?
+buildbot.status.client.PBListener port and not to the subordinateport?
 """
         reactor.stop()
         return why
     def disconnected(self, ref):
         print "lost connection"
-        # we can get here in one of two ways: the buildmaster has
+        # we can get here in one of two ways: the buildmain has
         # disconnected us (probably because it shut itself down), or because
         # we've been SIGINT'ed. In the latter case, our reactor is already
         # shut down, but we have no easy way of detecting that. So protect

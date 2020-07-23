@@ -179,7 +179,7 @@ class DevBuild:
 class ConsoleStatusResource(HtmlResource):
     """Main console class. It displays a user-oriented status page.
     Every change is a line in the page, and it shows the result of the first
-    build with this change for each slave."""
+    build with this change for each subordinate."""
 
     def __init__(self, orderByTime=False, repository=None,
                  builder_filter_fn=lambda builderName: True):
@@ -258,17 +258,17 @@ class ConsoleStatusResource(HtmlResource):
 
     @defer.deferredGenerator
     def getAllChanges(self, request, status, debugInfo, **kwargs):
-        master = request.site.buildbot_service.master
+        main = request.site.buildbot_service.main
         limit = min(100, max(1, int(request.args.get('limit', [25])[0])))
         wfd = defer.waitForDeferred(
-                master.db.changes.getRecentChanges(limit, **kwargs))
+                main.db.changes.getRecentChanges(limit, **kwargs))
         yield wfd
         chdicts = wfd.getResult()
 
         # convert those to Change instances
         wfd = defer.waitForDeferred(
             defer.gatherResults([
-                changes.Change.fromChdict(master, chdict)
+                changes.Change.fromChdict(main, chdict)
                 for chdict in chdicts ]))
         yield wfd
         allChanges = wfd.getResult()
@@ -426,9 +426,9 @@ class ConsoleStatusResource(HtmlResource):
             category = builder.category or "default"
             # Strip the category to keep only the text before the first |.
             # This is a hack to support the chromium usecase where they have
-            # multiple categories for each slave. We use only the first one.
+            # multiple categories for each subordinate. We use only the first one.
             # TODO(nsylvain): Create another way to specify "display category"
-            #     in master.cfg.
+            #     in main.cfg.
             category = category.split('|')[0]
             if not builderList.get(category):
                 builderList[category] = []
@@ -476,25 +476,25 @@ class ConsoleStatusResource(HtmlResource):
 
         return cs
 
-    def displaySlaveLine(self, status, builderList, debugInfo):
+    def displaySubordinateLine(self, status, builderList, debugInfo):
         """Display a line the shows the current status for all the builders we
         care about."""
 
-        nbSlaves = 0
+        nbSubordinates = 0
 
         # Get the number of builders.
         for category in builderList:
-            nbSlaves += len(builderList[category])
+            nbSubordinates += len(builderList[category])
 
         # Get the categories, and order them alphabetically.
         categories = builderList.keys()
         categories.sort()
 
-        slaves = {}
+        subordinates = {}
 
         # For each category, we display each builder.
         for category in categories:
-            slaves[category] = []
+            subordinates[category] = []
             # For each builder in this category, we set the build info and we
             # display the box.
             for builder in builderList[category]:
@@ -518,9 +518,9 @@ class ConsoleStatusResource(HtmlResource):
                         s["color"] = getResultsClass(build.getResults(), None,
                                                       False)
 
-                slaves[category].append(s)
+                subordinates[category].append(s)
 
-        return slaves
+        return subordinates
 
     def displayStatusLine(self, builderList, allBuilds, revision, debugInfo):
         """Display the boxes that represent the status of each builder in the
@@ -528,9 +528,9 @@ class ConsoleStatusResource(HtmlResource):
         happened during these builds."""
 
         details = []
-        nbSlaves = 0
+        nbSubordinates = 0
         for category in builderList:
-            nbSlaves += len(builderList[category])
+            nbSubordinates += len(builderList[category])
 
         # Sort the categories.
         categories = builderList.keys()
@@ -688,7 +688,7 @@ class ConsoleStatusResource(HtmlResource):
 
         if builderList:
             subs["categories"] = self.displayCategories(builderList, debugInfo)
-            subs['slaves'] = self.displaySlaveLine(status, builderList,
+            subs['subordinates'] = self.displaySubordinateLine(status, builderList,
                                                    debugInfo)
         else:
             subs["categories"] = []
@@ -824,8 +824,8 @@ class ConsoleStatusResource(HtmlResource):
 
             templates = request.site.buildbot_service.templates
             template = templates.get_template("console.html")
-            cxt['mastername'] = (
-                request.site.buildbot_service.master.properties['mastername'])
+            cxt['mainname'] = (
+                request.site.buildbot_service.main.properties['mainname'])
             data = template.render(cxt)
 
             # Clean up the cache.

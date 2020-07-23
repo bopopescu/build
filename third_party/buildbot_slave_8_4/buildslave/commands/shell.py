@@ -15,10 +15,10 @@
 
 import os
 
-from buildslave.commands import base
-from buildslave import runprocess
+from buildsubordinate.commands import base
+from buildsubordinate import runprocess
 
-class SlaveShellCommand(base.Command):
+class SubordinateShellCommand(base.Command):
     """This is a Command which runs a shell command. The args dict contains
     the following keys:
 
@@ -37,7 +37,7 @@ class SlaveShellCommand(base.Command):
         - ['want_stdout']: 0 if stdout should be thrown away
         - ['want_stderr']: 0 if stderr should be thrown away
         - ['usePTY']: True or False if the command should use a PTY (defaults to
-                      configuration of the slave)
+                      configuration of the subordinate)
         - ['not_really']: 1 to skip execution and return rc=0
         - ['timeout']: seconds of silence to tolerate before killing command
         - ['maxTime']: seconds before killing command
@@ -45,7 +45,7 @@ class SlaveShellCommand(base.Command):
                         filename of a local log file. This local file will be
                         watched just like 'tail -f', and all changes will be
                         written to 'log' status updates.
-        - ['logEnviron']: False to not log the environment variables on the slave
+        - ['logEnviron']: False to not log the environment variables on the subordinate
 
     ShellCommand creates the following status messages:
         - {'stdout': data} : when stdout data is available
@@ -73,7 +73,7 @@ class SlaveShellCommand(base.Command):
                          sendRC=True,
                          initialStdin=args.get('initial_stdin'),
                          logfiles=args.get('logfiles', {}),
-                         usePTY=args.get('usePTY', "slave-config"),
+                         usePTY=args.get('usePTY', "subordinate-config"),
                          logEnviron=args.get('logEnviron', True),
                          )
         c._reactor = self._reactor

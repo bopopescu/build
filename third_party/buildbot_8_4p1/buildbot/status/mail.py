@@ -58,7 +58,7 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
-def defaultMessage(mode, name, build, results, master_status):
+def defaultMessage(mode, name, build, results, main_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
     result = Results[results]
@@ -80,16 +80,16 @@ def defaultMessage(mode, name, build, results, master_status):
     if ss and ss.project:
         project = ss.project
     else:
-        project = master_status.getTitle()
+        project = main_status.getTitle()
     text += " on builder %s while building %s.\n" % (name, project)
-    if master_status.getURLForThing(build):
-        text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
+    if main_status.getURLForThing(build):
+        text += "Full details are available at:\n %s\n" % main_status.getURLForThing(build)
     text += "\n"
 
-    if master_status.getBuildbotURL():
-        text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
+    if main_status.getBuildbotURL():
+        text += "Buildbot URL: %s\n\n" % urllib.quote(main_status.getBuildbotURL(), '/:')
 
-    text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
+    text += "Buildsubordinate for this Build: %s\n\n" % build.getSubordinatename()
     text += "Build Reason: %s\n" % build.getReason()
 
     source = ""
@@ -245,7 +245,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         @type  messageFormatter: func
         @param messageFormatter: function taking (mode, name, build, result,
-                                 master_status) and returning a dictionary
+                                 main_status) and returning a dictionary
                                  containing two required keys "body" and "type",
                                  with a third optional key, "subject". The
                                  "body" key gives a string that contains the
@@ -312,7 +312,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.buildSetSummary = buildSetSummary
         self.buildSetSubscription = None
         self.watched = []
-        self.master_status = None
+        self.main_status = None
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
@@ -324,20 +324,20 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def setServiceParent(self, parent):
         """
-        @type  parent: L{buildbot.master.BuildMaster}
+        @type  parent: L{buildbot.main.BuildMain}
         """
         base.StatusReceiverMultiService.setServiceParent(self, parent)
 
     def setup(self):
-        self.master_status = self.parent.getStatus()
-        self.master_status.subscribe(self)
-        self.master = self.master_status.master
+        self.main_status = self.parent.getStatus()
+        self.main_status.subscribe(self)
+        self.main = self.main_status.main
 
     def startService(self):
         self.setup()
         if self.buildSetSummary:
             self.buildSetSubscription = \
-            self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
+            self.main.subscribeToBuildsetCompletions(self.buildsetFinished)
 
         base.StatusReceiverMultiService.startService(self)
 
@@ -349,7 +349,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         return base.StatusReceiverMultiService.stopService(self)
 
     def disownServiceParent(self):
-        self.master_status.unsubscribe(self)
+        self.main_status.unsubscribe(self)
         for w in self.watched:
             w.unsubscribe(self)
         return base.StatusReceiverMultiService.disownServiceParent(self)
@@ -426,24 +426,24 @@ class MailNotifier(base.StatusReceiverMultiService):
         dl = []
         for breq in breqs:
             buildername = breq['buildername']
-            builders.append(self.master_status.getBuilder(buildername))
-            d = self.master.db.builds.getBuildsForRequest(breq['brid'])
+            builders.append(self.main_status.getBuilder(buildername))
+            d = self.main.db.builds.getBuildsForRequest(breq['brid'])
             d.addCallback(builddicts.append)
             dl.append(d)
         d = defer.DeferredList(dl)
         d.addCallback(self._gotBuilds, builddicts, buildset, builders)
 
     def _gotBuildSet(self, buildset, bsid):
-        d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
+        d = self.main.db.buildrequests.getBuildRequests(bsid=bsid)
         d.addCallback(self._gotBuildRequests, buildset)
 
     def buildsetFinished(self, bsid, result):
-        d = self.master.db.buildsets.getBuildset(bsid=bsid)
+        d = self.main.db.buildsets.getBuildset(bsid=bsid)
         d.addCallback(self._gotBuildSet, bsid)
 
         return d
 
-    def getCustomMesgData(self, mode, name, build, results, master_status):
+    def getCustomMesgData(self, mode, name, build, results, main_status):
         #
         # logs is a list of tuples that contain the log
         # name, log url, and the log contents as a list of strings.
@@ -456,20 +456,20 @@ class MailNotifier(base.StatusReceiverMultiService):
             logName = logf.getName()
             logs.append(('%s.%s' % (stepName, logName),
                          '%s/steps/%s/logs/%s' % (
-                             master_status.getURLForThing(build),
+                             main_status.getURLForThing(build),
                              stepName, logName),
                          logf.getText().splitlines(),
                          logStatus))
 
         attrs = {'builderName': name,
-                 'title': master_status.getTitle(),
+                 'title': main_status.getTitle(),
                  'mode': mode,
                  'result': Results[results],
-                 'buildURL': master_status.getURLForThing(build),
-                 'buildbotURL': master_status.getBuildbotURL(),
+                 'buildURL': main_status.getURLForThing(build),
+                 'buildbotURL': main_status.getBuildbotURL(),
                  'buildText': build.getText(),
                  'buildProperties': build.getProperties(),
-                 'slavename': build.getSlavename(),
+                 'subordinatename': build.getSubordinatename(),
                  'reason':  build.getReason(),
                  'responsibleUsers': build.getResponsibleUsers(),
                  'branch': "",
@@ -559,12 +559,12 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
             attrs = self.getCustomMesgData(self.mode, name, build, results,
-                                           self.master_status)
+                                           self.main_status)
             text, type = self.customMesg(attrs)
             msgdict = { 'body' : text, 'type' : type }
         else:
             msgdict = self.messageFormatter(self.mode, name, build, results,
-                                            self.master_status)
+                                            self.main_status)
 
         return msgdict
 
@@ -594,7 +594,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             if 'subject' in tmp:
               msgdict['subject'] = tmp['subject']
 
-        m = self.createEmail(msgdict, name, self.master_status.getTitle(),
+        m = self.createEmail(msgdict, name, self.main_status.getTitle(),
                              results, builds, patches, logs)
 
         # now, who is this message going to?

@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master import failures_notifier
-from master import master_utils
+from main import failures_notifier
+from main import main_utils
 
 # This is the list of the builder categories and the corresponding critical
 # steps. If one critical step fails, gatekeeper will close the tree
@@ -60,19 +60,19 @@ exclusions = {
 forgiving_steps = ['update_scripts', 'update', 'svnkill', 'taskkill',
                    'archive_build', 'start_crash_handler']
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   c['status'].append(failures_notifier.FailuresNotifier(
-      fromaddr=active_master.from_address,
+      fromaddr=active_main.from_address,
       categories_steps=categories_steps,
       exclusions=exclusions,
-      relayhost=config.Master.smtp,
+      relayhost=config.Main.smtp,
       subject='buildbot %(result)s in %(projectName)s on %(builder)s, '
               'revision %(revision)s',
-      extraRecipients=active_master.tree_closing_notification_recipients,
-      lookup=master_utils.FilterDomain(),
+      extraRecipients=active_main.tree_closing_notification_recipients,
+      lookup=main_utils.FilterDomain(),
       forgiving_steps=forgiving_steps,
       use_getname=True,
-      public_html='../master.chromium/public_html',
+      public_html='../main.chromium/public_html',
       sheriffs=['sheriff_memory'],
       status_header='Failure notification for "%(steps)s" on "%(builder)s".\n'
           'Please see if the failures are related to your commit and take '
@@ -113,23 +113,23 @@ def Update(config, active_master, c):
    ],
   }
   c['status'].append(failures_notifier.FailuresNotifier(
-      fromaddr=active_master.from_address,
+      fromaddr=active_main.from_address,
       categories_steps=drm_categories_steps,
       exclusions=exclusions,
-      relayhost=config.Master.smtp,
+      relayhost=config.Main.smtp,
       subject='drmemory buildbot %(result)s in %(projectName)s on '
               '%(builder)s, revision %(revision)s',
       sendToInterestedUsers=True,
       extraRecipients=(
-          active_master.tree_closing_notification_recipients +
+          active_main.tree_closing_notification_recipients +
           # Also send e-mails to the Dr.Memory team.
           ['bruening+drmfailure@google.com',
            'zhaoqin+drmfailure@google.com',
           ]),
-      lookup=master_utils.FilterDomain(),
+      lookup=main_utils.FilterDomain(),
       forgiving_steps=forgiving_steps,
       use_getname=True,
-      public_html='../master.chromium/public_html',
+      public_html='../main.chromium/public_html',
       sheriffs=['sheriff_memory'],
       status_header='Failure notification for "%(steps)s" on "%(builder)s".\n\n'
           'NOTE: This bot is in testing mode, but most of the failures are '

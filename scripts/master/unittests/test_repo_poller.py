@@ -15,7 +15,7 @@ from twisted.mail import smtp
 from twisted.trial import unittest
 import buildbot.changes.base
 
-class MasterProxy(object):
+class MainProxy(object):
   def __init__(self):
     self.changes = []
   def addChange(self, *args, **kwargs):
@@ -24,9 +24,9 @@ class MasterProxy(object):
 
 class PollingChangeSourceProxy(service.Service):
   def __init__(self):
-    self.master = None
+    self.main = None
   def startService(self):
-    self.master = MasterProxy()
+    self.main = MainProxy()
     service.Service.startService(self)
   def stopService(self):
     return service.Service.stopService(self)
@@ -42,13 +42,13 @@ def sendmail_proxy(smtphost, from_addr, to_addrs, msg,
 buildbot.changes.base.PollingChangeSource = PollingChangeSourceProxy
 smtp.sendmail = sendmail_proxy
 
-from master.repo_poller import RepoPoller
+from main.repo_poller import RepoPoller
 
 REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'repo'))
 REPO_BIN = os.path.join(REPO_DIR, 'repo')
 REPO_URL = os.path.join(REPO_DIR, 'clone.bundle')
 
-REPO_BRANCHES = ['master', 'foo_branch', 'bar_branch']
+REPO_BRANCHES = ['main', 'foo_branch', 'bar_branch']
 
 REPO_MANIFEST = """<?xml version="1.0" encoding="UTF-8"?>
 <manifest>
@@ -96,11 +96,11 @@ class TestRepoPoller(unittest.TestCase):
     for d in git_dirs + [manifest_dir]:
       self.assertFalse(_cmd(['git', 'init', '--quiet'], d))
 
-    def _masterToFront(x, y): return int(y == 'master') - int(x == 'master')
-    REPO_BRANCHES.sort(cmp=_masterToFront)
+    def _mainToFront(x, y): return int(y == 'main') - int(x == 'main')
+    REPO_BRANCHES.sort(cmp=_mainToFront)
 
     for n, branch in enumerate(REPO_BRANCHES):
-      # when n==0 we're creating master, and 'checkout -b' will fail
+      # when n==0 we're creating main, and 'checkout -b' will fail
       self.assertFalse(_cmd(['git', 'checkout', '-q', '-b', branch],
                             manifest_dir)
                        and n != 0)
@@ -122,7 +122,7 @@ class TestRepoPoller(unittest.TestCase):
 
     for n, branch in enumerate(REPO_BRANCHES):
       for x, git_dir in enumerate(git_dirs):
-        # when n==0 we're creating master, and 'checkout -b' will fail
+        # when n==0 we're creating main, and 'checkout -b' will fail
         self.assertFalse(_cmd(['git', 'checkout', '-q', '-b', branch], git_dir)
                          and n != 0)
         fh = open(os.path.join(git_dir, 'file%d.txt' % x), 'w')
@@ -147,7 +147,7 @@ class TestRepoPoller(unittest.TestCase):
     shutil.rmtree(self.workdir)
 
   def _modifySrcFile(self, gitname, filename, comment='comment',
-                     branch='master'):
+                     branch='main'):
     src_dir = os.path.join(self.repo_src, gitname)
     self.assertFalse(_cmd(['git', 'checkout', branch], src_dir))
     src_file = os.path.join(src_dir, filename)
@@ -184,9 +184,9 @@ class TestRepoPoller(unittest.TestCase):
         len(self.poller.comparator.tag_order), INITIAL_REVS_DETECTED + 1,
         "%d total revisions after a single commit." %
         (INITIAL_REVS_DETECTED + 1))
-    self.assertEqual(len(self.poller.master.changes), 1,
-                     "One change in master")
-    change = self.poller.master.changes[0][1]
+    self.assertEqual(len(self.poller.main.changes), 1,
+                     "One change in main")
+    change = self.poller.main.changes[0][1]
     self.assertEqual(change['files'], ['file2.txt'],
                      'File(s) in change.')
     self.assertEqual(change['repository'], os.path.join(self.repo_src, 'git2'),
@@ -221,15 +221,15 @@ class TestRepoPoller(unittest.TestCase):
     self.assertEqual(
       len(self.poller.comparator.tag_order), INITIAL_REVS_DETECTED + 3,
       "%d total revisions after three commits." % (INITIAL_REVS_DETECTED + 3))
-    self.assertEqual(len(self.poller.master.changes), 3,
-                     "Three changes in master")
-    self.assertEqual(self.poller.master.changes[0][1]['repository'],
+    self.assertEqual(len(self.poller.main.changes), 3,
+                     "Three changes in main")
+    self.assertEqual(self.poller.main.changes[0][1]['repository'],
                      os.path.join(self.repo_src, 'git0'),
                      'Commit ordering by timestamp')
-    self.assertEqual(self.poller.master.changes[1][1]['repository'],
+    self.assertEqual(self.poller.main.changes[1][1]['repository'],
                      os.path.join(self.repo_src, 'git1'),
                      'Commit ordering by timestamp')
-    self.assertEqual(self.poller.master.changes[2][1]['repository'],
+    self.assertEqual(self.poller.main.changes[2][1]['repository'],
                      os.path.join(self.repo_src, 'git2'),
                      'Commit ordering by timestamp')
 
@@ -249,7 +249,7 @@ class TestRepoPoller(unittest.TestCase):
     yield wfd
     wfd.getResult()
 
-    comments = [change[1]['comments'] for change in self.poller.master.changes]
+    comments = [change[1]['comments'] for change in self.poller.main.changes]
     self.assertEqual(comments, ['c%d' % i for i in range(5)],
                      'Stable sort')
 
@@ -292,15 +292,15 @@ class TestRepoPoller(unittest.TestCase):
     yield wfd
     wfd.getResult()
 
-    ch1 = self.poller.master.changes[0][1]
+    ch1 = self.poller.main.changes[0][1]
     self.assertEqual(ch1['properties']['manifest_branch'], 'foo_branch')
 
-    ch2 = self.poller.master.changes[1][1]
+    ch2 = self.poller.main.changes[1][1]
     self.assertEqual(ch2['properties']['manifest_branch'], 'bar_branch')
 
     # a second round of different changes
     self._modifySrcFile('git0', 'file0.txt', branch='bar_branch')
-    self._modifySrcFile('git1', 'file1.txt', branch='master')
+    self._modifySrcFile('git1', 'file1.txt', branch='main')
 
     d = self.poller.poll()
     wfd = defer.waitForDeferred(d)
@@ -308,10 +308,10 @@ class TestRepoPoller(unittest.TestCase):
     wfd.getResult()
 
     # branches are polled in the order passed, in this case, REPO_BRANCHES'
-    ch1 = self.poller.master.changes[2][1]
-    self.assertEqual(ch1['properties']['manifest_branch'], 'master')
+    ch1 = self.poller.main.changes[2][1]
+    self.assertEqual(ch1['properties']['manifest_branch'], 'main')
 
-    ch2 = self.poller.master.changes[3][1]
+    ch2 = self.poller.main.changes[3][1]
     self.assertEqual(ch2['properties']['manifest_branch'], 'bar_branch')
 
 ## Helpers

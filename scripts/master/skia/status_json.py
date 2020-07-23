@@ -15,7 +15,7 @@ class JsonStatusHelper(object):
 
   This class:
     - Monkeypatches buildbot.status.web.status_json.JsonStatusResource.__init__.
-    - Is intended to be used in master.cfg files before the JSON status targets
+    - Is intended to be used in main.cfg files before the JSON status targets
       are instantiated.
     - Is NOT thread-safe, however any number of JsonStatusHelpers may be used
       sequentially or simultaneously within the same thread.
@@ -45,7 +45,7 @@ class TryBuildersJsonResource(status_json.JsonResource):
 
   We add filtering to display only the try builders.
   """
-  help = """List of all the try builders defined on a master."""
+  help = """List of all the try builders defined on a main."""
   pageTitle = 'Builders'
 
   def __init__(self, status):

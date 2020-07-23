@@ -31,32 +31,32 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
 from buildbot.process import metrics
 
 """
-BuildStep and RemoteCommand classes for master-side representation of the
+BuildStep and RemoteCommand classes for main-side representation of the
 build process
 """
 
 class RemoteCommand(pb.Referenceable):
     """
-    I represent a single command to be run on the slave. I handle the details
-    of reliably gathering status updates from the slave (acknowledging each),
+    I represent a single command to be run on the subordinate. I handle the details
+    of reliably gathering status updates from the subordinate (acknowledging each),
     and (eventually, in a future release) recovering from interrupted builds.
-    This is the master-side object that is known to the slave-side
-    L{buildbot.slave.bot.SlaveBuilder}, to which status updates are sent.
+    This is the main-side object that is known to the subordinate-side
+    L{buildbot.subordinate.bot.SubordinateBuilder}, to which status updates are sent.
 
     My command should be started by calling .run(), which returns a
     Deferred that will fire when the command has finished, or will
     errback if an exception is raised.
     
     Typically __init__ or run() will set up self.remote_command to be a
-    string which corresponds to one of the SlaveCommands registered in
-    the buildslave, and self.args to a dictionary of arguments that will
-    be passed to the SlaveCommand instance.
+    string which corresponds to one of the SubordinateCommands registered in
+    the buildsubordinate, and self.args to a dictionary of arguments that will
+    be passed to the SubordinateCommand instance.
 
     start, remoteUpdate, and remoteComplete are available to be overridden
 
     @type  commandCounter: list of one int
     @cvar  commandCounter: provides a unique value for each
-                           RemoteCommand executed across all slaves
+                           RemoteCommand executed across all subordinates
     @type  active:         boolean
     @ivar  active:         whether the command is currently running
     """
@@ -68,9 +68,9 @@ class RemoteCommand(pb.Referenceable):
         @type  remote_command: string
         @param remote_command: remote command to start.  This will be
                                passed to
-                               L{buildbot.slave.bot.SlaveBuilder.remote_startCommand}
+                               L{buildbot.subordinate.bot.SubordinateBuilder.remote_startCommand}
                                and needs to have been registered
-                               slave-side in L{buildbot.slave.registry}
+                               subordinate-side in L{buildbot.subordinate.registry}
         @type  args:           dict
         @param args:           arguments to send to the remote command
         """
@@ -94,7 +94,7 @@ class RemoteCommand(pb.Referenceable):
         # _finished is called with an error for unknown commands, errors
         # that occur while the command is starting (including OSErrors in
         # exec()), StaleBroker (when the connection was lost before we
-        # started), and pb.PBConnectionLost (when the slave isn't responding
+        # started), and pb.PBConnectionLost (when the subordinate isn't responding
         # over this connection, perhaps it had a power failure, or NAT
         # weirdness). If this happens, self.deferred is fired right away.
         d.addErrback(self._finished)
@@ -105,7 +105,7 @@ class RemoteCommand(pb.Referenceable):
 
     def start(self):
         """
-        Tell the slave to start executing the remote command.
+        Tell the subordinate to start executing the remote command.
 
         @rtype:   L{twisted.internet.defer.Deferred}
         @returns: a deferred that will fire when the remote command is
@@ -139,7 +139,7 @@ class RemoteCommand(pb.Referenceable):
             log.msg(" but our .remote went away")
             return
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
-            log.msg("RemoteCommand.disconnect: lost slave")
+            log.msg("RemoteCommand.disconnect: lost subordinate")
             self.remote = None
             self._finished(why)
             return
@@ -149,7 +149,7 @@ class RemoteCommand(pb.Referenceable):
         
         d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
                                 self.commandID, str(why))
-        # the slave may not have remote_interruptCommand
+        # the subordinate may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d
 
@@ -161,13 +161,13 @@ class RemoteCommand(pb.Referenceable):
 
     def remote_update(self, updates):
         """
-        I am called by the slave's L{buildbot.slave.bot.SlaveBuilder} so
+        I am called by the subordinate's L{buildbot.subordinate.bot.SubordinateBuilder} so
         I can receive updates from the running remote command.
 
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildsubordinate.messageReceivedFromSubordinate()
         max_updatenum = 0
         for (update, num) in updates:
             #log.msg("update[%d]:" % num)
@@ -175,7 +175,7 @@ class RemoteCommand(pb.Referenceable):
                 if self.active: # ignore late updates
                     self.remoteUpdate(update)
             except:
-                # log failure, terminate build, let slave retire the update
+                # log failure, terminate build, let subordinate retire the update
                 self._finished(Failure())
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
@@ -188,16 +188,16 @@ class RemoteCommand(pb.Referenceable):
 
     def remote_complete(self, failure=None):
         """
-        Called by the slave's L{buildbot.slave.bot.SlaveBuilder} to
+        Called by the subordinate's L{buildbot.subordinate.bot.SubordinateBuilder} to
         notify me the remote command has finished.
 
         @type  failure: L{twisted.python.failure.Failure} or None
 
         @rtype: None
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildsubordinate.messageReceivedFromSubordinate()
         # call the real remoteComplete a moment later, but first return an
-        # acknowledgement so the slave can retire the completion message.
+        # acknowledgement so the subordinate can retire the completion message.
         if self.active:
             reactor.callLater(0, self._finished, failure)
         return None
@@ -224,15 +224,15 @@ class RemoteCommand(pb.Referenceable):
         will be None if the command completed normally, or a Failure
         instance in one of the following situations:
 
-         - the slave was lost before the command was started
-         - the slave didn't respond to the startCommand message
-         - the slave raised an exception while starting the command
+         - the subordinate was lost before the command was started
+         - the subordinate didn't respond to the startCommand message
+         - the subordinate raised an exception while starting the command
            (bad command name, bad args, OSError from missing executable)
-         - the slave raised an exception while finishing the command
+         - the subordinate raised an exception while finishing the command
            (they send back a remote_complete message with a Failure payload)
 
         and also (for now):
-         -  slave disconnected while the command was running
+         -  subordinate disconnected while the command was running
         
         This method should do cleanup, like closing log files. It should
         normally return the 'failure' argument, so that any exceptions will
@@ -247,7 +247,7 @@ class LoggedRemoteCommand(RemoteCommand):
     I am a L{RemoteCommand} which gathers output from the remote command into
     one or more local log files. My C{self.logs} dictionary contains
     references to these L{buildbot.status.logfile.LogFile} instances. Any
-    stdout/stderr/header updates from the slave will be put into
+    stdout/stderr/header updates from the subordinate will be put into
     C{self.logs['stdio']}, if it exists. If the remote command uses other log
     files, they will go into other entries in C{self.logs}.
 
@@ -469,7 +469,7 @@ class LogLineObserver(LogObserver):
 
 
 class RemoteShellCommand(LoggedRemoteCommand):
-    """This class helps you run a shell command on the build slave. It will
+    """This class helps you run a shell command on the build subordinate. It will
     accumulate all the command's output into a Log named 'stdio'. When the
     command is finished, it will fire a Deferred. You can then check the
     results of the command and parse the output however you like."""
@@ -477,7 +477,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
-                 usePTY="slave-config", logEnviron=True):
+                 usePTY="subordinate-config", logEnviron=True):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -498,10 +498,10 @@ class RemoteShellCommand(LoggedRemoteCommand):
 
         @type  env:     dict of string->string
         @param env:     environment variables to add or change for the
-                        slave.  Each command gets a separate
-                        environment; all inherit the slave's initial
+                        subordinate.  Each command gets a separate
+                        environment; all inherit the subordinate's initial
                         one.  TODO: make it possible to delete some or
-                        all of the slave's environment.
+                        all of the subordinate's environment.
 
         @type  want_stdout: bool
         @param want_stdout: defaults to True. Set to False if stdout should
@@ -517,7 +517,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                         the command is hung and should be killed. Use
                         None to disable the timeout.
 
-        @param logEnviron: whether to log env vars on the slave side
+        @param logEnviron: whether to log env vars on the subordinate side
 
         @type  maxTime: int
         @param maxTime: tell the remote that if the command fails to complete
@@ -527,7 +527,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
 
         self.command = command # stash .command, set it later
         if env is not None:
-            # avoid mutating the original master.cfg dictionary. Each
+            # avoid mutating the original main.cfg dictionary. Each
             # ShellCommand gets its own copy, any start() methods won't be
             # able to modify the original.
             env = env.copy()
@@ -546,9 +546,9 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def start(self):
         self.args['command'] = self.command
         if self.remote_command == "shell":
-            # non-ShellCommand slavecommands are responsible for doing this
+            # non-ShellCommand subordinatecommands are responsible for doing this
             # fixup themselves
-            if self.step.slaveVersion("shell", "old") == "old":
+            if self.step.subordinateVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
@@ -561,8 +561,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
 class BuildStep:
     """
     I represent a single step of the build process. This step may involve
-    zero or more commands to be run in the build slave, as well as arbitrary
-    processing on the master side. Regardless of how many slave commands are
+    zero or more commands to be run in the build subordinate, as well as arbitrary
+    processing on the main side. Regardless of how many subordinate commands are
     run, the BuildStep will result in a single status value.
 
     The step is started by calling startStep(), which returns a Deferred that
@@ -667,12 +667,12 @@ class BuildStep:
         # afterwards.
         self.build = build
 
-    def setBuildSlave(self, buildslave):
-        self.buildslave = buildslave
+    def setBuildSubordinate(self, buildsubordinate):
+        self.buildsubordinate = buildsubordinate
 
     def setDefaultWorkdir(self, workdir):
         # The Build calls this just after __init__().  ShellCommand
-        # and variants use a slave-side workdir, but some other steps
+        # and variants use a subordinate-side workdir, but some other steps
         # do not. Subclasses which use a workdir should use the value
         # set by this method unless they were constructed with
         # something more specific.
@@ -723,14 +723,14 @@ class BuildStep:
         Build's status, in addition to marking the build as failing.
 
         The deferred will errback if the step encounters an exception,
-        including an exception on the slave side (or if the slave goes away
+        including an exception on the subordinate side (or if the subordinate goes away
         altogether). Failures in shell commands (rc!=0) will B{not} cause an
         errback, in general the BuildStep will evaluate the results and
         decide whether to treat it as a WARNING or FAILURE.
 
         @type remote: L{twisted.spread.pb.RemoteReference}
-        @param remote: a reference to the slave's
-                       L{buildbot.slave.bot.SlaveBuilder} instance where any
+        @param remote: a reference to the subordinate's
+                       L{buildbot.subordinate.bot.SubordinateBuilder} instance where any
                        RemoteCommands may be run
         """
 
@@ -742,12 +742,12 @@ class BuildStep:
             if not isinstance(access, locks.LockAccess):
                 # Buildbot 0.7.7 compability: user did not specify access
                 access = access.defaultAccess()
-            lock = self.build.builder.botmaster.getLockByID(access.lockid)
+            lock = self.build.builder.botmain.getLockByID(access.lockid)
             lock_list.append((lock, access))
         self.locks = lock_list
-        # then narrow SlaveLocks down to the slave that this build is being
+        # then narrow SubordinateLocks down to the subordinate that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        self.locks = [(l.getLock(self.build.subordinatebuilder), la) for l, la in self.locks]
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
@@ -832,7 +832,7 @@ class BuildStep:
         """Begin the step. Override this method and add code to do local
         processing, fire off remote commands, etc.
 
-        To spawn a command in the buildslave, create a RemoteCommand instance
+        To spawn a command in the buildsubordinate, create a RemoteCommand instance
         and run it with self.runCommand::
 
           c = RemoteCommandFoo(args)
@@ -891,7 +891,7 @@ class BuildStep:
 
     def interrupt(self, reason):
         """Halt the command, either because the user has decided to cancel
-        the build ('reason' is a string), or because the slave has
+        the build ('reason' is a string), or because the subordinate has
         disconnected ('reason' is a ConnectionLost Failure). Any further
         local processing should be skipped, and the Step completed with an
         error status. The results text should say something useful like
@@ -918,7 +918,7 @@ class BuildStep:
             # that this should just be exception due to interrupt
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
-            # due to slave lost
+            # due to subordinate lost
             results = EXCEPTION
             self.step_status.setText(self.describe(True) +
                                  ["interrupted"])
@@ -973,30 +973,30 @@ class BuildStep:
 
     # utility methods that BuildSteps may find useful
 
-    def slaveVersion(self, command, oldversion=None):
-        """Return the version number of the given slave command. For the
-        commands defined in buildbot.slave.commands, this is the value of
+    def subordinateVersion(self, command, oldversion=None):
+        """Return the version number of the given subordinate command. For the
+        commands defined in buildbot.subordinate.commands, this is the value of
         'cvs_ver' at the top of that file. Non-existent commands will return
-        a value of None. Buildslaves running buildbot-0.5.0 or earlier did
-        not respond to the version query: commands on those slaves will
+        a value of None. Buildsubordinates running buildbot-0.5.0 or earlier did
+        not respond to the version query: commands on those subordinates will
         return a value of OLDVERSION, so you can distinguish between old
-        buildslaves and missing commands.
+        buildsubordinates and missing commands.
 
-        If you know that <=0.5.0 buildslaves have the command you want (CVS
+        If you know that <=0.5.0 buildsubordinates have the command you want (CVS
         and SVN existed back then, but none of the other VC systems), then it
         makes sense to call this with oldversion='old'. If the command you
         want is newer than that, just leave oldversion= unspecified, and the
-        command will return None for a buildslave that does not implement the
+        command will return None for a buildsubordinate that does not implement the
         command.
         """
-        return self.build.getSlaveCommandVersion(command, oldversion)
+        return self.build.getSubordinateCommandVersion(command, oldversion)
 
-    def slaveVersionIsOlderThan(self, command, minversion):
-        sv = self.build.getSlaveCommandVersion(command, None)
+    def subordinateVersionIsOlderThan(self, command, minversion):
+        sv = self.build.getSubordinateCommandVersion(command, None)
         if sv is None:
             return True
         # the version we get back is a string form of the CVS version number
-        # of the slave's buildbot/slave/commands.py, something like 1.39 .
+        # of the subordinate's buildbot/subordinate/commands.py, something like 1.39 .
         # This might change in the future (I might move away from CVS), but
         # if so I'll keep updating that string with suitably-comparable
         # values.
@@ -1004,8 +1004,8 @@ class BuildStep:
             return True
         return False
 
-    def getSlaveName(self):
-        return self.build.getSlaveName()
+    def getSubordinateName(self):
+        return self.build.getSubordinateName()
 
     def addLog(self, name):
         loog = self.step_status.addLog(name)
@@ -1062,7 +1062,7 @@ class BuildStep:
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
-        c.buildslave = self.buildslave
+        c.buildsubordinate = self.buildsubordinate
         d = c.run(self, self.remote)
         return d
 
@@ -1196,9 +1196,9 @@ class LoggingBuildStep(BuildStep):
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
         self.step_status.setText(self.describe(True) +
-                                 ["exception", "slave", "lost"])
-        self.step_status.setText2(["exception", "slave", "lost"])
-        # Retry if we're stopping the reactor (resarting the master)
+                                 ["exception", "subordinate", "lost"])
+        self.step_status.setText2(["exception", "subordinate", "lost"])
+        # Retry if we're stopping the reactor (resarting the main)
         return self.finished(RETRY if reactor._stopped else EXCEPTION)
 
     # to refine the status output, override one or more of the following

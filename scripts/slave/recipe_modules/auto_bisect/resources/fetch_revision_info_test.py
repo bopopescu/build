@@ -38,7 +38,7 @@ class ChromiumRevisionsTest(unittest.TestCase):
                      '(even if they are in\nthe chevron).\n\n'
                      'BUG=544859\nBUG=548160\n\nReview URL: '
                      'https://codereview.chromium.org/1414343003\n\n'
-                     'Cr-Commit-Position: refs/heads/master@{#356400}'),
+                     'Cr-Commit-Position: refs/heads/main@{#356400}'),
             'date': 'Tue Oct 27 21:26:30 2015',
             'subject': ('[Extensions] Fix hiding browser actions '
                         'without the toolbar redesign'),

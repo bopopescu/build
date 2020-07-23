@@ -8,7 +8,7 @@ This is based on commands.py and adds chromium-specific commands."""
 
 from buildbot.steps import shell
 
-from master.factory import commands
+from main.factory import commands
 
 
 class OmahaCommands(commands.FactoryCommands):

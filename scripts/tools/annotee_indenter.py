@@ -5,7 +5,7 @@
 
 """annotee_indenter parses annotated input and indents each step level.
 
-Used by ../slave/recipes/infra/try_recipe.py to execute sub-recipes
+Used by ../subordinate/recipes/infra/try_recipe.py to execute sub-recipes
 and indent output automatically.
 """
 

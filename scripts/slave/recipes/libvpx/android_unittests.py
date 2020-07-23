@@ -43,7 +43,7 @@ PROPERTIES = {
 
 def RunSteps(api, libvpx_git_url, buildername):
   # Paths and other constants
-  build_root = api.path['slave_build']
+  build_root = api.path['subordinate_build']
 
   # Android tools DEPS
   android_tools_root = build_root.join('android_tools')
@@ -107,7 +107,7 @@ def RunSteps(api, libvpx_git_url, buildername):
 
   api.python(
       'transfer_files',
-      api.path['build'].join('scripts', 'slave', 'android',
+      api.path['build'].join('scripts', 'subordinate', 'android',
                              'transfer_files.py'),
       args=[adb, DEVICE_ROOT, test_data])
 
@@ -153,7 +153,7 @@ def RunSteps(api, libvpx_git_url, buildername):
           testname,
           libvpx_revision_number,
           i["framesPerSecond"],
-          bot=api.m.properties["slavename"])
+          bot=api.m.properties["subordinatename"])
       p['units'] = "fps"
       points.append(p)
 
@@ -164,7 +164,7 @@ def RunSteps(api, libvpx_git_url, buildername):
           testname,
           libvpx_revision_number,
           i["minPsnr"],
-          bot=api.m.properties["slavename"])
+          bot=api.m.properties["subordinatename"])
       p['units'] = "dB"
       points.append(p)
     else:
@@ -174,7 +174,7 @@ def RunSteps(api, libvpx_git_url, buildername):
           testname,
           libvpx_revision_number,
           i["framesPerSecond"],
-          bot=api.m.properties["slavename"])
+          bot=api.m.properties["subordinatename"])
       p['units'] = "fps"
       points.append(p)
 
@@ -188,8 +188,8 @@ def GenTests(api):
     api.test('basic_linux_64') +
     api.properties(
         libvpx_git_url='https://chromium.googlesource.com/webm/libvpx',
-        slavename='libvpx-bot', buildername='Nexus 5 Builder',
-        mastername='client.libvpx', buildnumber='75') +
+        subordinatename='libvpx-bot', buildername='Nexus 5 Builder',
+        mainname='client.libvpx', buildnumber='75') +
     api.step_data('git number', stdout=api.raw_io.output('42')) +
     api.step_data('adb_wrap',
         api.raw_io.output("This is text with json inside normally")) +

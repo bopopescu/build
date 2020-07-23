@@ -54,10 +54,10 @@ def GenTests(api):
       buildername='ios',
       buildnumber='0',
       issue=123456,
-      mastername='tryserver.fake',
+      mainname='tryserver.fake',
       patchset=1,
       rietveld='fake://rietveld.url',
-      slavename='fake-vm',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -86,10 +86,10 @@ def GenTests(api):
       buildername='ios',
       buildnumber='0',
       issue=123456,
-      mastername='tryserver.fake',
+      mainname='tryserver.fake',
       patchset=1,
       rietveld='fake://rietveld.url',
-      slavename='fake-vm',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'triggered by': 'parent',
@@ -122,10 +122,10 @@ def GenTests(api):
       buildername='ios',
       buildnumber='0',
       issue=123456,
-      mastername='tryserver.fake',
+      mainname='tryserver.fake',
       patchset=1,
       rietveld='fake://rietveld.url',
-      slavename='fake-vm',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -156,10 +156,10 @@ def GenTests(api):
       buildername='ios',
       buildnumber='0',
       issue=123456,
-      mastername='tryserver.fake',
+      mainname='tryserver.fake',
       patchset=1,
       rietveld='fake://rietveld.url',
-      slavename='fake-vm',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',
@@ -191,10 +191,10 @@ def GenTests(api):
       buildername='ios',
       buildnumber='0',
       issue=123456,
-      mastername='tryserver.fake',
+      mainname='tryserver.fake',
       patchset=1,
       rietveld='fake://rietveld.url',
-      slavename='fake-vm',
+      subordinatename='fake-vm',
     )
     + api.ios.make_test_build_config({
       'xcode version': 'fake xcode version',

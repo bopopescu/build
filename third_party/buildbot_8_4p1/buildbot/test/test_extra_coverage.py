@@ -19,8 +19,8 @@
 
 modules = [] # for the benefit of pyflakes
 
-from buildbot import buildslave
-modules.extend([buildslave])
+from buildbot import buildsubordinate
+modules.extend([buildsubordinate])
 from buildbot.changes import p4poller, svnpoller
 modules.extend([p4poller, svnpoller])
 from buildbot.clients import base, sendchange, tryclient
@@ -35,12 +35,12 @@ from buildbot.status import tinderbox, words
 modules.extend([tinderbox, words])
 from buildbot.status.web import baseweb, build, builder, buildstatus, changes
 modules.extend([baseweb, build, builder, buildstatus, changes])
-from buildbot.status.web import console, feeds, grid, logs, olpb, root, slaves
-modules.extend([console, feeds, grid, logs, olpb, root, slaves])
+from buildbot.status.web import console, feeds, grid, logs, olpb, root, subordinates
+modules.extend([console, feeds, grid, logs, olpb, root, subordinates])
 from buildbot.status.web import status_json, step, tests, waterfall
 modules.extend([status_json, step, tests, waterfall])
-from buildbot.steps import dummy, master, maxq, python, python_twisted, subunit
-modules.extend([dummy, master, maxq, python, python_twisted, subunit])
+from buildbot.steps import dummy, main, maxq, python, python_twisted, subunit
+modules.extend([dummy, main, maxq, python, python_twisted, subunit])
 from buildbot.steps import trigger, vstudio
 modules.extend([trigger, vstudio])
 from buildbot.steps.package.rpm import rpmbuild, rpmlint, rpmspec
@@ -56,10 +56,10 @@ modules.extend([eventual, loop, monkeypatches])
 #import buildbot.changes.hgbuildbot
 
 # requires libboto
-#import buildbot.ec2buildslave
+#import buildbot.ec2buildsubordinate
 
 # requires libvirt
-#import buildbot.libvirtbuildslave
+#import buildbot.libvirtbuildsubordinate
 
 # requires pycrypto
 #import buildbot.manhole

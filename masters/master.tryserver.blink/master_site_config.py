@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class BlinkTryServer(Master.Master4):
+class BlinkTryServer(Main.Main4):
   project_name = 'Blink Try Server'
-  master_port = 8009
-  slave_port = 8109
-  master_port_alt = 8209
+  main_port = 8009
+  subordinate_port = 8109
+  main_port_alt = 8209
   buildbot_url = 'http://build.chromium.org/p/tryserver.blink/'
   # Select tree status urls and codereview location.
   reply_to = 'chrome-troopers+tryserver@google.com'
@@ -20,4 +20,4 @@ class BlinkTryServer(Master.Master4):
   last_good_url = base_app_url + '/lkgr'
   last_good_blink_url = 'http://blink-status.appspot.com/lkgr'
   service_account_file = 'service-account-chromium-tryserver.json'
-  buildbucket_bucket = 'master.tryserver.blink'
+  buildbucket_bucket = 'main.tryserver.blink'

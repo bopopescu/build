@@ -12,7 +12,7 @@ import os
 import sys
 
 from common import chromium_utils
-from slave import slave_utils
+from subordinate import subordinate_utils
 
 
 class LogClass(chromium_utils.RunCommandFilter):
@@ -125,7 +125,7 @@ def Execute(commands, annotate, log, fail_fast=False):
                                     max_time=command.get('maxTime'))
     commands_executed += 1
     if ret != 0:
-      if ret == slave_utils.WARNING_EXIT_CODE:
+      if ret == subordinate_utils.WARNING_EXIT_CODE:
         if annotate:
           print '@@@STEP_WARNINGS@@@'
         continue

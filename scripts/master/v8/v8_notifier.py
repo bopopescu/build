@@ -3,8 +3,8 @@
 # found in the LICENSE file.
 
 from buildbot.status.builder import FAILURE
-from master import chromium_notifier
-from master import master_utils
+from main import chromium_notifier
+from main import main_utils
 
 
 FORGIVING_STEPS = [
@@ -17,21 +17,21 @@ FORGIVING_STEPS = [
 class V8Notifier(chromium_notifier.ChromiumNotifier):
   def __init__(self,
                config,
-               active_master,
+               active_main,
                categories_steps,
                sendToInterestedUsers=False,
                extraRecipients=None):
     extraRecipients = extraRecipients or []
     chromium_notifier.ChromiumNotifier.__init__(
         self,
-        fromaddr=active_master.from_address,
+        fromaddr=active_main.from_address,
         categories_steps=categories_steps,
-        relayhost=config.Master.smtp,
+        relayhost=config.Main.smtp,
         sendToInterestedUsers=sendToInterestedUsers,
         extraRecipients=extraRecipients,
         status_header=
             'buildbot failure in %(project)s on %(builder)s, %(steps)s',
-        lookup=master_utils.FilterDomain(),
+        lookup=main_utils.FilterDomain(),
         forgiving_steps=FORGIVING_STEPS,
     )
 

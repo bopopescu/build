@@ -3,29 +3,29 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-r"""Tool for viewing masters, their hosts and their ports.
+r"""Tool for viewing mains, their hosts and their ports.
 
 Has three modes:
-  a) In normal mode, simply prints the list of all known masters, sorted by
+  a) In normal mode, simply prints the list of all known mains, sorted by
      hostname, along with their associated ports, for the perusal of the user.
-  b) In --audit mode, tests to make sure that no masters conflict/overlap on
-     ports (even on different masters) and that no masters have unexpected
-     ports (i.e. differences of more than 100 between master, slave, and alt).
+  b) In --audit mode, tests to make sure that no mains conflict/overlap on
+     ports (even on different mains) and that no mains have unexpected
+     ports (i.e. differences of more than 100 between main, subordinate, and alt).
      Audit mode returns non-zero error code if conflicts are found. In audit
      mode, --verbose causes it to print human-readable output as well.
-  c) In --find mode, prints a set of available ports for the given master
+  c) In --find mode, prints a set of available ports for the given main
      class.
 
 Ports are well-formed if they follow this spec:
 XYYZZ
-|| \__The last two digits identify the master, e.g. master.chromium
-|\____The second and third digits identify the master host, e.g. master1.golo
-\_____The first digit identifies the port type, e.g. master_port
+|| \__The last two digits identify the main, e.g. main.chromium
+|\____The second and third digits identify the main host, e.g. main1.golo
+\_____The first digit identifies the port type, e.g. main_port
 
 In particular,
-X==3: master_port (Web display)
-X==4: slave_port (for slave TCP/RCP connections)
-X==5: master_port_alt (Alt web display, with "force build" disabled)
+X==3: main_port (Web display)
+X==4: subordinate_port (for subordinate TCP/RCP connections)
+X==5: main_port_alt (Alt web display, with "force build" disabled)
 The values X==1,2, and 6 are not used due to too few free ports in those ranges.
 
 In all modes, --csv causes the output (if any) to be formatted as
@@ -44,8 +44,8 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'site_config'))
 
 import config_bootstrap
-from config_bootstrap import Master
-from slave import bootstrap
+from config_bootstrap import Main
+from subordinate import bootstrap
 
 
 # These are ports which are likely to be used by another service, or which have
@@ -70,35 +70,35 @@ PORT_BLACKLIST = set([
 
 
 PORT_RANGE_MAP = {
-  'port': Master.Base.MASTER_PORT_RANGE,
-  'slave_port': Master.Base.SLAVE_PORT_RANGE,
-  'alt_port': Master.Base.MASTER_PORT_ALT_RANGE,
+  'port': Main.Base.MASTER_PORT_RANGE,
+  'subordinate_port': Main.Base.SLAVE_PORT_RANGE,
+  'alt_port': Main.Base.MASTER_PORT_ALT_RANGE,
 }
 
 
-# A map of (full) master host to master class used in 'get_master_class'
+# A map of (full) main host to main class used in 'get_main_class'
 # lookup.
-MASTER_HOST_MAP = dict((m.master_host, m)
-                       for m in Master.get_base_masters())
+MASTER_HOST_MAP = dict((m.main_host, m)
+                       for m in Main.get_base_mains())
 
 
 def get_args():
   """Process command-line arguments."""
   parser = argparse.ArgumentParser(
-      description='Tool to list all masters along with their hosts and ports.')
+      description='Tool to list all mains along with their hosts and ports.')
 
   parser.add_argument(
       '-l', '--list', action='store_true', default=False,
-      help='Output a list of all ports in use by all masters. Default behavior'
+      help='Output a list of all ports in use by all mains. Default behavior'
            ' if no other options are given.')
   parser.add_argument(
       '--sort-by', action='store',
       help='Define the primary key by which rows are sorted. Possible values '
-           'are: "port", "alt_port", "slave_port", "host", and "name". Only '
+           'are: "port", "alt_port", "subordinate_port", "host", and "name". Only '
            'one value is allowed (for now).')
   parser.add_argument(
       '--find', action='store', metavar='NAME',
-      help='Outputs three available ports for the given master class.')
+      help='Outputs three available ports for the given main class.')
   parser.add_argument(
       '--audit', action='store_true', default=False,
       help='Output conflict diagnostics and return an error code if '
@@ -113,7 +113,7 @@ def get_args():
       default='human', help='Print output in the given format')
   parser.add_argument(
       '--full-host-names', action='store_true', default=False,
-      help='Refrain from truncating the master host names')
+      help='Refrain from truncating the main host names')
 
   opts = parser.parse_args()
 
@@ -188,7 +188,7 @@ def extract_columns(spec, data):
   The spec is a list of tuples representing the column names
   and how to the column from a row of data.  E.g.
 
-  [ ('Master', lambda m: m['name']),
+  [ ('Main', lambda m: m['name']),
     ('Config Dir', lambda m: m['dirname']),
     ...
   ]
@@ -207,80 +207,80 @@ def field(name):
   return lambda d: d[name]
 
 
-def master_map(masters, output, opts):
-  """Display a list of masters and their associated hosts and ports."""
+def main_map(mains, output, opts):
+  """Display a list of mains and their associated hosts and ports."""
 
   host_key = 'host' if not opts.full_host_names else 'fullhost'
 
-  output([ ('Master', field('name')),
+  output([ ('Main', field('name')),
            ('Config Dir', field('dirname')),
            ('Host', field(host_key)),
            ('Web port', field('port')),
-           ('Slave port', field('slave_port')),
+           ('Subordinate port', field('subordinate_port')),
            ('Alt port', field('alt_port')),
            ('URL', field('buildbot_url')) ],
-         masters)
+         mains)
 
 
-def get_master_class(master):
-  return MASTER_HOST_MAP.get(master['fullhost'])
+def get_main_class(main):
+  return MASTER_HOST_MAP.get(main['fullhost'])
 
 
-def get_master_port(master):
-  master_class = get_master_class(master)
-  if not master_class:
+def get_main_port(main):
+  main_class = get_main_class(main)
+  if not main_class:
     return None
-  return '%02d' % (master_class.master_port_base,)
+  return '%02d' % (main_class.main_port_base,)
 
 
-def master_audit(masters, output, opts):
-  """Check for port conflicts and misconfigurations on masters.
+def main_audit(mains, output, opts):
+  """Check for port conflicts and misconfigurations on mains.
 
-  Outputs lists of masters whose ports conflict and who have misconfigured
+  Outputs lists of mains whose ports conflict and who have misconfigured
   ports. If any misconfigurations are found, returns a non-zero error code.
   """
 
   # Return value. Will be set to 1 the first time we see an error.
   ret = 0
 
-  # Look for masters using the wrong ports for their port types.
-  bad_port_masters = []
-  for master in masters:
+  # Look for mains using the wrong ports for their port types.
+  bad_port_mains = []
+  for main in mains:
     for port_type, port_range in PORT_RANGE_MAP.iteritems():
-      if not port_range.contains(master[port_type]):
+      if not port_range.contains(main[port_type]):
         ret = 1
-        bad_port_masters.append(master)
+        bad_port_mains.append(main)
         break
-  output([ ('Masters with misconfigured ports based on port type',
+  output([ ('Mains with misconfigured ports based on port type',
             field('name')) ],
-         bad_port_masters)
+         bad_port_mains)
 
-  # Look for masters using the wrong ports for their hostname.
-  bad_host_masters = []
-  for master in masters:
-    digits = get_master_port(master)
+  # Look for mains using the wrong ports for their hostname.
+  bad_host_mains = []
+  for main in mains:
+    digits = get_main_port(main)
     if digits:
       for port_type, port_range in PORT_RANGE_MAP.iteritems():
-        if ('%04d' % port_range.offset_of(master[port_type]))[0:2] != digits:
+        if ('%04d' % port_range.offset_of(main[port_type]))[0:2] != digits:
           ret = 1
-          bad_host_masters.append(master)
+          bad_host_mains.append(main)
           break
-  output([ ('Masters with misconfigured ports based on hostname',
+  output([ ('Mains with misconfigured ports based on hostname',
             field('name')) ],
-         bad_host_masters)
+         bad_host_mains)
 
-  # Look for masters configured to use the same ports.
+  # Look for mains configured to use the same ports.
   web_ports = {}
-  slave_ports = {}
+  subordinate_ports = {}
   alt_ports = {}
   all_ports = {}
-  for master in masters:
-    web_ports.setdefault(master['port'], []).append(master)
-    slave_ports.setdefault(master['slave_port'], []).append(master)
-    alt_ports.setdefault(master['alt_port'], []).append(master)
+  for main in mains:
+    web_ports.setdefault(main['port'], []).append(main)
+    subordinate_ports.setdefault(main['subordinate_port'], []).append(main)
+    alt_ports.setdefault(main['alt_port'], []).append(main)
 
-    for port_type in ('port', 'slave_port', 'alt_port'):
-      all_ports.setdefault(master[port_type], []).append(master)
+    for port_type in ('port', 'subordinate_port', 'alt_port'):
+      all_ports.setdefault(main[port_type], []).append(main)
 
   # Check for blacklisted ports.
   blacklisted_ports = []
@@ -291,7 +291,7 @@ def master_audit(masters, output, opts):
         blacklisted_ports.append(
             { 'port': port, 'name': m['name'], 'host': m['host'] })
   output([ ('Blacklisted port', field('port')),
-           ('Master', field('name')),
+           ('Main', field('name')),
            ('Host', field('host')) ],
          blacklisted_ports)
 
@@ -304,22 +304,22 @@ def master_audit(masters, output, opts):
         conflicting_web_ports.append(
             { 'web_port': port, 'name': m['name'], 'host': m['host'] })
   output([ ('Web port', field('web_port')),
-           ('Master', field('name')),
+           ('Main', field('name')),
            ('Host', field('host')) ],
          conflicting_web_ports)
 
-  # Check for conflicting slave ports.
-  conflicting_slave_ports = []
-  for port, lst in slave_ports.iteritems():
+  # Check for conflicting subordinate ports.
+  conflicting_subordinate_ports = []
+  for port, lst in subordinate_ports.iteritems():
     if len(lst) > 1:
       ret = 1
       for m in lst:
-        conflicting_slave_ports.append(
-            { 'slave_port': port, 'name': m['name'], 'host': m['host'] })
-  output([ ('Slave port', field('slave_port') ),
-           ('Master', field('name')),
+        conflicting_subordinate_ports.append(
+            { 'subordinate_port': port, 'name': m['name'], 'host': m['host'] })
+  output([ ('Subordinate port', field('subordinate_port') ),
+           ('Main', field('name')),
            ('Host', field('host')) ],
-         conflicting_slave_ports)
+         conflicting_subordinate_ports)
 
   # Check for conflicting alt ports.
   conflicting_alt_ports = []
@@ -330,72 +330,72 @@ def master_audit(masters, output, opts):
         conflicting_alt_ports.append(
             { 'alt_port': port, 'name': m['name'], 'host': m['host'] })
   output([ ('Alt port', field('alt_port')),
-           ('Master', field('name')),
+           ('Main', field('name')),
            ('Host', field('host')) ],
          conflicting_alt_ports)
 
-  # Look for masters whose port, slave_port, alt_port aren't separated by 5000.
-  bad_sep_masters = []
-  for master in masters:
-    if (getint(master['slave_port']) - getint(master['alt_port']) != 5000 or
-        getint(master['alt_port']) - getint(master['port']) != 5000):
+  # Look for mains whose port, subordinate_port, alt_port aren't separated by 5000.
+  bad_sep_mains = []
+  for main in mains:
+    if (getint(main['subordinate_port']) - getint(main['alt_port']) != 5000 or
+        getint(main['alt_port']) - getint(main['port']) != 5000):
       ret = 1
-      bad_sep_masters.append(master)
-  output([ ('Master', field('name')),
+      bad_sep_mains.append(main)
+  output([ ('Main', field('name')),
            ('Host', field('host')),
            ('Web port', field('port')),
-           ('Slave port', field('slave_port')),
+           ('Subordinate port', field('subordinate_port')),
            ('Alt port', field('alt_port')) ],
-         bad_sep_masters)
+         bad_sep_mains)
 
   return ret
 
 
-def build_port_str(master_class, port_type, digits):
+def build_port_str(main_class, port_type, digits):
   port_range = PORT_RANGE_MAP[port_type]
   port = str(port_range.compose_port(
-      master_class.master_port_base * 100 + digits))
+      main_class.main_port_base * 100 + digits))
   assert len(port) == 5, "Invalid port generated (%s)" % (port,)
   return port
 
 
-def find_port(master_class_name, masters, output, opts):
-  """Finds a triplet of free ports appropriate for the given master."""
+def find_port(main_class_name, mains, output, opts):
+  """Finds a triplet of free ports appropriate for the given main."""
   try:
-    master_class = getattr(Master, master_class_name)
+    main_class = getattr(Main, main_class_name)
   except AttributeError:
-    raise ValueError('Master class %s does not exist' % master_class_name)
+    raise ValueError('Main class %s does not exist' % main_class_name)
 
   used_ports = set()
-  for m in masters:
-    for port in ('port', 'slave_port', 'alt_port'):
+  for m in mains:
+    for port in ('port', 'subordinate_port', 'alt_port'):
       used_ports.add(m.get(port, 0))
   used_ports = used_ports | PORT_BLACKLIST
 
   def _inner_loop():
     for digits in xrange(0, 100):
-      port = build_port_str(master_class, 'port', digits)
-      slave_port = build_port_str(master_class, 'slave_port', digits)
-      alt_port = build_port_str(master_class, 'alt_port', digits)
+      port = build_port_str(main_class, 'port', digits)
+      subordinate_port = build_port_str(main_class, 'subordinate_port', digits)
+      alt_port = build_port_str(main_class, 'alt_port', digits)
       if all([
           int(port) not in used_ports,
-          int(slave_port) not in used_ports,
+          int(subordinate_port) not in used_ports,
           int(alt_port) not in used_ports]):
-        return port, slave_port, alt_port
+        return port, subordinate_port, alt_port
     return None, None, None
-  port, slave_port, alt_port = _inner_loop()
+  port, subordinate_port, alt_port = _inner_loop()
 
-  if not all([port, slave_port, alt_port]):
+  if not all([port, subordinate_port, alt_port]):
     raise RuntimeError('Unable to find available ports on host')
 
-  output([ ('Master', field('master_base_class')),
-           ('Port', field('master_port')),
-           ('Alt port', field('master_port_alt')),
-           ('Slave port', field('slave_port')) ],
-         [ { 'master_base_class': master_class_name,
-           'master_port': port,
-           'master_port_alt': alt_port,
-           'slave_port': slave_port } ])
+  output([ ('Main', field('main_base_class')),
+           ('Port', field('main_port')),
+           ('Alt port', field('main_port_alt')),
+           ('Subordinate port', field('subordinate_port')) ],
+         [ { 'main_base_class': main_class_name,
+           'main_port': port,
+           'main_port_alt': alt_port,
+           'subordinate_port': subordinate_port } ])
 
 
 def format_host_name(host):
@@ -405,38 +405,38 @@ def format_host_name(host):
   return host
 
 
-def extract_masters():
-  """Extracts the data we want from a collection of possibly-masters."""
-  good_masters = []
-  for master in config_bootstrap.Master.get_all_masters():
-    host = getattr(master, 'master_host', '')
-    local_config_path = getattr(master, 'local_config_path', '')
+def extract_mains():
+  """Extracts the data we want from a collection of possibly-mains."""
+  good_mains = []
+  for main in config_bootstrap.Main.get_all_mains():
+    host = getattr(main, 'main_host', '')
+    local_config_path = getattr(main, 'local_config_path', '')
     build_dir = os.path.basename(os.path.abspath(os.path.join(local_config_path,
                                                         os.pardir, os.pardir)))
     is_internal = build_dir == 'build_internal'
-    good_masters.append({
-        'name': master.__name__,
+    good_mains.append({
+        'name': main.__name__,
         'host': format_host_name(host),
         'fullhost': host,
-        'port': getattr(master, 'master_port', 0),
-        'slave_port': getattr(master, 'slave_port', 0),
-        'alt_port': getattr(master, 'master_port_alt', 0),
-        'buildbot_url': getattr(master, 'buildbot_url', ''),
+        'port': getattr(main, 'main_port', 0),
+        'subordinate_port': getattr(main, 'subordinate_port', 0),
+        'alt_port': getattr(main, 'main_port_alt', 0),
+        'buildbot_url': getattr(main, 'buildbot_url', ''),
         'dirname': os.path.basename(local_config_path),
         'internal': is_internal
     })
-  return good_masters
+  return good_mains
 
 
 def real_main(include_internal=False):
   opts = get_args()
 
-  bootstrap.ImportMasterConfigs(include_internal=include_internal)
+  bootstrap.ImportMainConfigs(include_internal=include_internal)
 
-  masters = extract_masters()
+  mains = extract_mains()
 
   # Define sorting order
-  sort_keys = ['host', 'port', 'alt_port', 'slave_port', 'name']
+  sort_keys = ['host', 'port', 'alt_port', 'subordinate_port', 'name']
   # Move key specified on command-line to the front of the list
   if opts.sort_by is not None:
     try:
@@ -447,7 +447,7 @@ def real_main(include_internal=False):
       sort_keys.insert(0, sort_keys.pop(index))
 
   for key in reversed(sort_keys):
-    masters.sort(key=lambda m: m[key])  # pylint: disable=cell-var-from-loop
+    mains.sort(key=lambda m: m[key])  # pylint: disable=cell-var-from-loop
 
   def output_csv(spec, data):
     print_columns_csv(extract_columns(spec, data), opts.verbose)
@@ -467,14 +467,14 @@ def real_main(include_internal=False):
     }[opts.format]
 
   if opts.list:
-    master_map(masters, output, opts)
+    main_map(mains, output, opts)
 
   ret = 0
   if opts.audit or opts.presubmit:
-    ret = master_audit(masters, output, opts)
+    ret = main_audit(mains, output, opts)
 
   if opts.find:
-    find_port(opts.find, masters, output, opts)
+    find_port(opts.find, mains, output, opts)
 
   return ret
 

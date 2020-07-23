@@ -76,7 +76,7 @@ def RunSteps(api):
   api.isolate.set_isolate_environment(api.chromium.c)
 
   api.chromium.cleanup_temp()
-  # Checkout chromium + deps (including 'master' of swarming_client).
+  # Checkout chromium + deps (including 'main' of swarming_client).
   api.gclient.checkout()
 
   # Ensure swarming_client version is fresh enough.

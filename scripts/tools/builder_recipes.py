@@ -17,19 +17,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(
 
 
 BLACKLISTED_MASTERS = [
-    'master.chromium.reserved',
-    'master.chromiumos.unused',
-    'master.client.reserved',
-    'master.reserved',
-    'master.tryserver.reserved',
+    'main.chromium.reserved',
+    'main.chromiumos.unused',
+    'main.client.reserved',
+    'main.reserved',
+    'main.tryserver.reserved',
 ]
 
 
-def getMasterConfig(path):
+def getMainConfig(path):
   with tempfile.NamedTemporaryFile() as f:
     subprocess.check_call([
         os.path.join(BASE_DIR, 'scripts', 'tools', 'runit.py'),
-        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_master_cfg.py'),
+        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_main_cfg.py'),
         os.path.join(path),
         f.name])
     return json.load(f)
@@ -42,15 +42,15 @@ def main(argv):
 
   data = []
 
-  for master in os.listdir(os.path.join(BASE_DIR, 'masters')):
-    if master in BLACKLISTED_MASTERS:
+  for main in os.listdir(os.path.join(BASE_DIR, 'mains')):
+    if main in BLACKLISTED_MASTERS:
       continue
 
-    path = os.path.join(BASE_DIR, 'masters', master)
+    path = os.path.join(BASE_DIR, 'mains', main)
     if not os.path.isdir(path):
       continue
 
-    config = getMasterConfig(path)
+    config = getMainConfig(path)
     for builder in config['builders']:
       try:
         recipe = builder['factory']['properties'].get(
@@ -63,17 +63,17 @@ def main(argv):
           not recipe.startswith('<error:')):
         continue
       data.append({
-        'master': master,
+        'main': main,
         'builder': builder['name'],
         'recipe': recipe,
       })
 
-  master_padding = max(len(row['master']) for row in data)
+  main_padding = max(len(row['main']) for row in data)
   builder_padding = max(len(row['builder']) for row in data)
 
-  pattern = '%%-%ds | %%-%ds | %%s' % (master_padding, builder_padding)
-  for row in sorted(data, key=operator.itemgetter('master', 'builder')):
-    print pattern % (row['master'], row['builder'], row['recipe'])
+  pattern = '%%-%ds | %%-%ds | %%s' % (main_padding, builder_padding)
+  for row in sorted(data, key=operator.itemgetter('main', 'builder')):
+    print pattern % (row['main'], row['builder'], row['recipe'])
 
   return 0
 

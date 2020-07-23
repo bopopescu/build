@@ -30,9 +30,9 @@ from collections import deque
 from twisted.python import runtime, log
 from twisted.internet import reactor, defer, protocol, task, error
 
-from buildslave import util
-from buildslave.exceptions import AbandonChain
-import slave.reboot_tools
+from buildsubordinate import util
+from buildsubordinate.exceptions import AbandonChain
+import subordinate.reboot_tools
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
@@ -204,7 +204,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 
 class RunProcess:
     """
-    This is a helper class, used by slave commands to run programs in a child
+    This is a helper class, used by subordinate commands to run programs in a child
     shell.
     """
 
@@ -235,7 +235,7 @@ class RunProcess:
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, initialStdin=None,
                  keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config",
+                 logEnviron=True, logfiles={}, usePTY="subordinate-config",
                  useProcGroup=True):
         """
 
@@ -245,7 +245,7 @@ class RunProcess:
                            has finished.
         @param keepStderr: same, for stderr
 
-        @param usePTY: "slave-config" -> use the SlaveBuilder's usePTY;
+        @param usePTY: "subordinate-config" -> use the SubordinateBuilder's usePTY;
             otherwise, true to use a PTY, false to not use a PTY.
 
         @param useProcGroup: (default True) use a process group for non-PTY
@@ -256,8 +256,8 @@ class RunProcess:
         self.command = util.Obfuscated.get_real(command)
 
         # We need to take unicode commands and arguments and encode them using
-        # the appropriate encoding for the slave.  This is mostly platform
-        # specific, but can be overridden in the slave's buildbot.tac file.
+        # the appropriate encoding for the subordinate.  This is mostly platform
+        # specific, but can be overridden in the subordinate's buildbot.tac file.
         #
         # Encoding the command line here ensures that the called executables
         # receive arguments as bytestrings encoded with an appropriate
@@ -300,7 +300,7 @@ class RunProcess:
                 return os.environ.get(match.group(1), "")
             newenv = {}
             for key in os.environ.keys():
-                # setting a key to None will delete it from the slave environment
+                # setting a key to None will delete it from the subordinate environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
             for key in environ.keys():
@@ -323,7 +323,7 @@ class RunProcess:
         self.buflen = 0
         self.buftimer = None
 
-        if usePTY == "slave-config":
+        if usePTY == "subordinate-config":
             self.usePTY = self.builder.usePTY
         else:
             self.usePTY = usePTY
@@ -333,7 +333,7 @@ class RunProcess:
         # and in situations where ptys cause problems.  PTYs are posix-only,
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
-            if self.usePTY and usePTY != "slave-config":
+            if self.usePTY and usePTY != "subordinate-config":
                 self.sendStatus({'header': "WARNING: disabling usePTY for this command"})
             self.usePTY = False
 
@@ -549,7 +549,7 @@ class RunProcess:
 
     def _sendMessage(self, msg):
         """
-        Collapse and send msg to the master
+        Collapse and send msg to the main
         """
         if not msg:
             return
@@ -577,7 +577,7 @@ class RunProcess:
             # transferred as a dictionary, which makes the ordering of keys
             # unspecified, and makes it impossible to interleave data from
             # different logs.  A future enhancement could be to change the
-            # master to support a list of (logname, data) tuples instead of a
+            # main to support a list of (logname, data) tuples instead of a
             # dictionary.
             # On our first pass through this loop lastlog is None
             if lastlog is None:
@@ -821,7 +821,7 @@ class RunProcess:
         if self.sendRC:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
-        slave.reboot_tools.Reboot()
+        subordinate.reboot_tools.Reboot()
         # In production, Reboot() does not return, and failed() is
         # never called. In testing mode, Reboot() returns immediately
         # with no effect, and we need to recover.

@@ -23,7 +23,7 @@ def Extend(pythonpath, cwd):
   # Add 'BUILD/third_party' paths.
   build_path += [os.path.join(third_party_base, *parts) for parts in (
       ('buildbot_8_4p1',),
-      ('buildbot_slave_8_4',),
+      ('buildbot_subordinate_8_4',),
       ('jinja2',),
       ('markupsafe',),
       ('mock-1.0.1',),

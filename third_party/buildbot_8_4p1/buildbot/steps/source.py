@@ -19,7 +19,7 @@ from email.Utils import formatdate
 from twisted.python import log
 from zope.interface import implements
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
-from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
+from buildbot.interfaces import BuildSubordinateTooOldError, IRenderable
 from buildbot.status.builder import SKIPPED
 
 class _ComputeRepositoryURL(object):
@@ -55,7 +55,7 @@ class _ComputeRepositoryURL(object):
                 return str(build.render(repository))
 
 class Source(LoggingBuildStep):
-    """This is a base class to generate a source tree in the buildslave.
+    """This is a base class to generate a source tree in the buildsubordinate.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
     startVC(). The class as a whole builds up the self.args dictionary, then
@@ -137,10 +137,10 @@ class Source(LoggingBuildStep):
         for each build.
 
         The source stamp helps avoid a race condition in which someone
-        commits a change after the master has decided to start a build
-        but before the slave finishes checking out the sources. At best
+        commits a change after the main has decided to start a build
+        but before the subordinate finishes checking out the sources. At best
         this results in a build which contains more changes than the
-        buildmaster thinks it has (possibly resulting in the wrong
+        buildmain thinks it has (possibly resulting in the wrong
         person taking the blame for any problems that result), at worst
         is can result in an incoherent set of sources (splitting a
         non-atomic commit) which may not build at all.
@@ -148,7 +148,7 @@ class Source(LoggingBuildStep):
         @type  retry: tuple of ints (delay, repeats) (or None)
         @param retry: if provided, VC update failures are re-attempted up
                       to REPEATS times, with DELAY seconds between each
-                      attempt. Some users have slaves with poor connectivity
+                      attempt. Some users have subordinates with poor connectivity
                       to their VC repository, and they say that up to 80% of
                       their build failures are due to transient network
                       failures that could be handled by simply retrying a
@@ -300,10 +300,10 @@ class BK(Source):
     def startVC(self, branch, revision, patch):
 
         warnings = []
-        slavever = self.slaveVersion("bk")
-        if not slavever:
-            m = "slave does not have the 'bk' command"
-            raise BuildSlaveTooOldError(m)
+        subordinatever = self.subordinateVersion("bk")
+        if not subordinatever:
+            m = "subordinate does not have the 'bk' command"
+            raise BuildSubordinateTooOldError(m)
 
         if self.bkurl:
             assert not branch # we need baseURL= to use branches
@@ -334,7 +334,7 @@ class CVS(Source):
     """I do CVS checkout/update operations.
 
     Note: if you are doing anonymous/pserver CVS operations, you will need
-    to manually do a 'cvs login' on each buildslave before the slave has any
+    to manually do a 'cvs login' on each buildsubordinate before the subordinate has any
     hope of success. XXX: fix then, take a cvs password as an argument and
     figure out how to do a 'cvs login' on each build
     """
@@ -379,7 +379,7 @@ class CVS(Source):
                       :pserver: method is used to access the repository.
                       This login is only needed once, but must be run
                       each time (just before the CVS operation) because
-                      there is no way for the buildslave to tell whether
+                      there is no way for the buildsubordinate to tell whether
                       it was previously performed or not.
 
         @type  branch: string
@@ -462,32 +462,32 @@ class CVS(Source):
         return formatdate(when)
 
     def startVC(self, branch, revision, patch):
-        if self.slaveVersionIsOlderThan("cvs", "1.39"):
-            # the slave doesn't know to avoid re-using the same sourcedir
+        if self.subordinateVersionIsOlderThan("cvs", "1.39"):
+            # the subordinate doesn't know to avoid re-using the same sourcedir
             # when the branch changes. We have no way of knowing which branch
             # the last build used, so if we're using a non-default branch and
             # either 'update' or 'copy' modes, it is safer to refuse to
-            # build, and tell the user they need to upgrade the buildslave.
+            # build, and tell the user they need to upgrade the buildsubordinate.
             if (branch != self.branch
                 and self.args['mode'] in ("update", "copy")):
-                m = ("This buildslave (%s) does not know about multiple "
+                m = ("This buildsubordinate (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
-                     "Refusing to build. Please upgrade the buildslave to "
-                     "buildbot-0.7.0 or newer." % (self.build.slavename,
+                     "Refusing to build. Please upgrade the buildsubordinate to "
+                     "buildbot-0.7.0 or newer." % (self.build.subordinatename,
                                                    self.args['mode']))
                 log.msg(m)
-                raise BuildSlaveTooOldError(m)
+                raise BuildSubordinateTooOldError(m)
 
-        if self.slaveVersionIsOlderThan("cvs", "2.10"):
+        if self.subordinateVersionIsOlderThan("cvs", "2.10"):
             if self.args['extra_options'] or self.args['export_options']:
-                m = ("This buildslave (%s) does not support export_options "
+                m = ("This buildsubordinate (%s) does not support export_options "
                      "or extra_options arguments to the CVS step."
-                     % (self.build.slavename))
+                     % (self.build.subordinatename))
                 log.msg(m)
-                raise BuildSlaveTooOldError(m)
+                raise BuildSubordinateTooOldError(m)
             # the unwanted args are empty, and will probably be ignored by
-            # the slave, but delete them just to be safe
+            # the subordinate, but delete them just to be safe
             del self.args['export_options']
             del self.args['extra_options']
 
@@ -503,11 +503,11 @@ class CVS(Source):
             # TODO: figure out why, see if it applies to -r BRANCH
             self.args['branch'] = None
 
-        # deal with old slaves
+        # deal with old subordinates
         warnings = []
-        slavever = self.slaveVersion("cvs", "old")
+        subordinatever = self.subordinateVersion("cvs", "old")
 
-        if slavever == "old":
+        if subordinatever == "old":
             # 0.5.0
             if self.args['mode'] == "export":
                 self.args['export'] = 1
@@ -516,7 +516,7 @@ class CVS(Source):
             elif self.args['mode'] == "copy":
                 self.args['copydir'] = "source"
             self.args['tag'] = self.args['branch']
-            assert not self.args['patch'] # 0.5.0 slave can't do patch
+            assert not self.args['patch'] # 0.5.0 subordinate can't do patch
 
         cmd = LoggedRemoteCommand("cvs", self.args)
         self.startCommand(cmd, warnings)
@@ -600,43 +600,43 @@ class SVN(Source):
         return lastChange
 
     def checkCompatibility(self):
-        ''' Handle compatibility between old slaves/svn clients '''
+        ''' Handle compatibility between old subordinates/svn clients '''
 
-        slavever = self.slaveVersion("svn", "old")
+        subordinatever = self.subordinateVersion("svn", "old")
 
-        if not slavever:
-            m = "slave does not have the 'svn' command"
-            raise BuildSlaveTooOldError(m)
+        if not subordinatever:
+            m = "subordinate does not have the 'svn' command"
+            raise BuildSubordinateTooOldError(m)
 
-        if self.slaveVersionIsOlderThan("svn", "1.39"):
-            # the slave doesn't know to avoid re-using the same sourcedir
+        if self.subordinateVersionIsOlderThan("svn", "1.39"):
+            # the subordinate doesn't know to avoid re-using the same sourcedir
             # when the branch changes. We have no way of knowing which branch
             # the last build used, so if we're using a non-default branch and
             # either 'update' or 'copy' modes, it is safer to refuse to
-            # build, and tell the user they need to upgrade the buildslave.
+            # build, and tell the user they need to upgrade the buildsubordinate.
             if (self.args['branch'] != self.branch
                 and self.args['mode'] in ("update", "copy")):
-                m = ("This buildslave (%s) does not know about multiple "
+                m = ("This buildsubordinate (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
-                     "Refusing to build. Please upgrade the buildslave to "
-                     "buildbot-0.7.0 or newer." % (self.build.slavename,
+                     "Refusing to build. Please upgrade the buildsubordinate to "
+                     "buildbot-0.7.0 or newer." % (self.build.subordinatename,
                                                    self.args['mode']))
-                raise BuildSlaveTooOldError(m)
+                raise BuildSubordinateTooOldError(m)
 
-        if (self.depth is not None) and self.slaveVersionIsOlderThan("svn","2.9"):
-            m = ("This buildslave (%s) does not support svn depth "
+        if (self.depth is not None) and self.subordinateVersionIsOlderThan("svn","2.9"):
+            m = ("This buildsubordinate (%s) does not support svn depth "
                     "arguments.  Refusing to build. "
-                    "Please upgrade the buildslave." % (self.build.slavename))
-            raise BuildSlaveTooOldError(m)
+                    "Please upgrade the buildsubordinate." % (self.build.subordinatename))
+            raise BuildSubordinateTooOldError(m)
 
         if (self.username is not None or self.password is not None) \
-        and self.slaveVersionIsOlderThan("svn", "2.8"):
-            m = ("This buildslave (%s) does not support svn usernames "
+        and self.subordinateVersionIsOlderThan("svn", "2.8"):
+            m = ("This buildsubordinate (%s) does not support svn usernames "
                  "and passwords.  "
-                 "Refusing to build. Please upgrade the buildslave to "
-                 "buildbot-0.7.10 or newer." % (self.build.slavename,))
-            raise BuildSlaveTooOldError(m)
+                 "Refusing to build. Please upgrade the buildsubordinate to "
+                 "buildbot-0.7.10 or newer." % (self.build.subordinatename,))
+            raise BuildSubordinateTooOldError(m)
 
     def getSvnUrl(self, branch, revision, patch):
         ''' Compute the svn url that will be passed to the svn remote command '''
@@ -744,31 +744,31 @@ class Darcs(Source):
                              " baseURL")
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("darcs")
-        if not slavever:
-            m = "slave is too old, does not know about darcs"
-            raise BuildSlaveTooOldError(m)
+        subordinatever = self.subordinateVersion("darcs")
+        if not subordinatever:
+            m = "subordinate is too old, does not know about darcs"
+            raise BuildSubordinateTooOldError(m)
 
-        if self.slaveVersionIsOlderThan("darcs", "1.39"):
+        if self.subordinateVersionIsOlderThan("darcs", "1.39"):
             if revision:
                 # TODO: revisit this once we implement computeSourceRevision
-                m = "0.6.6 slaves can't handle args['revision']"
-                raise BuildSlaveTooOldError(m)
+                m = "0.6.6 subordinates can't handle args['revision']"
+                raise BuildSubordinateTooOldError(m)
 
-            # the slave doesn't know to avoid re-using the same sourcedir
+            # the subordinate doesn't know to avoid re-using the same sourcedir
             # when the branch changes. We have no way of knowing which branch
             # the last build used, so if we're using a non-default branch and
             # either 'update' or 'copy' modes, it is safer to refuse to
-            # build, and tell the user they need to upgrade the buildslave.
+            # build, and tell the user they need to upgrade the buildsubordinate.
             if (branch != self.branch
                 and self.args['mode'] in ("update", "copy")):
-                m = ("This buildslave (%s) does not know about multiple "
+                m = ("This buildsubordinate (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
-                     "Refusing to build. Please upgrade the buildslave to "
-                     "buildbot-0.7.0 or newer." % (self.build.slavename,
+                     "Refusing to build. Please upgrade the buildsubordinate to "
+                     "buildbot-0.7.0 or newer." % (self.build.subordinatename,
                                                    self.args['mode']))
-                raise BuildSlaveTooOldError(m)
+                raise BuildSubordinateTooOldError(m)
 
         if self.repourl:
             assert not branch # we need baseURL= to use branches
@@ -796,7 +796,7 @@ class Git(Source):
     renderables = [ 'repourl' ]
 
     def __init__(self, repourl=None,
-                 branch="master",
+                 branch="main",
                  submodules=False,
                  ignore_ignores=None,
                  reference=None,
@@ -873,9 +873,9 @@ class Git(Source):
             except:
                 pass
 
-        slavever = self.slaveVersion("git")
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion("git")
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about git")
         cmd = LoggedRemoteCommand("git", self.args)
         self.startCommand(cmd)
@@ -890,7 +890,7 @@ class Repo(Source):
 
     def __init__(self,
                  manifest_url=None,
-                 manifest_branch="master",
+                 manifest_branch="main",
                  manifest_file="default.xml",
                  tarball=None,
                  **kwargs):
@@ -928,7 +928,7 @@ class Repo(Source):
          can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
          or several instances of "proj number/patch" (simpler version)
          This feature allows integrator to build with several pending interdependant changes.
-         returns list of repo downloads sent to the buildslave
+         returns list of repo downloads sent to the buildsubordinate
          """
         import re
         if s == None:
@@ -948,7 +948,7 @@ class Repo(Source):
     def startVC(self, branch, revision, patch):
         self.args['manifest_url'] = self.manifest_url
 
-        # only master has access to properties, so we must implement this here.
+        # only main has access to properties, so we must implement this here.
         downloads = []
 
         # download patches based on GerritChangeSource events
@@ -974,9 +974,9 @@ class Repo(Source):
             self.args["repo_downloads"] = downloads
             self.setProperty("repo_downloads", downloads)
 
-        slavever = self.slaveVersion("repo")
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion("repo")
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about repo")
         cmd = LoggedRemoteCommand("repo", self.args)
         self.startCommand(cmd)
@@ -1049,10 +1049,10 @@ class Bzr(Source):
         return lastChange
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("bzr")
-        if not slavever:
-            m = "slave is too old, does not know about bzr"
-            raise BuildSlaveTooOldError(m)
+        subordinatever = self.subordinateVersion("bzr")
+        if not subordinatever:
+            m = "subordinate is too old, does not know about bzr"
+            raise BuildSubordinateTooOldError(m)
 
         if self.repourl:
             assert not branch # we need baseURL= to use branches
@@ -1133,9 +1133,9 @@ class Mercurial(Source):
                              " baseURL")
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("hg")
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion("hg")
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about hg")
 
         if self.repourl:
@@ -1182,7 +1182,7 @@ class P4(Source):
 
     def __init__(self, p4base=None, defaultBranch=None, p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=[], p4line_end='local',
-                 p4client='buildbot_%(slave)s_%(builder)s', **kwargs):
+                 p4client='buildbot_%(subordinate)s_%(builder)s', **kwargs):
         """
         @type  p4base: string
         @param p4base: A view into a perforce depot, typically
@@ -1213,7 +1213,7 @@ class P4(Source):
         @param p4line_end: value of the LineEnd client specification property
 
         @type  p4client: string
-        @param p4client: The perforce client to use for this buildslave.
+        @param p4client: The perforce client to use for this buildsubordinate.
         """
 
         self.p4base = _ComputeRepositoryURL(p4base)
@@ -1238,7 +1238,7 @@ class P4(Source):
     def setBuild(self, build):
         Source.setBuild(self, build)
         self.args['p4client'] = self.p4client % {
-            'slave': build.slavename,
+            'subordinate': build.subordinatename,
             'builder': build.builder.name,
         }
 
@@ -1249,8 +1249,8 @@ class P4(Source):
         return lastChange
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("p4")
-        assert slavever, "slave is too old, does not know about p4"
+        subordinatever = self.subordinateVersion("p4")
+        assert subordinatever, "subordinate is too old, does not know about p4"
         args = dict(self.args)
         args['p4base'] = self.p4base
         args['branch'] = branch or self.branch
@@ -1261,17 +1261,17 @@ class P4(Source):
 
 class P4Sync(Source):
     """This is a partial solution for using a P4 source repository. You are
-    required to manually set up each build slave with a useful P4
-    environment, which means setting various per-slave environment variables,
+    required to manually set up each build subordinate with a useful P4
+    environment, which means setting various per-subordinate environment variables,
     and creating a P4 client specification which maps the right files into
-    the slave's working directory. Once you have done that, this step merely
+    the subordinate's working directory. Once you have done that, this step merely
     performs a 'p4 sync' to update that workspace with the newest files.
 
-    Each slave needs the following environment:
+    Each subordinate needs the following environment:
 
-     - PATH: the 'p4' binary must be on the slave's PATH
-     - P4USER: each slave needs a distinct user account
-     - P4CLIENT: each slave needs a distinct client specification
+     - PATH: the 'p4' binary must be on the subordinate's PATH
+     - P4USER: each subordinate needs a distinct user account
+     - P4CLIENT: each subordinate needs a distinct client specification
 
     You should use 'p4 client' (?) to set up a client view spec which maps
     the desired files into $SLAVEBASE/$BUILDERBASE/source .
@@ -1300,8 +1300,8 @@ class P4Sync(Source):
         return lastChange
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("p4sync")
-        assert slavever, "slave is too old, does not know about p4"
+        subordinatever = self.subordinateVersion("p4sync")
+        assert subordinatever, "subordinate is too old, does not know about p4"
         cmd = LoggedRemoteCommand("p4sync", self.args)
         self.startCommand(cmd)
 
@@ -1343,9 +1343,9 @@ class Monotone(Source):
                           })
 
     def startVC(self, branch, revision, patch):
-        slavever = self.slaveVersion("mtn")
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion("mtn")
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about mtn")
 
         self.args['repourl'] = self.repourl

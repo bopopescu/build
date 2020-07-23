@@ -154,7 +154,7 @@ class GridStatusMixin(object):
 class GridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
-    changemaster = None
+    changemain = None
 
     @defer.deferredGenerator
     def content(self, request, cxt):
@@ -216,7 +216,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
-    changemaster = None
+    changemain = None
     default_rev_order = "asc"
 
     @defer.deferredGenerator

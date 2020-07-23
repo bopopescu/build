@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class GYP(Master.Master3):
+class GYP(Main.Main3):
   project_name = 'GYP'
-  master_port = 20302
-  slave_port = 30302
-  master_port_alt = 25302
+  main_port = 20302
+  subordinate_port = 30302
+  main_port_alt = 25302
   buildbot_url = 'https://build.chromium.org/p/client.gyp/'
-  buildbucket_bucket = 'master.client.gyp'
+  buildbucket_bucket = 'main.client.gyp'
   service_account_file = 'service-account-gyp.json'

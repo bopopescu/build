@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Dart(Master.Master3):
+class Dart(Main.Main3):
   base_app_url = 'https://dart-status.appspot.com'
   tree_status_url = base_app_url + '/status'
   store_revisions_url = base_app_url + '/revisions'
@@ -14,8 +14,8 @@ class Dart(Master.Master3):
   # This IP refers to a golem server in BigCluster
   http_status_push_url = "http://108.170.219.8:8080/submit-buildbot-info/"
   project_name = 'Dart'
-  master_port = 8040
-  slave_port = 8140
+  main_port = 8040
+  subordinate_port = 8140
   # Enable when there's a public waterfall.
-  master_port_alt = 8240
+  main_port_alt = 8240
   buildbot_url = 'http://build.chromium.org/p/client.dart/'

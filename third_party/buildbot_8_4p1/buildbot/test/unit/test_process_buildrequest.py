@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb, fakemain
 from buildbot.process import buildrequest
 
 class TestBuildRequest(unittest.TestCase):
 
     def test_fromBrdict(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
-        master.db.insertTestData([
+        main = fakemain.make_main()
+        main.db = fakedb.FakeDBConnector(self)
+        main.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                         repository='svn://...', project='world-domination'),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
@@ -38,9 +38,9 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
+        d = main.db.buildrequests.getBuildRequest(288)
         d.addCallback(lambda brdict :
-                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+                    buildrequest.BuildRequest.fromBrdict(main, brdict))
         def check(br):
             # check enough of the source stamp to verify it found the changes
             self.assertEqual(br.source.ssid, 234)
@@ -59,9 +59,9 @@ class TestBuildRequest(unittest.TestCase):
         return d
 
     def test_fromBrdict_submittedAt_NULL(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
-        master.db.insertTestData([
+        main = fakemain.make_main()
+        main.db = fakedb.FakeDBConnector(self)
+        main.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
             fakedb.Buildset(id=539, reason='triggered', sourcestampid=234),
@@ -70,9 +70,9 @@ class TestBuildRequest(unittest.TestCase):
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
-        d = master.db.buildrequests.getBuildRequest(288)
+        d = main.db.buildrequests.getBuildRequest(288)
         d.addCallback(lambda brdict :
-                    buildrequest.BuildRequest.fromBrdict(master, brdict))
+                    buildrequest.BuildRequest.fromBrdict(main, brdict))
         def check(br):
             # remaining fields assumed to be checked in test_fromBrdict
             self.assertEqual(br.submittedAt, None)

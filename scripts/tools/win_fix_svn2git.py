@@ -23,7 +23,7 @@ import sys
 
 SLAVE_GCLIENT_CONFIG = """solutions = [
   {
-    "name"      : "slave.DEPS",
+    "name"      : "subordinate.DEPS",
     "url"       : "https://chrome-internal.googlesource.com/chrome/tools/build/slave.DEPS.git",
     "deps_file" : ".DEPS.git",
     "managed"   : True,
@@ -94,7 +94,7 @@ def main():
       'must not be run from any of the subdirs of %s because bash will lock '
       'these subdirs and we will not be able to move/delete them' % b_dir)
 
-  if os.path.exists(os.path.join(b_dir, 'slave.DEPS')):
+  if os.path.exists(os.path.join(b_dir, 'subordinate.DEPS')):
     gclient_config = SLAVE_GCLIENT_CONFIG
   else:
     gclient_config = INTERNAL_GCLIENT_CONFIG
@@ -121,7 +121,7 @@ def main():
   call_bash('mv build/site_config site_config; '
             'mv depot_tools depot_tools2; '
             'mkdir _del; '
-            'mv build* .gclient* *.DEPS slave_svn_to_git* _del')
+            'mv build* .gclient* *.DEPS subordinate_svn_to_git* _del')
 
   print 'Creating new .gclient'
   with open('.gclient', 'w') as fo:

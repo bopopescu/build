@@ -10,8 +10,8 @@ from twisted.python import log
 
 from common import chromium_utils
 
-from master.try_job_base import text_to_dict
-from master.try_job_repo import TryJobRepoBase
+from main.try_job_base import text_to_dict
+from main.try_job_repo import TryJobRepoBase
 
 
 class SVNPoller(svnpoller.SVNPoller):
@@ -27,7 +27,7 @@ class SVNPoller(svnpoller.SVNPoller):
   def submit_changes(self, changes):
     """Passes the changes to TryJobSubversion.
 
-    Instead of submitting the changes to the master, pass them to
+    Instead of submitting the changes to the main, pass them to
     TryJobSubversion. We don't want buildbot to see these changes.
     """
     return self.try_job.process_svn_changes(changes)

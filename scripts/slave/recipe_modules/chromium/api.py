@@ -103,10 +103,10 @@ class ChromiumApi(recipe_api.RecipeApi):
   def configure_bot(self, builders_dict, additional_configs=None):
     """Sets up the configurations and gclient to be ready for bot update.
 
-    builders_dict is a dict of mastername -> 'builders' -> buildername ->
+    builders_dict is a dict of mainname -> 'builders' -> buildername ->
         bot_config.
 
-    The current mastername and buildername are looked up from the
+    The current mainname and buildername are looked up from the
     build properties; we then apply the configs specified in bot_config
     as appropriate.
 
@@ -116,12 +116,12 @@ class ChromiumApi(recipe_api.RecipeApi):
     additional_configs = additional_configs or []
 
     # TODO: crbug.com/358481 . The build_config should probably be a property
-    # passed in from the slave config, but that doesn't exist today, so we
+    # passed in from the subordinate config, but that doesn't exist today, so we
     # need a lookup mechanism to map bot name to build_config.
-    mastername = self.m.properties.get('mastername')
+    mainname = self.m.properties.get('mainname')
     buildername = self.m.properties.get('buildername')
-    master_dict = builders_dict.get(mastername, {})
-    bot_config = master_dict.get('builders', {}).get(buildername)
+    main_dict = builders_dict.get(mainname, {})
+    bot_config = main_dict.get('builders', {}).get(buildername)
 
     self.set_config(bot_config.get('chromium_config', 'chromium'),
                     **bot_config.get('chromium_config_kwargs', {}))
@@ -155,7 +155,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     args = [
       '--show-path',
       'python',
-      self.package_repo_resource('scripts', 'slave', 'compile.py'),
+      self.package_repo_resource('scripts', 'subordinate', 'compile.py'),
       '--ninja-path', self.m.depot_tools.ninja_path,
       '--target', target or self.c.build_config_fs,
       '--src-dir', self.m.path['checkout'],
@@ -322,7 +322,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     # These properties are specified on every bot, so pass them down
     # unconditionally.
     full_args.append('--builder-name=%s' % self.m.properties['buildername'])
-    full_args.append('--slave-name=%s' % self.m.properties['slavename'])
+    full_args.append('--subordinate-name=%s' % self.m.properties['subordinatename'])
     # A couple of the recipes contain tests which don't specify a buildnumber,
     # so make this optional.
     if self.m.properties.get('buildnumber') is not None:
@@ -363,7 +363,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     full_args.extend(self.c.runtests.test_args)
     full_args.extend(args)
 
-    runtest_path = self.package_repo_resource('scripts', 'slave', 'runtest.py')
+    runtest_path = self.package_repo_resource('scripts', 'subordinate', 'runtest.py')
     if self.c.runtest_py.src_side and not disable_src_side_runtest_py:
       runtest_path = self.m.path['checkout'].join(
           'infra', 'scripts', 'runtest_wrapper.py')
@@ -381,7 +381,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     """Return a sizes.py invocation.
     This uses runtests.py to upload the results to the perf dashboard."""
     sizes_script = self.package_repo_resource(
-        'scripts', 'slave', 'chromium', 'sizes.py')
+        'scripts', 'subordinate', 'chromium', 'sizes.py')
     sizes_args = ['--target', self.c.build_config_fs]
     if platform:
       sizes_args.extend(['--platform', platform])
@@ -395,7 +395,7 @@ class ChromiumApi(recipe_api.RecipeApi):
                            '--build-properties', properties_json])
     run_tests_args.extend(['--test-type=sizes',
                            '--builder-name=%s' % self.m.properties['buildername'],
-                           '--slave-name=%s' % self.m.properties['slavename'],
+                           '--subordinate-name=%s' % self.m.properties['subordinatename'],
                            '--build-number=%s' % self.m.properties['buildnumber'],
                            '--run-python-script'])
 
@@ -416,13 +416,13 @@ class ChromiumApi(recipe_api.RecipeApi):
     full_args = run_tests_args + [sizes_script] + sizes_args
 
     return self.m.python(
-        'sizes', self.package_repo_resource('scripts', 'slave', 'runtest.py'),
+        'sizes', self.package_repo_resource('scripts', 'subordinate', 'runtest.py'),
         full_args, allow_subannotations=True, **kwargs)
 
   def get_clang_version(self, **kwargs):
     step_result = self.m.python(
         'clang_revision',
-        self.package_repo_resource('scripts', 'slave', 'clang_revision.py'),
+        self.package_repo_resource('scripts', 'subordinate', 'clang_revision.py'),
         args=['--src-dir', self.m.path['checkout'],
               '--output-json', self.m.json.output()],
         step_test_data=lambda:
@@ -537,7 +537,7 @@ class ChromiumApi(recipe_api.RecipeApi):
             '--args=%s' % ' '.join(gn_args),
         ])
 
-  def run_mb(self, mastername, buildername, use_goma=False,
+  def run_mb(self, mainname, buildername, use_goma=False,
              mb_config_path=None, isolated_targets=None, name=None,
              build_dir=None):
     mb_config_path = (mb_config_path or
@@ -548,7 +548,7 @@ class ChromiumApi(recipe_api.RecipeApi):
 
     args=[
         'gen',
-        '-m', mastername,
+        '-m', mainname,
         '-b', buildername,
         '--config-file', mb_config_path,
     ]
@@ -599,7 +599,7 @@ class ChromiumApi(recipe_api.RecipeApi):
   def taskkill(self):
     self.m.python(
       'taskkill',
-      self.package_repo_resource('scripts', 'slave', 'kill_processes.py'))
+      self.package_repo_resource('scripts', 'subordinate', 'kill_processes.py'))
 
   def cleanup_temp(self):
     self.m.python(
@@ -607,7 +607,7 @@ class ChromiumApi(recipe_api.RecipeApi):
       self.package_repo_resource('scripts', 'tools', 'runit.py'),
       ['--show-path',
        'python',
-       self.package_repo_resource('scripts', 'slave', 'cleanup_temp.py')],
+       self.package_repo_resource('scripts', 'subordinate', 'cleanup_temp.py')],
       infra_step=True)
 
   def process_dumps(self, **kwargs):
@@ -615,7 +615,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     try:
       self.m.python(
           'process_dumps',
-          self.package_repo_resource('scripts', 'slave', 'process_dumps.py'),
+          self.package_repo_resource('scripts', 'subordinate', 'process_dumps.py'),
           ['--target', self.c.build_config_fs],
           infra_step=True,
           **kwargs)
@@ -627,7 +627,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     self.m.python(
       'apply_syzyasan',
       self.package_repo_resource(
-          'scripts', 'slave', 'chromium', 'win_apply_syzyasan.py'),
+          'scripts', 'subordinate', 'chromium', 'win_apply_syzyasan.py'),
       args)
 
   def archive_build(self, step_name, gs_bucket, gs_acl=None, mode=None,
@@ -658,7 +658,7 @@ class ChromiumApi(recipe_api.RecipeApi):
     self.m.python(
       step_name,
       self.package_repo_resource(
-          'scripts', 'slave', 'chromium', 'archive_build.py'),
+          'scripts', 'subordinate', 'chromium', 'archive_build.py'),
       args,
       infra_step=True,
       **kwargs)

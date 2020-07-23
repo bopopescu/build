@@ -23,8 +23,8 @@ from buildbot.util import epoch2datetime
 
 class ChangePerspective(NewCredPerspective):
 
-    def __init__(self, master, prefix):
-        self.master = master
+    def __init__(self, main, prefix):
+        self.main = main
         self.prefix = prefix
 
     def attached(self, mind):
@@ -46,7 +46,7 @@ class ChangePerspective(NewCredPerspective):
 
         # rename arguments to new names.  Note that the client still uses the
         # "old" names (who, when, and isdir), as they are not deprecated yet,
-        # although the master will accept the new names (author,
+        # although the main will accept the new names (author,
         # when_timestamp, and is_dir).  After a few revisions have passed, we
         # can switch the client to use the new names.
         if 'isdir' in changedict:
@@ -89,7 +89,7 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        return self.master.addChange(**changedict)
+        return self.main.addChange(**changedict)
 
 class PBChangeSource(base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
@@ -108,7 +108,7 @@ class PBChangeSource(base.ChangeSource):
         if self.port is not None:
             portname = self.port
         else:
-            portname = "all-purpose slaveport"
+            portname = "all-purpose subordinateport"
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
@@ -118,8 +118,8 @@ class PBChangeSource(base.ChangeSource):
         base.ChangeSource.startService(self)
         port = self.port
         if port is None:
-            port = self.master.slavePortnum
-        self.registration = self.master.pbmanager.register(
+            port = self.main.subordinatePortnum
+        self.registration = self.main.pbmanager.register(
                 port, self.user, self.passwd,
                 self.getPerspective)
 
@@ -133,4 +133,4 @@ class PBChangeSource(base.ChangeSource):
 
     def getPerspective(self, mind, username):
         assert username == self.user
-        return ChangePerspective(self.master, self.prefix)
+        return ChangePerspective(self.main, self.prefix)

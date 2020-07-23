@@ -38,7 +38,7 @@ def RunSteps(api):
 
   # Enforce a clean state.
   api.git(
-      'checkout', '-f', 'master',
+      'checkout', '-f', 'main',
       cwd=api.path['checkout'],
   )
   api.git(
@@ -60,11 +60,11 @@ def RunSteps(api):
 def GenTests(api):
   yield (
       api.test('rolling_activated') +
-      api.properties.generic(mastername='client.webrtc.fyi',
+      api.properties.generic(mainname='client.webrtc.fyi',
                              buildername='Auto-roll - WebRTC DEPS')
   )
   yield (api.test('rolling_deactivated') +
-      api.properties.generic(mastername='client.webrtc.fyi',
+      api.properties.generic(mainname='client.webrtc.fyi',
                              buildername='Auto-roll - WebRTC DEPS') +
       api.override_step_data('check roll status',
                              api.raw_io.stream_output('0', stream='stdout'))

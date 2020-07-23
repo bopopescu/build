@@ -51,11 +51,11 @@ BUILDERS = freeze({
 
 PROPERTIES = {
   'buildername': Property(),
-  'mastername': Property(),
+  'mainname': Property(),
 }
 
-def RunSteps(api, mastername, buildername):
-  builder = BUILDERS[mastername][buildername]
+def RunSteps(api, mainname, buildername):
+  builder = BUILDERS[mainname][buildername]
   api.chromium_android.configure_from_properties(
       builder['config'],
       REPO_NAME='src',
@@ -72,7 +72,7 @@ def RunSteps(api, mastername, buildername):
   api.chromium.runhooks()
 
   if api.chromium.c.project_generator.tool == 'mb':
-    api.chromium.run_mb(mastername, buildername, use_goma=True)
+    api.chromium.run_mb(mainname, buildername, use_goma=True)
 
   targets = []
   for target, _ in builder.get('unittests', []):
@@ -111,19 +111,19 @@ def RunSteps(api, mastername, buildername):
 def GenTests(api):
   sanitize = lambda s: ''.join(c if c.isalnum() else '_' for c in s)
 
-  for mastername in BUILDERS:
-    master = BUILDERS[mastername]
-    for buildername in master:
+  for mainname in BUILDERS:
+    main = BUILDERS[mainname]
+    for buildername in main:
       yield (
           api.test('%s_test_basic' % sanitize(buildername)) +
           api.properties.generic(
               buildername=buildername,
-              mastername=mastername))
+              mainname=mainname))
 
   yield (
       api.test('Android_Tests__x86_emulator__test_fail') +
       api.properties.generic(
         buildername='Android Tests (x86 emulator)',
-        mastername='chromium.fyi') +
+        mainname='chromium.fyi') +
       api.step_data('android_webview_unittests', retcode=2)
   )

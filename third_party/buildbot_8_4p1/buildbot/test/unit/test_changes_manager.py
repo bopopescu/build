@@ -33,11 +33,11 @@ class TestChangeManager(unittest.TestCase):
         src = MySource()
         self.cm.addSource(src)
 
-        # addSource should set the source's 'master'
-        assert src.master is self.cm.parent
+        # addSource should set the source's 'main'
+        assert src.main is self.cm.parent
 
         d = self.cm.removeSource(src)
         def check(_):
             # and removeSource should rmeove it.
-            assert src.master is None
+            assert src.main is None
         return d

@@ -56,7 +56,7 @@ class OneRow(Pane):
     def addBuilder(self, builder):
         print "OneRow.addBuilder"
         # todo: ordering. Should follow the order in which they were added
-        # to the original BotMaster
+        # to the original BotMain
         self.builders.append(builder)
         # add the name to the left column, and a label (with background) to
         # the right
@@ -497,8 +497,8 @@ class ThreeRowClient(pb.Referenceable):
 class GtkClient(TextClient):
     ClientClass = ThreeRowClient
 
-    def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
-        self.master = master
+    def __init__(self, main, events="steps", username="statusClient", passwd="clientpw"):
+        self.main = main
         self.username = username
         self.passwd = passwd
         self.listener = StatusClient(events)
@@ -526,23 +526,23 @@ class GtkClient(TextClient):
         self.pane.removeBuilder(name, self.builders[name])
         Client.removeBuilder(self, name)
         
-    def startConnecting(self, master):
-        self.master = master
-        Client.startConnecting(self, master)
-        self.status.set_text("connecting to %s.." % master)
+    def startConnecting(self, main):
+        self.main = main
+        Client.startConnecting(self, main)
+        self.status.set_text("connecting to %s.." % main)
     def connected(self, remote):
         Client.connected(self, remote)
-        self.status.set_text(self.master)
+        self.status.set_text(self.main)
         remote.notifyOnDisconnect(self.disconnected)
     def disconnected(self, remote):
         self.status.set_text("disconnected, will retry")
 """
 
 def main():
-    master = "localhost:8007"
+    main = "localhost:8007"
     if len(sys.argv) > 1:
-        master = sys.argv[1]
-    c = GtkClient(master)
+        main = sys.argv[1]
+    c = GtkClient(main)
     c.run()
 
 if __name__ == '__main__':

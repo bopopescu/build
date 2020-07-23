@@ -21,7 +21,7 @@ from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.process.buildstep import RemoteCommand
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildSubordinateTooOldError
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -30,7 +30,7 @@ _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
 class ShellCommand(LoggingBuildStep):
-    """I run a single shell command on the buildslave. I return FAILURE if
+    """I run a single shell command on the buildsubordinate. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method.
 
@@ -66,7 +66,7 @@ class ShellCommand(LoggingBuildStep):
     """
 
     name = "shell"
-    renderables = [ 'description', 'descriptionDone', 'slaveEnvironment', 'remote_kwargs', 'command' ]
+    renderables = [ 'description', 'descriptionDone', 'subordinateEnvironment', 'remote_kwargs', 'command' ]
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     command = None # set this to a command, or set in kwargs
@@ -81,7 +81,7 @@ class ShellCommand(LoggingBuildStep):
     def __init__(self, workdir=None,
                  description=None, descriptionDone=None,
                  command=None,
-                 usePTY="slave-config",
+                 usePTY="subordinate-config",
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -121,7 +121,7 @@ class ShellCommand(LoggingBuildStep):
     def setBuild(self, build):
         LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
-        self.slaveEnvironment = self.build.slaveEnvironment
+        self.subordinateEnvironment = self.build.subordinateEnvironment
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
@@ -179,34 +179,34 @@ class ShellCommand(LoggingBuildStep):
             return ["???"]
 
     def setupEnvironment(self, cmd):
-        # merge in anything from Build.slaveEnvironment
+        # merge in anything from Build.subordinateEnvironment
         # This can be set from a Builder-level environment, or from earlier
         # BuildSteps. The latter method is deprecated and superceded by
         # BuildProperties.
         # Environment variables passed in by a BuildStep override
         # those passed in at the Builder level.
-        slaveEnv = self.slaveEnvironment
-        if slaveEnv:
+        subordinateEnv = self.subordinateEnvironment
+        if subordinateEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            fullSlaveEnv = slaveEnv.copy()
-            fullSlaveEnv.update(cmd.args['env'])
-            cmd.args['env'] = fullSlaveEnv
+            fullSubordinateEnv = subordinateEnv.copy()
+            fullSubordinateEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullSubordinateEnv
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
-    def checkForOldSlaveAndLogfiles(self):
+    def checkForOldSubordinateAndLogfiles(self):
         if not self.logfiles:
             return # doesn't matter
-        if not self.slaveVersionIsOlderThan("shell", "2.1"):
-            return # slave is new enough
-        # this buildslave is too old and will ignore the 'logfiles'
+        if not self.subordinateVersionIsOlderThan("shell", "2.1"):
+            return # subordinate is new enough
+        # this buildsubordinate is too old and will ignore the 'logfiles'
         # argument. You'll either have to pull the logfiles manually
         # (say, by using 'cat' in a separate RemoteShellCommand) or
-        # upgrade the buildslave.
-        msg1 = ("Warning: buildslave %s is too old "
+        # upgrade the buildsubordinate.
+        msg1 = ("Warning: buildsubordinate %s is too old "
                 "to understand logfiles=, ignoring it."
-               % self.getSlaveName())
+               % self.getSubordinateName())
         msg2 = "You will have to pull this logfile (%s) manually."
         log.msg(msg1)
         for logname,remotefilevalue in self.logfiles.items():
@@ -248,13 +248,13 @@ class ShellCommand(LoggingBuildStep):
         kwargs['logfiles'] = self.logfiles
 
         # check for the usePTY flag
-        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("svn", "2.7"):
-                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'subordinate-config':
+            if self.subordinateVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: subordinate does not allow main to override usePTY\n")
 
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
-        self.checkForOldSlaveAndLogfiles()
+        self.checkForOldSubordinateAndLogfiles()
 
         self.startCommand(cmd, warnings)
 
@@ -348,8 +348,8 @@ class StringFileWriter(pb.Referenceable):
     """
     FileWriter class that just puts received data into a buffer.
 
-    Used to upload a file from slave for inline processing rather than
-    writing into a file on master.
+    Used to upload a file from subordinate for inline processing rather than
+    writing into a file on main.
     """
     def __init__(self):
         self.buffer = ""
@@ -363,7 +363,7 @@ class StringFileWriter(pb.Referenceable):
 class SilentRemoteCommand(RemoteCommand):
     """
     Remote command subclass used to run an internal file upload command on the
-    slave. We do not need any progress updates from such command, so override
+    subordinate. We do not need any progress updates from such command, so override
     remoteUpdate() with an empty method.
     """
     def remoteUpdate(self, update):
@@ -490,15 +490,15 @@ class WarningCountingShellCommand(ShellCommand):
         if self.suppressionFile == None:
             return ShellCommand.start(self)
 
-        version = self.slaveVersion("uploadFile")
+        version = self.subordinateVersion("uploadFile")
         if not version:
-            m = "Slave is too old, does not know about uploadFile"
-            raise BuildSlaveTooOldError(m)
+            m = "Subordinate is too old, does not know about uploadFile"
+            raise BuildSubordinateTooOldError(m)
 
         self.myFileWriter = StringFileWriter()
 
         args = {
-            'slavesrc': self.suppressionFile,
+            'subordinatesrc': self.suppressionFile,
             'workdir': self.workdir,
             'writer': self.myFileWriter,
             'maxsize': None,

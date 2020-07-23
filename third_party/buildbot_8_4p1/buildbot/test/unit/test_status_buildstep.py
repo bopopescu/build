@@ -16,7 +16,7 @@
 import os
 from mock import Mock
 from twisted.trial import unittest
-from buildbot.status import builder, master
+from buildbot.status import builder, main
 
 class TestBuildStepStatus(unittest.TestCase):
 
@@ -36,7 +36,7 @@ class TestBuildStepStatus(unittest.TestCase):
         m = Mock()
         m.buildbotURL = 'http://buildbot:8010/'
         m.basedir = '/basedir'
-        s = master.Status(m)
+        s = main.Status(m)
         b.status = s
         return s
 

@@ -43,12 +43,12 @@ def _CheckoutSteps(api):
 def _AnnotatedStepsSteps(api, got_revision):
   # Default environemnt; required by all builders.
   env = {
-      'BUILDBOT_MASTERNAME': api.properties['mastername'],
+      'BUILDBOT_MASTERNAME': api.properties['mainname'],
       'BUILDBOT_BUILDERNAME': api.properties['buildername'],
       'BUILDBOT_REVISION': api.properties['revision'],
       'BUILDBOT_GOT_REVISION': got_revision,
-      'RUNTEST': api.path['build'].join('scripts', 'slave', 'runtest.py'),
-      'BUILDBOT_SLAVE_TYPE': api.properties['slavetype'],
+      'RUNTEST': api.path['build'].join('scripts', 'subordinate', 'runtest.py'),
+      'BUILDBOT_SLAVE_TYPE': api.properties['subordinatetype'],
   }
   # Set up env for the triggered builders.
   if api.properties['buildername'] in trigger_map.values():
@@ -58,7 +58,7 @@ def _AnnotatedStepsSteps(api, got_revision):
         'BUILDBOT_TRIGGERED_BY_BUILDNUMBER':
           api.properties['parent_buildnumber'],
         'BUILDBOT_TRIGGERED_BY_SLAVENAME':
-          api.properties['parent_slavename'],
+          api.properties['parent_subordinatename'],
     })
   api.python('annotated steps',
       api.path['checkout'].join('buildbot', 'buildbot_selector.py'),
@@ -71,7 +71,7 @@ def _TriggerTestsSteps(api):
   if api.properties['buildername'] in trigger_map:
     api.trigger(
         {'builder_name': trigger_map[api.properties['buildername']],
-         'properties': {'parent_slavename': api.properties['slavename']}})
+         'properties': {'parent_subordinatename': api.properties['subordinatename']}})
 
 def RunSteps(api):
   got_revision = _CheckoutSteps(api)
@@ -83,25 +83,25 @@ def GenTests(api):
     api.test('linux_triggering') +
     api.platform('linux', 64) +
     api.properties(
-      mastername = 'client.nacl',
+      mainname = 'client.nacl',
       buildername = 'precise_64-newlib-arm_qemu-pnacl-dbg',
       revision = 'abcd',
-      slavename = 'TestSlave',
+      subordinatename = 'TestSubordinate',
       buildnumber = 1234,
-      slavetype = 'BuilderTester',
+      subordinatetype = 'BuilderTester',
     ))
 
   yield (
     api.test('linux_triggered') +
     api.platform('linux', 32) +
     api.properties(
-      mastername = 'client.nacl',
+      mainname = 'client.nacl',
       buildername = 'oneiric_32-newlib-arm_hw-pnacl-panda-dbg',
       revision = 'abcd',
-      slavename='TestSlave',
+      subordinatename='TestSubordinate',
       buildnumber = 5678,
-      parent_slavename = 'TestSlave',
+      parent_subordinatename = 'TestSubordinate',
       parent_buildername = 'precise_64-newlib-arm_qemu-pnacl-dbg',
       parent_buildnumber = 1,
-      slavetype = 'BuilderTester',
+      subordinatetype = 'BuilderTester',
     ))

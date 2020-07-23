@@ -15,11 +15,11 @@
 
 from twisted.trial import unittest
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands import shell
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.command import CommandTestMixin
+from buildsubordinate.commands import shell
 
-class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
+class TestSubordinateShellCommand(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpCommand()
@@ -28,7 +28,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     def test_simple(self):
-        self.make_command(shell.SlaveShellCommand, dict(
+        self.make_command(shell.SubordinateShellCommand, dict(
             command=[ 'echo', 'hello' ],
             workdir='workdir',
         ))
@@ -41,7 +41,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
         d = self.run_command()
 
-        # note that SlaveShellCommand does not add any extra updates of it own
+        # note that SubordinateShellCommand does not add any extra updates of it own
         def check(_):
             self.assertUpdates(
                     [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
@@ -49,4 +49,4 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    # TODO: test all functionality that SlaveShellCommand adds atop RunProcess
+    # TODO: test all functionality that SubordinateShellCommand adds atop RunProcess

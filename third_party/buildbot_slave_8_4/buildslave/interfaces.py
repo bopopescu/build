@@ -16,17 +16,17 @@
 
 from zope.interface import Interface
 
-class ISlaveCommand(Interface):
-    """This interface is implemented by all of the buildslave's Command
-    subclasses. It specifies how the buildslave can start, interrupt, and
-    query the various Commands running on behalf of the buildmaster."""
+class ISubordinateCommand(Interface):
+    """This interface is implemented by all of the buildsubordinate's Command
+    subclasses. It specifies how the buildsubordinate can start, interrupt, and
+    query the various Commands running on behalf of the buildmain."""
 
     def __init__(builder, stepId, args):
         """Create the Command. 'builder' is a reference to the parent
-        buildbot.bot.SlaveBuilder instance, which will be used to send status
+        buildbot.bot.SubordinateBuilder instance, which will be used to send status
         updates (by calling builder.sendStatus). 'stepId' is a random string
-        which helps correlate slave logs with the master. 'args' is a dict of
-        arguments that comes from the master-side BuildStep, with contents
+        which helps correlate subordinate logs with the main. 'args' is a dict of
+        arguments that comes from the main-side BuildStep, with contents
         that are specific to the individual Command subclass.
 
         This method is not intended to be subclassed."""
@@ -40,7 +40,7 @@ class ISlaveCommand(Interface):
         """Begin the command, and return a Deferred.
 
         While the command runs, it should send status updates to the
-        master-side BuildStep by calling self.sendStatus(status). The
+        main-side BuildStep by calling self.sendStatus(status). The
         'status' argument is typically a dict with keys like 'stdout',
         'stderr', and 'rc'.
 
@@ -61,8 +61,8 @@ class ISlaveCommand(Interface):
         error condition). The Command's deferred should still be fired when
         the command has finally completed.
 
-        If the build is being stopped because the slave it shutting down or
-        because the connection to the buildmaster has been lost, the status
+        If the build is being stopped because the subordinate it shutting down or
+        because the connection to the buildmain has been lost, the status
         updates will simply be discarded. The Command does not need to be
         aware of this.
 

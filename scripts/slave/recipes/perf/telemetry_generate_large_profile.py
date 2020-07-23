@@ -96,7 +96,7 @@ def GenTests(api):
     yield (
         api.test(platform) +
         api.properties.generic(
-            mastername='master.chromium.perf.fyi',
+            mainname='main.chromium.perf.fyi',
             parent_build_archive_url=archive_url,
             parent_got_revision='5d6dd8eaee742daf7f298f533fb0827dc4a693fd') +
         api.platform.name(platform)

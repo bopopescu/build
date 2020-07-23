@@ -58,15 +58,15 @@ class TestObserver(buildstep.LogLineObserver):
         r'=> Tests to be fixed \((\d+)\):')
     self._summary_skipped = re.compile(r'(\d+) skipped')
 
-    self._master_name_re = re.compile(r'--master-name ([^ ]*)')
-    self.master_name = ''
+    self._main_name_re = re.compile(r'--main-name ([^ ]*)')
+    self.main_name = ''
 
   def outLineReceived(self, line):
     """This is called once with each line of the test log."""
 
-    results = self._master_name_re.search(line)
+    results = self._main_name_re.search(line)
     if results:
-      self.master_name = results.group(1)
+      self.main_name = results.group(1)
 
     results = self._passing_start.search(line)
     if results:
@@ -161,8 +161,8 @@ class WebKitCommand(shell.ShellCommand):
     full_desc = ['%s %d' % (description, len(tests))]
     full_desc.append('<div class="BuildResultInfo">')
 
-    full_desc.append('<a href="%s#master=%s&tests=%s">' % (
-        self._LAYOUT_TEST_DASHBOARD_BASE, self.test_observer.master_name,
+    full_desc.append('<a href="%s#main=%s&tests=%s">' % (
+        self._LAYOUT_TEST_DASHBOARD_BASE, self.test_observer.main_name,
         ','.join(sorted(tests))))
 
     # Display test names, with full paths as tooltips.

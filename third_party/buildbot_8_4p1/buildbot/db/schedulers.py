@@ -134,7 +134,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         if none is found.
 
         Note that this makes no attempt to "claim" the schedulerid: schedulers
-        with the same name and class, but running in different masters, will be
+        with the same name and class, but running in different mains, will be
         assigned the same schedulerid - with disastrous results.
 
         @param sched_name: the scheduler's configured name

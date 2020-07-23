@@ -32,12 +32,12 @@ def RunSteps(api):
 
 
 def execute_inner(api, name, **properties):
-  for attr in ['buildername', 'mastername', 'buildnumber', 'slavename']:
+  for attr in ['buildername', 'mainname', 'buildnumber', 'subordinatename']:
     properties.setdefault(attr, api.properties.get(attr))
   properties['actual_run'] = 'True'
   return api.python(
       name=name,
-      script=api.path['checkout'].join('scripts', 'slave', 'recipes.py'),
+      script=api.path['checkout'].join('scripts', 'subordinate', 'recipes.py'),
       args=[
         'run',
         '--properties-file',
@@ -74,7 +74,7 @@ def inner(api):
 
   api.git.checkout(
       url='https://chromium.googlesource.com/chromium/tools/build',
-      ref='master',
+      ref='main',
       dir_path=api.path['build'].join('clone'))
 
 
@@ -82,21 +82,21 @@ def GenTests(api):
   yield (
       api.test('ok-outer') +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='build_repo_real',
       )
   )
   yield (
       api.test('ok-outer-try') +
       api.properties.tryserver(
-          mastername='tryserver.infra',
+          mainname='tryserver.infra',
           buildername='build_repo_real',
       )
   )
   yield (
       api.test('ok-inner') +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='build_repo_real',
           actual_run='True',
       )
@@ -105,7 +105,7 @@ def GenTests(api):
       api.test('ok-inner-win') +
       api.platform('win', 64) +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='build_repo_real',
           actual_run='True',
       )
@@ -113,7 +113,7 @@ def GenTests(api):
   yield (
       api.test('ok-inner-try-rietveld') +
       api.properties.tryserver(
-          mastername='tryserver.infra',
+          mainname='tryserver.infra',
           buildername='build_repo_real',
           actual_run='True',
       )

@@ -10,7 +10,7 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-import slave.zip_build as zip_build
+import subordinate.zip_build as zip_build
 from common import chromium_utils
 
 

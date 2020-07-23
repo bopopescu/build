@@ -2,19 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
 
 from common.skia import global_constants
-from config_bootstrap import Master
+from config_bootstrap import Main
 
 
-class SkiaFYI(Master.Master3):
+class SkiaFYI(Main.Main3):
   project_name = 'SkiaFYI'
-  master_port = 8098
-  slave_port = 8198
-  master_port_alt = 8298
+  main_port = 8098
+  subordinate_port = 8198
+  main_port_alt = 8298
   repo_url = global_constants.SKIA_REPO
   buildbot_url = 'http://build.chromium.org/p/client.skia.fyi/'
   service_account_file = global_constants.SERVICE_ACCOUNT_FILE
-  buildbucket_bucket = 'master.client.skia.fyi'
+  buildbucket_bucket = 'main.client.skia.fyi'

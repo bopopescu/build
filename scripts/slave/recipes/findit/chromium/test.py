@@ -32,8 +32,8 @@ DEPS = [
 
 
 PROPERTIES = {
-    'target_mastername': Property(
-        kind=str, help='The target master to match compile config to.'),
+    'target_mainname': Property(
+        kind=str, help='The target main to match compile config to.'),
     'target_testername': Property(
         kind=str,
         help='The target tester to match test config to. If the tests are run '
@@ -61,14 +61,14 @@ class TestResult(object):
   FAILED = 'failed'  # The compile or test failed.
 
 
-def _compile_and_test_at_revision(api, target_mastername, target_buildername,
+def _compile_and_test_at_revision(api, target_mainname, target_buildername,
                                   target_testername, revision, requested_tests,
                                   use_analyze):
   results = {}
   with api.step.nest('test %s' % str(revision)):
     # Checkout code at the given revision to recompile.
     bot_config = api.chromium_tests.create_bot_config_object(
-        target_mastername, target_buildername)
+        target_mainname, target_buildername)
     bot_update_step, bot_db = api.chromium_tests.prepare_checkout(
         bot_config, root_solution_revision=revision)
 
@@ -95,7 +95,7 @@ def _compile_and_test_at_revision(api, target_mastername, target_buildername,
               test_targets=requested_test_targets,
               additional_compile_targets=[],
               config_file_name='trybot_analyze_config.json',
-              mb_mastername=target_mastername,
+              mb_mainname=target_mainname,
               mb_buildername=target_buildername,
               additional_names=None))
 
@@ -120,7 +120,7 @@ def _compile_and_test_at_revision(api, target_mastername, target_buildername,
           bot_db,
           actual_compile_targets,
           tests_including_triggered=actual_tests_to_run,
-          mb_mastername=target_mastername,
+          mb_mainname=target_mainname,
           mb_buildername=target_buildername,
           override_bot_type='builder_tester')
 
@@ -163,7 +163,7 @@ def _compile_and_test_at_revision(api, target_mastername, target_buildername,
     return results
 
 
-def RunSteps(api, target_mastername, target_testername,
+def RunSteps(api, target_mainname, target_testername,
              good_revision, bad_revision, tests, use_analyze):
   assert tests, 'No failed tests were specified.'
 
@@ -172,13 +172,13 @@ def RunSteps(api, target_mastername, target_testername,
   # such cases, just treat the builder as a "tester". Thus, we default to
   # the target tester.
   tester_config = api.chromium_tests.builders.get(
-      target_mastername).get('builders', {}).get(target_testername)
+      target_mainname).get('builders', {}).get(target_testername)
   target_buildername = (tester_config.get('parent_buildername') or
                         target_testername)
 
   # Configure to match the compile config on the builder.
   bot_config = api.chromium_tests.create_bot_config_object(
-      target_mastername, target_buildername)
+      target_mainname, target_buildername)
   api.chromium_tests.configure_build(
       bot_config, override_bot_type='builder_tester')
 
@@ -215,7 +215,7 @@ def RunSteps(api, target_mastername, target_testername,
     # both compile and test.
     for current_revision in revisions_to_check:
       test_results[current_revision] = _compile_and_test_at_revision(
-          api, target_mastername, target_buildername, target_testername,
+          api, target_mainname, target_buildername, target_testername,
           current_revision, tests, use_analyze)
       # TODO(http://crbug.com/566975): check whether culprits for all failed
       # tests are found and stop running tests at later revisions if so.
@@ -225,7 +225,7 @@ def RunSteps(api, target_mastername, target_testername,
         'report', [json.dumps(report, indent=2)], as_log='report')
 
     # Set the report as a build property too, so that it will be reported back
-    # to Buildbucket and Findit will pull from there instead of buildbot master.
+    # to Buildbucket and Findit will pull from there instead of buildbot main.
     step_result.presentation.properties['report'] = report
 
   return report
@@ -234,11 +234,11 @@ def RunSteps(api, target_mastername, target_testername,
 def GenTests(api):
   def props(tests, platform_name, tester_name, use_analyze=False):
     properties = {
-        'mastername': 'tryserver.chromium.%s' % platform_name,
+        'mainname': 'tryserver.chromium.%s' % platform_name,
         'buildername': '%s_chromium_variable' % platform_name,
-        'slavename': 'build1-a1',
+        'subordinatename': 'build1-a1',
         'buildnumber': 1,
-        'target_mastername': 'chromium.%s' % platform_name,
+        'target_mainname': 'chromium.%s' % platform_name,
         'target_testername': tester_name,
         'good_revision': 'r0',
         'bad_revision': 'r1',

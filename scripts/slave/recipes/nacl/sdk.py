@@ -25,7 +25,7 @@ def RunSteps(api):
   api.python(
       'annotated_steps',
       api.path['build'].join(
-          'scripts', 'slave', 'chromium', 'nacl_sdk_buildbot_run.py'),
+          'scripts', 'subordinate', 'chromium', 'nacl_sdk_buildbot_run.py'),
       allow_subannotations=True)
 
 

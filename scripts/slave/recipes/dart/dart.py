@@ -51,4 +51,4 @@ def RunSteps(api):
 def GenTests(api):
    yield (
       api.test('linux64') + api.platform('linux', 64) +
-      api.properties.generic(mastername='client.dart.FYI'))
+      api.properties.generic(mainname='client.dart.FYI'))

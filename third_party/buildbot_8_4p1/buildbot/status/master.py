@@ -27,14 +27,14 @@ from buildbot.status import buildset, builder, buildrequest
 
 class Status:
     """
-    I represent the status of the buildmaster.
+    I represent the status of the buildmain.
     """
     implements(interfaces.IStatus)
 
-    def __init__(self, master):
-        self.master = master
-        self.botmaster = master.botmaster
-        self.basedir = master.basedir
+    def __init__(self, main):
+        self.main = main
+        self.botmain = main.botmain
+        self.basedir = main.basedir
         self.watchers = []
         # compress logs bigger than 4k, a good default on linux
         self.logCompressionLimit = 4*1024
@@ -44,11 +44,11 @@ class Status:
         self.logMaxTailSize = None
 
         # subscribe to the things we need to know about
-        self.master.subscribeToBuildsetCompletions(
+        self.main.subscribeToBuildsetCompletions(
                 self._buildsetCompletionCallback)
-        self.master.subscribeToBuildsets(
+        self.main.subscribeToBuildsets(
                 self._buildsetCallback)
-        self.master.subscribeToBuildRequests(
+        self.main.subscribeToBuildRequests(
                 self._buildRequestCallback)
 
         self._builder_observers = bbcollections.KeyedSets()
@@ -57,25 +57,25 @@ class Status:
 
     @property
     def shuttingDown(self):
-        return self.botmaster.shuttingDown
+        return self.botmain.shuttingDown
 
     def cleanShutdown(self):
-        return self.botmaster.cleanShutdown()
+        return self.botmain.cleanShutdown()
 
     def cancelCleanShutdown(self):
-        return self.botmaster.cancelCleanShutdown()
+        return self.botmain.cancelCleanShutdown()
 
     # methods called by our clients
 
     def getTitle(self):
-        return self.master.title
+        return self.main.title
     def getTitleURL(self):
-        return self.master.titleURL
+        return self.main.titleURL
     def getBuildbotURL(self):
-        return self.master.buildbotURL
+        return self.main.buildbotURL
 
     def getMetrics(self):
-        return self.master.metrics
+        return self.main.metrics
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -106,7 +106,7 @@ class Status:
                 urllib.quote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
-        # ISlaveStatus
+        # ISubordinateStatus
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -134,29 +134,29 @@ class Status:
                 urllib.quote(loog.getName()))
 
     def getChangeSources(self):
-        return list(self.master.change_svc)
+        return list(self.main.change_svc)
 
     def getChange(self, number):
         """Get a Change object; returns a deferred"""
-        d = self.master.db.changes.getChange(number)
+        d = self.main.db.changes.getChange(number)
         def chdict2change(chdict):
             if not chdict:
                 return None
-            return changes.Change.fromChdict(self.master, chdict)
+            return changes.Change.fromChdict(self.main, chdict)
         d.addCallback(chdict2change)
         return d
 
     def getSchedulers(self):
-        return self.master.allSchedulers()
+        return self.main.allSchedulers()
 
     def getBuilderNames(self, categories=None):
         if categories == None:
-            return self.botmaster.builderNames[:] # don't let them break it
+            return self.botmain.builderNames[:] # don't let them break it
         
         l = []
         # respect addition order
-        for name in self.botmaster.builderNames:
-            bldr = self.botmaster.builders[name]
+        for name in self.botmain.builderNames:
+            bldr = self.botmain.builders[name]
             if bldr.builder_status.category in categories:
                 l.append(name)
         return l
@@ -165,16 +165,16 @@ class Status:
         """
         @rtype: L{BuilderStatus}
         """
-        return self.botmaster.builders[name].builder_status
+        return self.botmain.builders[name].builder_status
 
-    def getSlaveNames(self):
-        return self.botmaster.slaves.keys()
+    def getSubordinateNames(self):
+        return self.botmain.subordinates.keys()
 
-    def getSlave(self, slavename):
-        return self.botmaster.slaves[slavename].slave_status
+    def getSubordinate(self, subordinatename):
+        return self.botmain.subordinates[subordinatename].subordinate_status
 
     def getBuildSets(self):
-        d = self.master.db.buildsets.getBuildsets(complete=False)
+        d = self.main.db.buildsets.getBuildsets(complete=False)
         def make_status_objects(bsdicts):
             return [ buildset.BuildSetStatus(bsdict, self)
                     for bsdict in bsdicts ]
@@ -243,7 +243,7 @@ class Status:
 
     def subscribe(self, target):
         self.watchers.append(target)
-        for name in self.botmaster.builderNames:
+        for name in self.botmain.builderNames:
             self.announceNewBuilder(target, name, self.getBuilder(name))
     def unsubscribe(self, target):
         self.watchers.remove(target)
@@ -314,15 +314,15 @@ class Status:
             if hasattr(t, 'builderRemoved'):
                 t.builderRemoved(name)
 
-    def slaveConnected(self, name):
+    def subordinateConnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveConnected'):
-                t.slaveConnected(name)
+            if hasattr(t, 'subordinateConnected'):
+                t.subordinateConnected(name)
 
-    def slaveDisconnected(self, name):
+    def subordinateDisconnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveDisconnected'):
-                t.slaveDisconnected(name)
+            if hasattr(t, 'subordinateDisconnected'):
+                t.subordinateDisconnected(name)
 
     def changeAdded(self, change):
         for t in self.watchers:
@@ -369,7 +369,7 @@ class Status:
         # who cares
         if bsid not in self._buildset_finished_waiters:
             return
-        d = self.master.db.buildsets.getBuildset(bsid)
+        d = self.main.db.buildsets.getBuildset(bsid)
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             if bss.isFinished():
@@ -387,7 +387,7 @@ class Status:
 
     def _buildsetCallback(self, **kwargs):
         bsid = kwargs['bsid']
-        d = self.master.db.buildsets.getBuildset(bsid)
+        d = self.main.db.buildsets.getBuildset(bsid)
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             for t in self.watchers:

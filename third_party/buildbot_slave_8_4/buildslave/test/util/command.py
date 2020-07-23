@@ -16,9 +16,9 @@
 import os
 import shutil
 
-from buildslave.test.fake import slavebuilder, runprocess
-from buildslave.commands import utils
-import buildslave.runprocess
+from buildsubordinate.test.fake import subordinatebuilder, runprocess
+from buildsubordinate.commands import utils
+import buildsubordinate.runprocess
 
 class CommandTestMixin:
     """
@@ -61,7 +61,7 @@ class CommandTestMixin:
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        This always creates the SlaveBuilder with a basedir (self.basedir).  If
+        This always creates the SubordinateBuilder with a basedir (self.basedir).  If
         makedirs is true, it will create the basedir and a workdir directory
         inside (named 'workdir').
 
@@ -69,7 +69,7 @@ class CommandTestMixin:
         attributes are set:
 
             self.cmd -- the command
-            self.builder -- the (fake) SlaveBuilder
+            self.builder -- the (fake) SubordinateBuilder
         """
 
         # set up the workdir and basedir
@@ -80,7 +80,7 @@ class CommandTestMixin:
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
+        b = self.builder = subordinatebuilder.FakeSubordinateBuilder(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
 
         return self.cmd
@@ -119,8 +119,8 @@ class CommandTestMixin:
         """
         Patch a fake RunProcess class in, and set the given expectations.
         """
-        self.patch(buildslave.runprocess, 'RunProcess', runprocess.FakeRunProcess)
-        buildslave.runprocess.RunProcess.expect(*expectations)
+        self.patch(buildsubordinate.runprocess, 'RunProcess', runprocess.FakeRunProcess)
+        buildsubordinate.runprocess.RunProcess.expect(*expectations)
         self.runprocess_patched = True
 
     def patch_getCommand(self, name, result):

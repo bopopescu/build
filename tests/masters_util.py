@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Buildbot master utility functions.
+"""Buildbot main utility functions.
 """
 
 import json
@@ -15,7 +15,7 @@ import time
 BUILD_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BUILD_DIR, 'scripts'))
 
-from tools import mastermap
+from tools import mainmap
 from common import find_depot_tools  # pylint: disable=W0611
 import subprocess2
 
@@ -41,8 +41,8 @@ def pid_exists(pid):
   return True
 
 
-def is_master_alive(master, path):
-  """Reads master's *.pid file and checks for corresponding PID in the system.
+def is_main_alive(main, path):
+  """Reads main's *.pid file and checks for corresponding PID in the system.
   If there is no such process, removes stale *.pid file and returns False.
 
   Returns:
@@ -56,14 +56,14 @@ def is_master_alive(master, path):
       contents = f.read()
     if pid_exists(int(contents.strip())):
       return True
-    logging.warning('Ghost twistd.pid for %s, removing it', master)
+    logging.warning('Ghost twistd.pid for %s, removing it', main)
   except IOError as error:
     if error.errno == errno.ENOENT:
       return False
     raise
   except ValueError:
     logging.warning('Corrupted twistd.pid for %s, removing it: %r',
-                    master, contents)
+                    main, contents)
   remove_file(pid_path)
   return False
 
@@ -77,14 +77,14 @@ def remove_file(path):
     pass
 
 
-def start_master(master, path, dry_run=False):
-  """Asynchronously starts the |master| at given |path|.
-  If |dry_run| is True, will start the master in a limited mode suitable only
+def start_main(main, path, dry_run=False):
+  """Asynchronously starts the |main| at given |path|.
+  If |dry_run| is True, will start the main in a limited mode suitable only
   for integration testing purposes.
 
   Returns:
-    True - the master was successfully started.
-    False - the master failed to start, details are in the log.
+    True - the main was successfully started.
+    False - the main failed to start, details are in the log.
   """
   try:
     env = os.environ.copy()
@@ -96,41 +96,41 @@ def start_master(master, path, dry_run=False):
         ['make', 'start'], timeout=120, cwd=path, env=env,
         stderr=subprocess2.STDOUT)
   except subprocess2.CalledProcessError as e:
-    logging.error('Error: cannot start %s' % master)
+    logging.error('Error: cannot start %s' % main)
     print e
     return False
   return True
 
 
-def stop_master(master, path, force=False):
-  """Issues 'stop' command and waits for master to terminate. If |force| is True
-  will try to kill master process if it fails to terminate in time by itself.
+def stop_main(main, path, force=False):
+  """Issues 'stop' command and waits for main to terminate. If |force| is True
+  will try to kill main process if it fails to terminate in time by itself.
 
   Returns:
-    True - master was stopped, killed or wasn't running.
-    False - master is still running.
+    True - main was stopped, killed or wasn't running.
+    False - main is still running.
   """
-  if terminate_master(master, path, 'stop', timeout=10):
+  if terminate_main(main, path, 'stop', timeout=10):
     return True
   if not force:
-    logging.warning('Master %s failed to stop in time', master)
+    logging.warning('Main %s failed to stop in time', main)
     return False
-  logging.warning('Master %s failed to stop in time, killing it', master)
-  if terminate_master(master, path, 'kill', timeout=2):
+  logging.warning('Main %s failed to stop in time, killing it', main)
+  if terminate_main(main, path, 'kill', timeout=2):
     return True
-  logging.warning('Master %s is still running', master)
+  logging.warning('Main %s is still running', main)
   return False
 
 
-def terminate_master(master, path, command, timeout=10):
-  """Executes 'make |command|' and waits for master to stop running or until
+def terminate_main(main, path, command, timeout=10):
+  """Executes 'make |command|' and waits for main to stop running or until
   |timeout| seconds pass.
 
   Returns:
-    True - the master was terminated or wasn't running.
-    False - the command failed, or master failed to terminate in time.
+    True - the main was terminated or wasn't running.
+    False - the command failed, or main failed to terminate in time.
   """
-  if not is_master_alive(master, path):
+  if not is_main_alive(main, path):
     return True
   try:
     env = os.environ.copy()
@@ -139,29 +139,29 @@ def terminate_master(master, path, command, timeout=10):
         ['make', command], timeout=5, cwd=path, env=env,
         stderr=subprocess2.STDOUT)
   except subprocess2.CalledProcessError as e:
-    if not is_master_alive(master, path):
+    if not is_main_alive(main, path):
       return True
-    logging.warning('Master %s was not terminated: \'make %s\' failed: %s',
-                    master, command, e)
+    logging.warning('Main %s was not terminated: \'make %s\' failed: %s',
+                    main, command, e)
     return False
-  return wait_for_termination(master, path, timeout=timeout)
+  return wait_for_termination(main, path, timeout=timeout)
 
 
-def wait_for_termination(master, path, timeout=10):
-  """Waits for master to finish running and cleans up pid file.
+def wait_for_termination(main, path, timeout=10):
+  """Waits for main to finish running and cleans up pid file.
   Waits for at most |timeout| seconds.
 
   Returns:
-    True - master has stopped or wasn't running.
-    False - master failed to terminate in time.
+    True - main has stopped or wasn't running.
+    False - main failed to terminate in time.
   """
   started = time.time()
   while True:
     now = time.time()
     if now > started + timeout:
       break
-    if not is_master_alive(master, path):
-      logging.info('Master %s stopped in %.1f sec.', master, now - started)
+    if not is_main_alive(main, path):
+      logging.info('Main %s stopped in %.1f sec.', main, now - started)
       return True
     time.sleep(0.1)
   return False
@@ -194,7 +194,7 @@ def search_for_exceptions(path):
 
 
 def json_probe(sensitive, allports):
-  """Looks through the port range and finds a master listening.
+  """Looks through the port range and finds a main listening.
   sensitive: Indicates whether partial success should be reported.
 
   Returns (port, name) or None.
@@ -231,9 +231,9 @@ def json_probe(sensitive, allports):
   return None
 
 
-def wait_for_start(master, name, path, ports):
-  """Waits for ~30s for the masters to open its web server."""
-  logging.info("Waiting for master %s on ports %s" % (name, ports))
+def wait_for_start(main, name, path, ports):
+  """Waits for ~30s for the mains to open its web server."""
+  logging.info("Waiting for main %s on ports %s" % (name, ports))
   for i in range(300):
     result = json_probe(False, ports)
     if result is None:
@@ -245,25 +245,25 @@ def wait_for_start(master, name, path, ports):
     port, got_name = result # pylint: disable=unpacking-non-sequence
     if got_name != name:
       return 'Wrong %s name, expected %s, got %s on port %d' % (
-          master, name, got_name, port)
-    logging.info("Found master %s on port %s, iteration %d" % (name, port, i))
+          main, name, got_name, port)
+    logging.info("Found main %s on port %s, iteration %d" % (name, port, i))
     # The server is now answering /json requests. Check that the log file
     # doesn't have any other exceptions just in case there was some other
     # unexpected error.
     return search_for_exceptions(path)
 
-  return 'Didn\'t find open port for %s' % master
+  return 'Didn\'t find open port for %s' % main
 
 
-def check_for_no_masters():
+def check_for_no_mains():
   ports = range(8000, 8099) + range(8200, 8299) + range(9000, 9099)
-  ports = [x for x in ports if x not in mastermap.PORT_BLACKLIST]
+  ports = [x for x in ports if x not in mainmap.PORT_BLACKLIST]
   result = json_probe(True, ports)
   if result is None:
     return True
   if result[1] is None:
     logging.error('Something is listening on port %d' % result[0])
     return False
-  logging.error('Found unexpected master %s on port %d' %
+  logging.error('Found unexpected main %s on port %d' %
                 (result[1], result[0]))
   return False

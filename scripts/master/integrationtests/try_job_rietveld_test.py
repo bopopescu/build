@@ -17,7 +17,7 @@ from twisted.python import log
 
 import test_env  # pylint: disable=W0611
 
-from master import try_job_rietveld
+from main import try_job_rietveld
 
 # pylint: disable=W0212
 users = try_job_rietveld._ValidUserPoller(None)

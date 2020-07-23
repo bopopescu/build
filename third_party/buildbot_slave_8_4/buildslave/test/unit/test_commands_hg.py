@@ -15,9 +15,9 @@
 
 from twisted.trial import unittest
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import hg
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.sourcecommand import SourceCommandTestMixin
+from buildsubordinate.commands import hg
 
 class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
 

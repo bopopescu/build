@@ -4,7 +4,7 @@
 
 """Script to setup the environment to run unit tests.
 
-Imports scripts/master/unittests/test_env.py
+Imports scripts/main/unittests/test_env.py
 """
 
 import os
@@ -14,4 +14,4 @@ TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.abspath(os.path.join(TESTS_DIR, '..', '..', '..', '..'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'scripts'))
 
-import master.unittests.test_env
+import main.unittests.test_env

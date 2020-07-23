@@ -62,25 +62,25 @@ def _sanitize_nonalpha(text):
 def GenTests(api):
   builders = api.webrtc.BUILDERS
 
-  def generate_builder(mastername, buildername, revision,
+  def generate_builder(mainname, buildername, revision,
                        parent_got_revision=None, legacy_trybot=False,
                        failing_test=None, suffix=None):
     suffix = suffix or ''
-    bot_config = builders[mastername]['builders'][buildername]
+    bot_config = builders[mainname]['builders'][buildername]
     bot_type = bot_config.get('bot_type', 'builder_tester')
 
     if bot_type in ('builder', 'builder_tester'):
       assert bot_config.get('parent_buildername') is None, (
-          'Unexpected parent_buildername for builder %r on master %r.' %
-              (buildername, mastername))
+          'Unexpected parent_buildername for builder %r on main %r.' %
+              (buildername, mainname))
 
     chromium_kwargs = bot_config.get('chromium_config_kwargs', {})
     test = (
-      api.test('%s_%s%s' % (_sanitize_nonalpha(mastername),
+      api.test('%s_%s%s' % (_sanitize_nonalpha(mainname),
                             _sanitize_nonalpha(buildername), suffix)) +
-      api.properties(mastername=mastername,
+      api.properties(mainname=mainname,
                      buildername=buildername,
-                     slavename='slavename',
+                     subordinatename='subordinatename',
                      BUILD_CONFIG=chromium_kwargs['BUILD_CONFIG']) +
       api.platform(bot_config['testing']['platform'],
                    chromium_kwargs.get('TARGET_BITS', 64))
@@ -99,7 +99,7 @@ def GenTests(api):
     if failing_test:
       test += api.step_data(failing_test, retcode=1)
 
-    if mastername.startswith('tryserver'):
+    if mainname.startswith('tryserver'):
       if legacy_trybot:
         test += api.properties(patch_url='try_job_svn_patch')
       else:
@@ -108,32 +108,32 @@ def GenTests(api):
     test += api.properties(buildnumber=1337)
     return test
 
-  for mastername in ('client.webrtc', 'client.webrtc.fyi', 'tryserver.webrtc'):
-    master_config = builders[mastername]
-    for buildername in master_config['builders'].keys():
-      yield generate_builder(mastername, buildername, revision='12345')
+  for mainname in ('client.webrtc', 'client.webrtc.fyi', 'tryserver.webrtc'):
+    main_config = builders[mainname]
+    for buildername in main_config['builders'].keys():
+      yield generate_builder(mainname, buildername, revision='12345')
 
   # Forced builds (not specifying any revision) and test failures.
-  mastername = 'client.webrtc'
+  mainname = 'client.webrtc'
   buildername = 'Linux64 Debug'
-  yield generate_builder(mastername, buildername, revision=None,
+  yield generate_builder(mainname, buildername, revision=None,
                          suffix='_forced')
-  yield generate_builder(mastername, buildername, revision='12345',
+  yield generate_builder(mainname, buildername, revision='12345',
                          failing_test='tools_unittests',
                          suffix='_failing_test')
 
-  yield generate_builder(mastername, 'Android32 Builder', revision=None,
+  yield generate_builder(mainname, 'Android32 Builder', revision=None,
                          suffix='_forced')
 
   buildername = 'Android32 Tests (L Nexus5)'
-  yield generate_builder(mastername, buildername, revision=None,
+  yield generate_builder(mainname, buildername, revision=None,
                          parent_got_revision='12345', suffix='_forced')
-  yield generate_builder(mastername, buildername, revision=None,
+  yield generate_builder(mainname, buildername, revision=None,
                          suffix='_forced_invalid')
-  yield generate_builder(mastername, buildername, revision='12345',
+  yield generate_builder(mainname, buildername, revision='12345',
                          failing_test='tools_unittests', suffix='_failing_test')
 
   # Legacy trybot (SVN-based).
-  mastername = 'tryserver.webrtc'
-  yield generate_builder(mastername, 'linux_dbg', revision='12345',
+  mainname = 'tryserver.webrtc'
+  yield generate_builder(mainname, 'linux_dbg', revision='12345',
                          legacy_trybot=True, suffix='_legacy_svn_patch')

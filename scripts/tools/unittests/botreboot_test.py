@@ -22,23 +22,23 @@ sys.path.insert(0, SITE_CONFIG_DIR)
 sys.path.insert(0, SCRIPTS_DIR)
 sys.path.insert(0, DEPOT_TOOLS_DIR)
 
-# Trick reboot_tools to accept a dummy master config
+# Trick reboot_tools to accept a dummy main config
 import config_bootstrap
-import slave.reboot_tools
+import subordinate.reboot_tools
 from testing_support import auto_stub
 
 
-class DummyMasterReboot(config_bootstrap.Master.Master1):
-  project_name = 'Dummy Master Reboot'
+class DummyMainReboot(config_bootstrap.Main.Main1):
+  project_name = 'Dummy Main Reboot'
   reboot_on_step_timeout = True
 
 
-class DummyMasterNoReboot(config_bootstrap.Master.Master1):
-  project_name = 'Dummy Master No Reboot'
+class DummyMainNoReboot(config_bootstrap.Main.Main1):
+  project_name = 'Dummy Main No Reboot'
   reboot_on_step_timeout = False
 
-class DummyMasterDefault(config_bootstrap.Master.Master1):
-  project_name = 'Dummy Master Default'
+class DummyMainDefault(config_bootstrap.Main.Main1):
+  project_name = 'Dummy Main Default'
 
 class SleepException(Exception):
   pass
@@ -56,9 +56,9 @@ class BotRebootTest(auto_stub.TestCase):
     self.subprocess_calls = []
     if hasattr(os.environ, 'TESTING_MASTER'):
       del os.environ['TESTING_MASTER']
-    self.mock(slave.reboot_tools, 'Log', self.MockLog)
+    self.mock(subordinate.reboot_tools, 'Log', self.MockLog)
     self.mock(subprocess, 'call', self.MockCall)
-    self.mock(slave.reboot_tools, 'Sleep', MockSleep)
+    self.mock(subordinate.reboot_tools, 'Sleep', MockSleep)
 
   def tearDown(self):
     if hasattr(os.environ, 'TESTING_MASTER'):
@@ -72,37 +72,37 @@ class BotRebootTest(auto_stub.TestCase):
     self.subprocess_calls.append(args)
 
   def test_reboot(self):
-    setattr(config_bootstrap.Master, 'active_master', DummyMasterReboot)
+    setattr(config_bootstrap.Main, 'active_main', DummyMainReboot)
     # Run in test mode, don't actually reboot
-    os.environ['TESTING_MASTER'] = 'DummyMasterReboot'
-    slave.reboot_tools.Reboot()
+    os.environ['TESTING_MASTER'] = 'DummyMainReboot'
+    subordinate.reboot_tools.Reboot()
     msg = 'Reboot: Testing mode enabled, skipping the actual reboot'
     self.assertIn(msg, self.log_messages)
 
   def test_no_record(self):
-    setattr(config_bootstrap.Master, 'active_master', DummyMasterDefault)
+    setattr(config_bootstrap.Main, 'active_main', DummyMainDefault)
     # Run in test mode, don't actually reboot
-    os.environ['TESTING_MASTER'] = 'DummyMasterDefault'
-    slave.reboot_tools.Reboot()
+    os.environ['TESTING_MASTER'] = 'DummyMainDefault'
+    subordinate.reboot_tools.Reboot()
     msg = 'Reboot: Testing mode enabled, skipping the actual reboot'
     self.assertIn(msg, self.log_messages)
 
   def test_no_reboot(self):
-    setattr(config_bootstrap.Master, 'active_master', DummyMasterNoReboot)
+    setattr(config_bootstrap.Main, 'active_main', DummyMainNoReboot)
     # Run in test mode, don't actually reboot
-    os.environ['TESTING_MASTER'] = 'DummyMasterNoReboot'
-    slave.reboot_tools.Reboot()
+    os.environ['TESTING_MASTER'] = 'DummyMainNoReboot'
+    subordinate.reboot_tools.Reboot()
     msg = 'Reboot: Testing mode enabled, skipping the actual reboot'
     self.assertNotIn(msg, self.log_messages)
     self.assertNotIn('Reboot: Issuing Reboot...', self.log_messages)
 
   def test_issue_reboot(self):
-    setattr(config_bootstrap.Master, 'active_master', DummyMasterReboot)
+    setattr(config_bootstrap.Main, 'active_main', DummyMainReboot)
     # Do NOT define TESTING_MASTER, we want to reach IssueReboot().
     # However, setup a backdoor to capture the shutdown command and
     # provide a quick exit from the infinite loop
     try:
-      slave.reboot_tools.Reboot()
+      subordinate.reboot_tools.Reboot()
     except SleepException:
       pass
     calls_expected = [['sudo', 'shutdown', '-r', 'now']]

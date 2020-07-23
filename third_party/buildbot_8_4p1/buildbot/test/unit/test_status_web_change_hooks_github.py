@@ -63,7 +63,7 @@ gitJsonPayload = """
     }
   ],
   "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
-  "ref": "refs/heads/master"
+  "ref": "refs/heads/main"
 }
 """
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
@@ -87,7 +87,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
             self.assertEquals(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
             self.assertEquals(change["comments"], "okay i give in")
-            self.assertEquals(change["branch"], "master")
+            self.assertEquals(change["branch"], "main")
             self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59")
 
             change = self.request.addedChanges[1]
@@ -97,7 +97,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
             self.assertEquals(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
             self.assertEquals(change["comments"], "update pricing a tad")
-            self.assertEquals(change["branch"], "master")
+            self.assertEquals(change["branch"], "main")
             self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0")
 
         d.addCallback(check_changes)

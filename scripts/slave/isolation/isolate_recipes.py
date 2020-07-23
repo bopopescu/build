@@ -20,9 +20,9 @@ from recipe_engine import loader
 def main(argv):
   roots = [BUILD_ROOT, BUILD_INTERNAL_ROOT]
   universe = loader.RecipeUniverse(
-      module_dirs=[os.path.join(root, 'scripts', 'slave', 'recipe_modules')
+      module_dirs=[os.path.join(root, 'scripts', 'subordinate', 'recipe_modules')
                     for root in roots],
-      recipe_dirs=[os.path.join(root, 'scripts', 'slave', 'recipes')
+      recipe_dirs=[os.path.join(root, 'scripts', 'subordinate', 'recipes')
                     for root in roots])
   recipes = list(universe.loop_over_recipes())
   paths = []

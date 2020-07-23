@@ -15,8 +15,8 @@ import os
 import time
 
 import simplejson
-from slave.gtest.test_result import TestResult
-from slave.gtest.test_results_uploader import TestResultsUploader
+from subordinate.gtest.test_result import TestResult
+from subordinate.gtest.test_results_uploader import TestResultsUploader
 
 # A JSON results generator for generic tests.
 
@@ -97,7 +97,7 @@ class JSONResultsGenerator(object):
                test_results_map, svn_revisions=None,
                test_results_server=None,
                test_type='',
-               master_name='',
+               main_name='',
                file_writer=None):
     """Modifies the results.json file. Grabs it off the archive directory
     if it is not found locally.
@@ -117,7 +117,7 @@ class JSONResultsGenerator(object):
         included in the JSON with the given json_field_name.
       test_results_server: server that hosts test results json.
       test_type: test type string (e.g. 'webkit_tests').
-      master_name: the name of the buildbot master.
+      main_name: the name of the buildbot main.
       file_writer: if given the parameter is used to write JSON data to a file.
         The parameter must be the function that takes two arguments, 'file_path'
         and 'data' to be written into the file_path.
@@ -136,7 +136,7 @@ class JSONResultsGenerator(object):
 
     self._test_results_server = test_results_server
     self._test_type = test_type
-    self._master_name = master_name
+    self._main_name = main_name
     self._file_writer = file_writer
 
   def generate_json_output(self):
@@ -225,15 +225,15 @@ class JSONResultsGenerator(object):
     if not self._test_results_server:
       return
 
-    if not self._master_name:
-      logging.error('--test-results-server was set, but --master-name was not. '
+    if not self._main_name:
+      logging.error('--test-results-server was set, but --main-name was not. '
                     'Not uploading JSON files.')
       return
 
     print 'Uploading JSON files for builder: %s' % self._builder_name
     attrs = [('builder', self._builder_name),
              ('testtype', self._test_type),
-             ('master', self._master_name)]
+             ('main', self._main_name)]
 
     files = [(f, os.path.join(self._results_directory, f)) for f in json_files]
 

@@ -109,7 +109,7 @@ def isolate_recipes(api):
       api.path['build'].join('third_party', 'infra'),
       infra_step=True)
   skia_recipes_dir = api.path['build'].join(
-      'scripts', 'slave', 'recipes', 'skia')
+      'scripts', 'subordinate', 'recipes', 'skia')
   api.skia_swarming.create_isolated_gen_json(
       skia_recipes_dir.join('swarm_recipe.isolate'),
       skia_recipes_dir,
@@ -129,11 +129,11 @@ def trigger_task(api, task_name, builder, builder_spec, got_revision,
 
   properties = {
     'buildername': builder,
-    'mastername': api.properties['mastername'],
+    'mainname': api.properties['mainname'],
     'buildnumber': api.properties['buildnumber'],
     'reason': 'Triggered by Skia swarm_trigger Recipe',
     'revision': got_revision,
-    'slavename': api.properties['slavename'],
+    'subordinatename': api.properties['subordinatename'],
     'swarm_out_dir': '${ISOLATED_OUTDIR}',
   }
   builder_cfg = builder_spec['builder_cfg']
@@ -149,12 +149,12 @@ def trigger_task(api, task_name, builder, builder_spec, got_revision,
   for k, v in properties.iteritems():
     extra_args.append('%s=%s' % (k, v))
 
-  isolate_base_dir = api.path['slave_build']
+  isolate_base_dir = api.path['subordinate_build']
   dimensions = swarm_dimensions(builder_spec)
   isolate_blacklist = ['.git', 'out', '*.pyc']
   isolate_vars = {
     'BUILD': api.path['build'],
-    'WORKDIR': api.path['slave_build'],
+    'WORKDIR': api.path['subordinate_build'],
   }
 
   return api.skia_swarming.isolate_and_trigger_task(
@@ -179,7 +179,7 @@ def checkout_steps(api):
   skia.name = 'skia'
   skia.managed = False
   skia.url = 'https://skia.googlesource.com/skia.git'
-  skia.revision = api.properties.get('revision') or 'origin/master'
+  skia.revision = api.properties.get('revision') or 'origin/main'
   api.skia.update_repo(skia)
 
   # Run 'gclient sync'.
@@ -199,7 +199,7 @@ def compile_steps_swarm(api, builder_spec, got_revision, infrabots_dir,
   compile_builder_spec = builder_spec
   if builder_name != api.properties['buildername']:
     compile_builder_spec = api.skia.get_builder_spec(
-        api.path['slave_build'].join('skia'), builder_name)
+        api.path['subordinate_build'].join('skia'), builder_name)
   # Windows bots require a toolchain.
   extra_hashes = extra_isolate_hashes[:]
   if 'Win' in builder_name:
@@ -269,7 +269,7 @@ def perf_steps_collect(api, task, upload_perf_results, got_revision,
 
   # Upload the results.
   if upload_perf_results:
-    perf_data_dir = api.path['slave_build'].join(
+    perf_data_dir = api.path['subordinate_build'].join(
         'perfdata', api.properties['buildername'], 'data')
     git_timestamp = api.git.get_timestamp(test_data='1408633190',
                                           infra_step=True)
@@ -322,7 +322,7 @@ def test_steps_collect(api, task, upload_dm_results, got_revision, is_trybot):
 
   # Upload the results.
   if upload_dm_results:
-    dm_dir = api.path['slave_build'].join('dm')
+    dm_dir = api.path['subordinate_build'].join('dm')
     dm_src = task.task_output_dir.join('0', 'dm')
     api.file.rmtree('dm_dir', dm_dir, infra_step=True)
     api.file.copytree('dm_dir', dm_src, dm_dir, infra_step=True)
@@ -337,7 +337,7 @@ def test_steps_collect(api, task, upload_dm_results, got_revision, is_trybot):
           api.properties['buildername'],
           api.properties['buildnumber'],
           api.properties['issue'] if is_trybot else '',
-          api.path['slave_build'].join('skia', 'common', 'py', 'utils'),
+          api.path['subordinate_build'].join('skia', 'common', 'py', 'utils'),
         ],
         cwd=api.path['checkout'],
         env=api.skia.gsutil_env('chromium-skia-gm.boto'),
@@ -368,11 +368,11 @@ def RunSteps(api):
 
   extra_hashes = [recipes_hash, compile_hash]
 
-  api.skia.download_skps(api.path['slave_build'].join('tmp'),
-                         api.path['slave_build'].join('skps'),
+  api.skia.download_skps(api.path['subordinate_build'].join('tmp'),
+                         api.path['subordinate_build'].join('skps'),
                          False)
-  api.skia.download_images(api.path['slave_build'].join('tmp'),
-                           api.path['slave_build'].join('images'),
+  api.skia.download_images(api.path['subordinate_build'].join('tmp'),
+                           api.path['subordinate_build'].join('images'),
                            False)
 
   test_task = None
@@ -392,19 +392,19 @@ def RunSteps(api):
                        got_revision, is_trybot)
 
 
-def test_for_bot(api, builder, mastername, slavename, testname=None):
+def test_for_bot(api, builder, mainname, subordinatename, testname=None):
   """Generate a test for the given bot."""
   testname = testname or builder
   test = (
     api.test(testname) +
     api.properties(buildername=builder,
-                   mastername=mastername,
-                   slavename=slavename,
+                   mainname=mainname,
+                   subordinatename=subordinatename,
                    buildnumber=5,
                    revision='abc123') +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
   if 'Trybot' in builder:
@@ -428,18 +428,18 @@ def test_for_bot(api, builder, mastername, slavename, testname=None):
 
 
 def GenTests(api):
-  for mastername, slaves in TEST_BUILDERS.iteritems():
-    for slavename, builders_by_slave in slaves.iteritems():
-      for builder in builders_by_slave:
-        yield test_for_bot(api, builder, mastername, slavename)
+  for mainname, subordinates in TEST_BUILDERS.iteritems():
+    for subordinatename, builders_by_subordinate in subordinates.iteritems():
+      for builder in builders_by_subordinate:
+        yield test_for_bot(api, builder, mainname, subordinatename)
 
   builder = 'Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug-Swarming'
-  master = 'client.skia'
-  slave = 'skiabot-linux-test-000'
-  test = test_for_bot(api, builder, master, slave, 'No_downloaded_SKP_VERSION')
+  main = 'client.skia'
+  subordinate = 'skiabot-linux-test-000'
+  test = test_for_bot(api, builder, main, subordinate, 'No_downloaded_SKP_VERSION')
   test += api.step_data('Get downloaded SKP_VERSION', retcode=1)
   test += api.path.exists(
-      api.path['slave_build'].join('skia'),
-      api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+      api.path['subordinate_build'].join('skia'),
+      api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
   )
   yield test

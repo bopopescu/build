@@ -20,45 +20,45 @@ from twisted.web.util import Redirect
 from twisted.web.error import NoResource
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, path_to_slave, path_to_authfail
+    BuildLineMixin, path_to_subordinate, path_to_authfail
 from buildbot import util
 
-# /buildslaves/$slavename
-class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
+# /buildsubordinates/$subordinatename
+class OneBuildSubordinateResource(HtmlResource, BuildLineMixin):
     addSlash = False
-    def __init__(self, slavename):
+    def __init__(self, subordinatename):
         HtmlResource.__init__(self)
-        self.slavename = slavename
+        self.subordinatename = subordinatename
 
     def getPageTitle(self, req):
-        return "Buildbot: %s" % self.slavename
+        return "Buildbot: %s" % self.subordinatename
 
     def getChild(self, path, req):
         s = self.getStatus(req)
-        slave = s.getSlave(self.slavename)
+        subordinate = s.getSubordinate(self.subordinatename)
         if path == "shutdown":
-            if self.getAuthz(req).actionAllowed("gracefulShutdown", req, slave):
-                slave.setGraceful(True)
+            if self.getAuthz(req).actionAllowed("gracefulShutdown", req, subordinate):
+                subordinate.setGraceful(True)
             else:
                 return Redirect(path_to_authfail(req))
-        return Redirect(path_to_slave(req, slave))
+        return Redirect(path_to_subordinate(req, subordinate))
 
     def content(self, request, ctx):        
         s = self.getStatus(request)
-        slave = s.getSlave(self.slavename)
+        subordinate = s.getSubordinate(self.subordinatename)
         
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
-            for bs in b.getSlaves():
-                if bs.getName() == self.slavename:
+            for bs in b.getSubordinates():
+                if bs.getName() == self.subordinatename:
                     my_builders.append(b)
 
         # Current builds
         current_builds = []
         for b in my_builders:
             for cb in b.getCurrentBuilds():
-                if cb.getSlavename() == self.slavename:                    
+                if cb.getSubordinatename() == self.subordinatename:                    
                     current_builds.append(self.get_line_values(request, cb))
 
         try:
@@ -69,36 +69,36 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         recent_builds = []    
         n = 0
         for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-            if rb.getSlavename() == self.slavename:
+            if rb.getSubordinatename() == self.subordinatename:
                 n += 1
                 recent_builds.append(self.get_line_values(request, rb))
                 if n > max_builds:
                     break
 
         # connects over the last hour
-        slave = s.getSlave(self.slavename)
-        connect_count = slave.getConnectCount()
+        subordinate = s.getSubordinate(self.subordinatename)
+        connect_count = subordinate.getConnectCount()
 
-        ctx.update(dict(slave=slave,
-                        slavename = self.slavename,  
+        ctx.update(dict(subordinate=subordinate,
+                        subordinatename = self.subordinatename,  
                         current = current_builds, 
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),
                         authz = self.getAuthz(request),
-                        this_url = "../../../" + path_to_slave(request, slave),
-                        access_uri = slave.getAccessURI()),
-                        admin = unicode(slave.getAdmin() or '', 'utf-8'),
-                        host = unicode(slave.getHost() or '', 'utf-8'),
-                        slave_version = slave.getVersion(),
+                        this_url = "../../../" + path_to_subordinate(request, subordinate),
+                        access_uri = subordinate.getAccessURI()),
+                        admin = unicode(subordinate.getAdmin() or '', 'utf-8'),
+                        host = unicode(subordinate.getHost() or '', 'utf-8'),
+                        subordinate_version = subordinate.getVersion(),
                         show_builder_column = True,
                         connect_count = connect_count)
-        template = request.site.buildbot_service.templates.get_template("buildslave.html")
+        template = request.site.buildbot_service.templates.get_template("buildsubordinate.html")
         data = template.render(**ctx)
         return data
 
-# /buildslaves
-class BuildSlavesResource(HtmlResource):
-    pageTitle = "BuildSlaves"
+# /buildsubordinates
+class BuildSubordinatesResource(HtmlResource):
+    pageTitle = "BuildSubordinates"
     addSlash = True
 
     def content(self, request, ctx):
@@ -111,19 +111,19 @@ class BuildSlavesResource(HtmlResource):
         used_by_builder = {}
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
-            for bs in b.getSlaves():
-                slavename = bs.getName()
-                if slavename not in used_by_builder:
-                    used_by_builder[slavename] = []
-                used_by_builder[slavename].append(bname)
+            for bs in b.getSubordinates():
+                subordinatename = bs.getName()
+                if subordinatename not in used_by_builder:
+                    used_by_builder[subordinatename] = []
+                used_by_builder[subordinatename].append(bname)
 
-        slaves = ctx['slaves'] = []
-        for name in util.naturalSort(s.getSlaveNames()):
+        subordinates = ctx['subordinates'] = []
+        for name in util.naturalSort(s.getSubordinateNames()):
             info = {}
-            slaves.append(info)
-            slave = s.getSlave(name)
-            slave_status = s.botmaster.slaves[name].slave_status
-            info['running_builds'] = len(slave_status.getRunningBuilds())
+            subordinates.append(info)
+            subordinate = s.getSubordinate(name)
+            subordinate_status = s.botmain.subordinates[name].subordinate_status
+            info['running_builds'] = len(subordinate_status.getRunningBuilds())
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
 
@@ -132,24 +132,24 @@ class BuildSlavesResource(HtmlResource):
                 for b in used_by_builder.get(name, []):
                     info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
                                         
-            info['version'] = slave.getVersion()
-            info['connected'] = slave.isConnected()
-            info['connectCount'] = slave.getConnectCount()
+            info['version'] = subordinate.getVersion()
+            info['connected'] = subordinate.isConnected()
+            info['connectCount'] = subordinate.getConnectCount()
             
-            info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
-            last = slave.lastMessageReceived()
+            info['admin'] = unicode(subordinate.getAdmin() or '', 'utf-8')
+            last = subordinate.lastMessageReceived()
             if last:
                 info['last_heard_from_age'] = abbreviate_age(time.time() - last)
                 info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
                                                             time.localtime(last))
 
-        template = request.site.buildbot_service.templates.get_template("buildslaves.html")
+        template = request.site.buildbot_service.templates.get_template("buildsubordinates.html")
         data = template.render(**ctx)
         return data
 
     def getChild(self, path, req):
         try:
-            self.getStatus(req).getSlave(path)
-            return OneBuildSlaveResource(path)
+            self.getStatus(req).getSubordinate(path)
+            return OneBuildSubordinateResource(path)
         except KeyError:
-            return NoResource("No such slave '%s'" % html.escape(path))
+            return NoResource("No such subordinate '%s'" % html.escape(path))

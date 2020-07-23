@@ -153,17 +153,17 @@ class SkiaApi(recipe_api.RecipeApi):
     self.failed = []
 
     self.builder_name = self.m.properties['buildername']
-    self.master_name = self.m.properties['mastername']
-    self.slave_name = self.m.properties['slavename']
+    self.main_name = self.m.properties['mainname']
+    self.subordinate_name = self.m.properties['subordinatename']
 
-    self.slave_dir = self.m.path['slave_build']
-    self.skia_dir = self.slave_dir.join('skia')
+    self.subordinate_dir = self.m.path['subordinate_build']
+    self.skia_dir = self.subordinate_dir.join('skia')
     self.infrabots_dir = self.skia_dir.join('infra', 'bots')
 
     self.default_env = {}
     if running_in_swarming:
       self.default_env['CHROME_HEADLESS'] = '1'
-      depot_tools = self.slave_dir.join('depot_tools')
+      depot_tools = self.subordinate_dir.join('depot_tools')
       self.default_env['PATH'] = '%s:%%(PATH)s' % depot_tools
 
     # We run through this recipe in one of two ways:
@@ -185,15 +185,15 @@ class SkiaApi(recipe_api.RecipeApi):
 
     # Set some important variables.
     self.resource_dir = self.skia_dir.join('resources')
-    self.images_dir = self.slave_dir.join('images')
+    self.images_dir = self.subordinate_dir.join('images')
     if self.running_in_swarming:
       self.swarming_out_dir = self.m.properties['swarm_out_dir']
-      self.out_dir = self.slave_dir.join('out')
-      self.local_skp_dir = self.slave_dir.join('skps')
+      self.out_dir = self.subordinate_dir.join('out')
+      self.local_skp_dir = self.subordinate_dir.join('skps')
     else:
       self.out_dir = self.m.path['checkout'].join('out', self.builder_name)
-      self.local_skp_dir = self.slave_dir.join('playback', 'skps')
-    self.tmp_dir = self.m.path['slave_build'].join('tmp')
+      self.local_skp_dir = self.subordinate_dir.join('playback', 'skps')
+    self.tmp_dir = self.m.path['subordinate_build'].join('tmp')
 
     self.gsutil_env_chromium_skia_gm = self.gsutil_env(BOTO_CHROMIUM_SKIA_GM)
     # TODO(borenet): This works on GCE instance because we fall back on
@@ -222,8 +222,8 @@ class SkiaApi(recipe_api.RecipeApi):
       self.perf_data_dir = self.m.path.join(self.swarming_out_dir,
           'perfdata', self.builder_name, 'data')
     else:
-      self.dm_dir = self.slave_dir.join('dm')
-      self.perf_data_dir = self.slave_dir.join('perfdata', self.builder_name,
+      self.dm_dir = self.subordinate_dir.join('dm')
+      self.perf_data_dir = self.subordinate_dir.join('perfdata', self.builder_name,
                                                'data')
     self.dm_flags = self.builder_spec['dm_flags']
     self.nanobench_flags = self.builder_spec['nanobench_flags']
@@ -254,7 +254,7 @@ class SkiaApi(recipe_api.RecipeApi):
 
   def update_repo(self, repo):
     """Update an existing repo. This is safe to call without gen_steps."""
-    repo_path = self.m.path['slave_build'].join(repo.name)
+    repo_path = self.m.path['subordinate_build'].join(repo.name)
     if self.m.path.exists(repo_path):
       if self.m.platform.is_win:
         git = 'git.bat'
@@ -282,7 +282,7 @@ class SkiaApi(recipe_api.RecipeApi):
     if self.running_in_swarming:
       # We should've obtained the Skia checkout through isolates, so we don't
       # need to perform the checkout ourselves.
-      self.m.path['checkout'] = self.m.path['slave_build'].join('skia')
+      self.m.path['checkout'] = self.m.path['subordinate_build'].join('skia')
       self.got_revision = self.m.properties['revision']
       return
 
@@ -292,7 +292,7 @@ class SkiaApi(recipe_api.RecipeApi):
     skia.name = 'skia'
     skia.managed = False
     skia.url = global_constants.SKIA_REPO
-    skia.revision = self.m.properties.get('revision') or 'origin/master'
+    skia.revision = self.m.properties.get('revision') or 'origin/main'
     self.update_repo(skia)
 
     # Run 'gclient sync'.
@@ -649,7 +649,7 @@ print json.dumps({'ccache': ccache})
     # Run DM.
     properties = [
       'gitHash',      self.got_revision,
-      'master',       self.master_name,
+      'main',       self.main_name,
       'builder',      self.builder_name,
       'build_number', self.m.properties['buildnumber'],
     ]
@@ -710,7 +710,7 @@ print json.dumps({'ccache': ccache})
               self.builder_name,
               self.m.properties['buildnumber'],
               self.m.properties['issue'] if self.is_trybot else '',
-              self.m.path['slave_build'].join('skia', 'common', 'py', 'utils'),
+              self.m.path['subordinate_build'].join('skia', 'common', 'py', 'utils'),
           ],
           cwd=self.m.path['checkout'],
           env=self.gsutil_env_chromium_skia_gm,

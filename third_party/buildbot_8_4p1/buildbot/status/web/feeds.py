@@ -84,9 +84,9 @@ class FeedResource(XmlResource):
         self.link = self.status.getBuildbotURL()
         self.description = 'List of builds'
         self.pubdate = time.gmtime(int(time.time()))
-        self.user = self.getEnv(['USER', 'USERNAME'], 'buildmaster')
+        self.user = self.getEnv(['USER', 'USERNAME'], 'buildmain')
         self.hostname = self.getEnv(['HOSTNAME', 'COMPUTERNAME'],
-                                    'buildmaster')
+                                    'buildmain')
         self.children = {}
 
     def getEnv(self, keys, fallback):

@@ -24,30 +24,30 @@ from buildbot.process.builder import Builder
 from buildbot import interfaces, locks
 from buildbot.process import metrics
 
-class BotMaster(service.MultiService):
+class BotMain(service.MultiService):
 
-    """This is the master-side service which manages remote buildbot slaves.
-    It provides them with BuildSlaves, and distributes build requests to
+    """This is the main-side service which manages remote buildbot subordinates.
+    It provides them with BuildSubordinates, and distributes build requests to
     them."""
 
     debug = 0
     reactor = reactor
 
-    def __init__(self, master):
+    def __init__(self, main):
         service.MultiService.__init__(self)
-        self.master = master
+        self.main = main
 
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
-        # which is the master-side object that defines and controls a build.
+        # which is the main-side object that defines and controls a build.
 
-        # self.slaves contains a ready BuildSlave instance for each
-        # potential buildslave, i.e. all the ones listed in the config file.
-        # If the slave is connected, self.slaves[slavename].slave will
+        # self.subordinates contains a ready BuildSubordinate instance for each
+        # potential buildsubordinate, i.e. all the ones listed in the config file.
+        # If the subordinate is connected, self.subordinates[subordinatename].subordinate will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        self.slaves = {} # maps slavename to BuildSlave
+        self.subordinates = {} # maps subordinatename to BuildSubordinate
         self.watchers = {}
 
         # self.locks holds the real Lock instances
@@ -63,7 +63,7 @@ class BotMaster(service.MultiService):
 
         self.shuttingDown = False
 
-        self.lastSlavePortnum = None
+        self.lastSubordinatePortnum = None
 
         # subscription to new build requests
         self.buildrequest_sub = None
@@ -125,35 +125,35 @@ class BotMaster(service.MultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
-    def loadConfig_Slaves(self, new_slaves):
-        timer = metrics.Timer("BotMaster.loadConfig_Slaves()")
+    def loadConfig_Subordinates(self, new_subordinates):
+        timer = metrics.Timer("BotMain.loadConfig_Subordinates()")
         timer.start()
-        new_portnum = (self.lastSlavePortnum is not None
-                   and self.lastSlavePortnum != self.master.slavePortnum)
+        new_portnum = (self.lastSubordinatePortnum is not None
+                   and self.lastSubordinatePortnum != self.main.subordinatePortnum)
         if new_portnum:
             # it turns out this is pretty hard..
-            raise ValueError("changing slavePortnum in reconfig is not supported")
-        self.lastSlavePortnum = self.master.slavePortnum
+            raise ValueError("changing subordinatePortnum in reconfig is not supported")
+        self.lastSubordinatePortnum = self.main.subordinatePortnum
 
-        old_slaves = [c for c in list(self)
-                      if interfaces.IBuildSlave.providedBy(c)]
+        old_subordinates = [c for c in list(self)
+                      if interfaces.IBuildSubordinate.providedBy(c)]
 
-        # identify added/removed slaves. For each slave we construct a tuple
-        # of (name, password, class), and we consider the slave to be already
+        # identify added/removed subordinates. For each subordinate we construct a tuple
+        # of (name, password, class), and we consider the subordinate to be already
         # present if the tuples match. (we include the class to make sure
-        # that BuildSlave(name,pw) is different than
-        # SubclassOfBuildSlave(name,pw) ). If the password or class has
-        # changed, we will remove the old version of the slave and replace it
+        # that BuildSubordinate(name,pw) is different than
+        # SubclassOfBuildSubordinate(name,pw) ). If the password or class has
+        # changed, we will remove the old version of the subordinate and replace it
         # with a new one. If anything else has changed, we just update the
-        # old BuildSlave instance in place. If the name has changed, of
-        # course, it looks exactly the same as deleting one slave and adding
+        # old BuildSubordinate instance in place. If the name has changed, of
+        # course, it looks exactly the same as deleting one subordinate and adding
         # an unrelated one.
 
         old_t = {}
-        for s in old_slaves:
+        for s in old_subordinates:
             old_t[s.identity()] = s
         new_t = {}
-        for s in new_slaves:
+        for s in new_subordinates:
             new_t[s.identity()] = s
         removed = [old_t[t]
                    for t in old_t
@@ -165,15 +165,15 @@ class BotMaster(service.MultiService):
                        for t in new_t
                        if t in old_t]
 
-        # removeSlave will hang up on the old bot
+        # removeSubordinate will hang up on the old bot
         dl = []
         for s in removed:
-            dl.append(self.removeSlave(s))
+            dl.append(self.removeSubordinate(s))
         d = defer.DeferredList(dl, fireOnOneErrback=True)
 
         def add_new(res):
             for s in added:
-                self.addSlave(s)
+                self.addSubordinate(s)
         d.addCallback(add_new)
 
         def update_remaining(_):
@@ -183,46 +183,46 @@ class BotMaster(service.MultiService):
         d.addCallback(update_remaining)
 
         def stop(_):
-            metrics.MetricCountEvent.log("num_slaves",
-                len(self.slaves), absolute=True)
+            metrics.MetricCountEvent.log("num_subordinates",
+                len(self.subordinates), absolute=True)
             timer.stop()
             return _
         d.addBoth(stop)
 
         return d
 
-    def addSlave(self, s):
+    def addSubordinate(self, s):
         s.setServiceParent(self)
-        s.setBotmaster(self)
-        self.slaves[s.slavename] = s
-        s.pb_registration = self.master.pbmanager.register(
-                self.master.slavePortnum, s.slavename,
+        s.setBotmain(self)
+        self.subordinates[s.subordinatename] = s
+        s.pb_registration = self.main.pbmanager.register(
+                self.main.subordinatePortnum, s.subordinatename,
                 s.password, self.getPerspective)
-        # do not call maybeStartBuildsForSlave here, as the slave has not
+        # do not call maybeStartBuildsForSubordinate here, as the subordinate has not
         # necessarily attached yet
 
-    @metrics.countMethod('BotMaster.removeSlave()')
-    def removeSlave(self, s):
+    @metrics.countMethod('BotMain.removeSubordinate()')
+    def removeSubordinate(self, s):
         d = s.disownServiceParent()
         d.addCallback(lambda _ : s.pb_registration.unregister())
-        d.addCallback(lambda _ : self.slaves[s.slavename].disconnect())
-        def delslave(_):
-            del self.slaves[s.slavename]
-        d.addCallback(delslave)
+        d.addCallback(lambda _ : self.subordinates[s.subordinatename].disconnect())
+        def delsubordinate(_):
+            del self.subordinates[s.subordinatename]
+        d.addCallback(delsubordinate)
         return d
 
-    @metrics.countMethod('BotMaster.slaveLost()')
-    def slaveLost(self, bot):
-        metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
+    @metrics.countMethod('BotMain.subordinateLost()')
+    def subordinateLost(self, bot):
+        metrics.MetricCountEvent.log("BotMain.attached_subordinates", -1)
         for name, b in self.builders.items():
-            if bot.slavename in b.slavenames:
+            if bot.subordinatename in b.subordinatenames:
                 b.detached(bot)
 
-    @metrics.countMethod('BotMaster.getBuildersForSlave()')
-    def getBuildersForSlave(self, slavename):
+    @metrics.countMethod('BotMain.getBuildersForSubordinate()')
+    def getBuildersForSubordinate(self, subordinatename):
         return [b
                 for b in self.builders.values()
-                if slavename in b.slavenames]
+                if subordinatename in b.subordinatenames]
 
     def getBuildernames(self):
         return self.builderNames
@@ -242,27 +242,27 @@ class BotMaster(service.MultiService):
         def _add(ign):
             log.msg("setBuilders._add: %s %s" % (list(self), [b.name for b in builders]))
             for b in builders:
-                for slavename in b.slavenames:
+                for subordinatename in b.subordinatenames:
                     # this is actually validated earlier
-                    assert slavename in self.slaves
+                    assert subordinatename in self.subordinates
                 self.builders[b.name] = b
                 self.builderNames.append(b.name)
-                b.setBotmaster(self)
+                b.setBotmain(self)
                 b.setServiceParent(self)
         d.addCallback(_add)
-        d.addCallback(lambda ign: self._updateAllSlaves())
-        # N.B. this takes care of starting all builders at master startup
+        d.addCallback(lambda ign: self._updateAllSubordinates())
+        # N.B. this takes care of starting all builders at main startup
         d.addCallback(lambda _ :
             self.maybeStartBuildsForAllBuilders())
         return d
 
-    def _updateAllSlaves(self):
-        """Notify all buildslaves about changes in their Builders."""
-        timer = metrics.Timer("BotMaster._updateAllSlaves()")
+    def _updateAllSubordinates(self):
+        """Notify all buildsubordinates about changes in their Builders."""
+        timer = metrics.Timer("BotMain._updateAllSubordinates()")
         timer.start()
         dl = []
-        for s in self.slaves.values():
-            d = s.updateSlave()
+        for s in self.subordinates.values():
+            d = s.updateSubordinate()
             d.addErrback(log.err)
             dl.append(d)
         d = defer.DeferredList(dl)
@@ -272,7 +272,7 @@ class BotMaster(service.MultiService):
         d.addBoth(stop)
         return d
 
-    @metrics.countMethod('BotMaster.shouldMergeRequests()')
+    @metrics.countMethod('BotMain.shouldMergeRequests()')
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
         the given builder.
@@ -286,21 +286,21 @@ class BotMaster(service.MultiService):
                 return False
         return req1.canBeMergedWith(req2)
 
-    def getPerspective(self, mind, slavename):
-        sl = self.slaves[slavename]
+    def getPerspective(self, mind, subordinatename):
+        sl = self.subordinates[subordinatename]
         if not sl:
             return None
-        metrics.MetricCountEvent.log("BotMaster.attached_slaves", 1)
+        metrics.MetricCountEvent.log("BotMain.attached_subordinates", 1)
 
         # record when this connection attempt occurred
         sl.recordConnectTime()
 
         if sl.isConnected():
-            # duplicate slave - send it to arbitration
-            arb = DuplicateSlaveArbitrator(sl)
-            return arb.getPerspective(mind, slavename)
+            # duplicate subordinate - send it to arbitration
+            arb = DuplicateSubordinateArbitrator(sl)
+            return arb.getPerspective(mind, subordinatename)
         else:
-            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
+            log.msg("subordinate '%s' attaching from %s" % (subordinatename, mind.broker.transport.getPeer()))
             return sl
 
     def startService(self):
@@ -308,7 +308,7 @@ class BotMaster(service.MultiService):
             log.msg("Processing new build request: %s" % notif)
             self.maybeStartBuildsForBuilder(notif['buildername'])
         self.buildrequest_sub = \
-            self.master.subscribeToBuildRequests(buildRequestAdded)
+            self.main.subscribeToBuildRequests(buildRequestAdded)
         service.MultiService.startService(self)
 
     def stopService(self):
@@ -316,21 +316,21 @@ class BotMaster(service.MultiService):
             self.buildrequest_sub.unsubscribe()
             self.buildrequest_sub = None
         for b in self.builders.values():
-            b.builder_status.addPointEvent(["master", "shutdown"])
+            b.builder_status.addPointEvent(["main", "shutdown"])
             b.builder_status.saveYourself()
         return service.MultiService.stopService(self)
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.SlaveLock instance
-        @return: a locks.RealMasterLock or locks.RealSlaveLock instance
+        @param lockid: a locks.MainLock or locks.SubordinateLock instance
+        @return: a locks.RealMainLock or locks.RealSubordinateLock instance
         """
-        assert isinstance(lockid, (locks.MasterLock, locks.SlaveLock))
+        assert isinstance(lockid, (locks.MainLock, locks.SubordinateLock))
         if not lockid in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
-        # if the master.cfg file has changed maxCount= on the lock, the next
+        # if the main.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and SlaveLock (marker) instances
+        # that this requires that MainLock and SubordinateLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
@@ -343,14 +343,14 @@ class BotMaster(service.MultiService):
         """
         self.brd.maybeStartBuildsOn([buildername])
 
-    def maybeStartBuildsForSlave(self, slave_name):
+    def maybeStartBuildsForSubordinate(self, subordinate_name):
         """
-        Call this when something suggests that a particular slave may now be
+        Call this when something suggests that a particular subordinate may now be
         available to start a build.
 
-        @param slave_name: the name of the slave
+        @param subordinate_name: the name of the subordinate
         """
-        builders = self.getBuildersForSlave(slave_name)
+        builders = self.getBuildersForSubordinate(subordinate_name)
         self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
     def maybeStartBuildsForAllBuilders(self):
@@ -372,9 +372,9 @@ class BuildRequestDistributor(service.Service):
     methods.
     """
 
-    def __init__(self, botmaster):
-        self.botmaster = botmaster
-        self.master = botmaster.master
+    def __init__(self, botmain):
+        self.botmain = botmain
+        self.main = botmain.main
 
         # lock to ensure builders are only sorted once at any time
         self.pending_builders_lock = defer.DeferredLock()
@@ -439,7 +439,7 @@ class BuildRequestDistributor(service.Service):
         self.pending_builders_lock.release()
 
     @defer.deferredGenerator
-    def _defaultSorter(self, master, builders):
+    def _defaultSorter(self, main, builders):
         timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
         timer.start()
         # perform an asynchronous schwarzian transform, transforming None
@@ -475,13 +475,13 @@ class BuildRequestDistributor(service.Service):
         # note that this takes and returns a list of builder names
 
         # convert builder names to builders
-        builders_dict = self.botmaster.builders
+        builders_dict = self.botmain.builders
         builders = [ builders_dict.get(n)
                      for n in buildernames
                      if n in builders_dict ]
 
         # find a sorting function
-        sorter = self.botmaster.prioritizeBuilders
+        sorter = self.botmain.prioritizeBuilders
         if not sorter:
             sorter = self._defaultSorter
 
@@ -489,7 +489,7 @@ class BuildRequestDistributor(service.Service):
         try:
             wfd = defer.waitForDeferred(
                 defer.maybeDeferred(lambda :
-                    sorter(self.master, builders)))
+                    sorter(self.main, builders)))
             yield wfd
             builders = wfd.getResult()
         except:
@@ -546,7 +546,7 @@ class BuildRequestDistributor(service.Service):
 
     def _callABuilder(self, bldr_name):
         # get the actual builder object
-        bldr = self.botmaster.builders.get(bldr_name)
+        bldr = self.botmain.builders.get(bldr_name)
         if not bldr:
             return defer.succeed(None)
 
@@ -559,158 +559,158 @@ class BuildRequestDistributor(service.Service):
         pass # pragma: no cover
 
 
-class DuplicateSlaveArbitrator(object):
-    """Utility class to arbitrate the situation when a new slave connects with
-    the name of an existing, connected slave"""
-    # There are several likely duplicate slave scenarios in practice:
+class DuplicateSubordinateArbitrator(object):
+    """Utility class to arbitrate the situation when a new subordinate connects with
+    the name of an existing, connected subordinate"""
+    # There are several likely duplicate subordinate scenarios in practice:
     #
-    # 1. two slaves are configured with the same username/password
+    # 1. two subordinates are configured with the same username/password
     #
-    # 2. the same slave process believes it is disconnected (due to a network
+    # 2. the same subordinate process believes it is disconnected (due to a network
     # hiccup), and is trying to reconnect
     #
-    # For the first case, we want to prevent the two slaves from repeatedly
+    # For the first case, we want to prevent the two subordinates from repeatedly
     # superseding one another (which results in lots of failed builds), so we
-    # will prefer the old slave.  However, for the second case we need to
-    # detect situations where the old slave is "gone".  Sometimes "gone" means
+    # will prefer the old subordinate.  However, for the second case we need to
+    # detect situations where the old subordinate is "gone".  Sometimes "gone" means
     # that the TCP/IP connection to it is in a long timeout period (10-20m,
     # depending on the OS configuration), so this can take a while.
 
     PING_TIMEOUT = 10
-    """Timeout for pinging the old slave.  Set this to something quite long, as
-    a very busy slave (e.g., one sending a big log chunk) may take a while to
+    """Timeout for pinging the old subordinate.  Set this to something quite long, as
+    a very busy subordinate (e.g., one sending a big log chunk) may take a while to
     return a ping.
 
-    @ivar old_slave: L{buildbot.process.slavebuilder.AbstractSlaveBuilder}
+    @ivar old_subordinate: L{buildbot.process.subordinatebuilder.AbstractSubordinateBuilder}
     instance
     """
 
-    def __init__(self, slave):
-        self.old_slave = slave
+    def __init__(self, subordinate):
+        self.old_subordinate = subordinate
 
-    def getPerspective(self, mind, slavename):
-        self.new_slave_mind = mind
+    def getPerspective(self, mind, subordinatename):
+        self.new_subordinate_mind = mind
 
-        old_tport = self.old_slave.slave.broker.transport
+        old_tport = self.old_subordinate.subordinate.broker.transport
         new_tport = mind.broker.transport
-        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old (%s)" % 
-                (self.old_slave.slavename, new_tport.getPeer(), old_tport.getPeer()))
+        log.msg("duplicate subordinate %s; delaying new subordinate (%s) and pinging old (%s)" % 
+                (self.old_subordinate.subordinatename, new_tport.getPeer(), old_tport.getPeer()))
 
-        # delay the new slave until we decide what to do with it
-        self.new_slave_d = defer.Deferred()
+        # delay the new subordinate until we decide what to do with it
+        self.new_subordinate_d = defer.Deferred()
 
-        # Ping the old slave.  If this kills it, then we can allow the new
-        # slave to connect.  If this does not kill it, then we disconnect
-        # the new slave.
-        self.ping_old_slave_done = False
-        self.ping_new_slave_done = False
-        self.old_slave_connected = True
-        self.ping_old_slave(new_tport.getPeer())
+        # Ping the old subordinate.  If this kills it, then we can allow the new
+        # subordinate to connect.  If this does not kill it, then we disconnect
+        # the new subordinate.
+        self.ping_old_subordinate_done = False
+        self.ping_new_subordinate_done = False
+        self.old_subordinate_connected = True
+        self.ping_old_subordinate(new_tport.getPeer())
 
-        # Print a message on the new slave, if possible.
-        self.ping_new_slave()
+        # Print a message on the new subordinate, if possible.
+        self.ping_new_subordinate()
 
-        return self.new_slave_d
+        return self.new_subordinate_d
 
-    def ping_new_slave(self):
-        d = self.new_slave_mind.callRemote("print",
-            "master already has a connection named '%s' - checking its liveness"
-                        % self.old_slave.slavename)
+    def ping_new_subordinate(self):
+        d = self.new_subordinate_mind.callRemote("print",
+            "main already has a connection named '%s' - checking its liveness"
+                        % self.old_subordinate.subordinatename)
         def done(_):
             # failure or success, doesn't matter
-            self.ping_new_slave_done = True
+            self.ping_new_subordinate_done = True
             self.maybe_done()
         d.addBoth(done)
 
-    def ping_old_slave(self, new_peer):
+    def ping_old_subordinate(self, new_peer):
         # set a timer on this ping, in case the network is bad.  TODO: a timeout
         # on the ping itself is not quite what we want.  If there is other data
         # flowing over the PB connection, then we should keep waiting.  Bug #1703
         def timeout():
-            self.ping_old_slave_timeout = None
-            self.ping_old_slave_timed_out = True
-            self.old_slave_connected = False
-            self.ping_old_slave_done = True
+            self.ping_old_subordinate_timeout = None
+            self.ping_old_subordinate_timed_out = True
+            self.old_subordinate_connected = False
+            self.ping_old_subordinate_done = True
             self.maybe_done()
-        self.ping_old_slave_timeout = reactor.callLater(self.PING_TIMEOUT, timeout)
-        self.ping_old_slave_timed_out = False
+        self.ping_old_subordinate_timeout = reactor.callLater(self.PING_TIMEOUT, timeout)
+        self.ping_old_subordinate_timed_out = False
 
         try:
-          d = self.old_slave.slave.callRemote(
+          d = self.old_subordinate.subordinate.callRemote(
               "print",
-              "master got a duplicate connection from %s; keeping this one"
+              "main got a duplicate connection from %s; keeping this one"
               % new_peer)
         except pb.DeadReferenceError():
           timeout()
           return
 
         def clear_timeout(r):
-            if self.ping_old_slave_timeout:
-                self.ping_old_slave_timeout.cancel()
-                self.ping_old_slave_timeout = None
+            if self.ping_old_subordinate_timeout:
+                self.ping_old_subordinate_timeout.cancel()
+                self.ping_old_subordinate_timeout = None
             return r
         d.addBoth(clear_timeout)
 
         def old_gone(f):
-            if self.ping_old_slave_timed_out:
+            if self.ping_old_subordinate_timed_out:
                 return # ignore after timeout
             f.trap(pb.PBConnectionLost)
-            log.msg(("connection lost while pinging old slave '%s' - " +
-                     "keeping new slave") % self.old_slave.slavename)
-            self.old_slave_connected = False
+            log.msg(("connection lost while pinging old subordinate '%s' - " +
+                     "keeping new subordinate") % self.old_subordinate.subordinatename)
+            self.old_subordinate_connected = False
         d.addErrback(old_gone)
 
         def other_err(f):
-            if self.ping_old_slave_timed_out:
+            if self.ping_old_subordinate_timed_out:
                 return # ignore after timeout
-            log.msg("unexpected error while pinging old slave; disconnecting it")
+            log.msg("unexpected error while pinging old subordinate; disconnecting it")
             log.err(f)
-            self.old_slave_connected = False
+            self.old_subordinate_connected = False
         d.addErrback(other_err)
 
         def done(_):
-            if self.ping_old_slave_timed_out:
+            if self.ping_old_subordinate_timed_out:
                 return # ignore after timeout
-            self.ping_old_slave_done = True
+            self.ping_old_subordinate_done = True
             self.maybe_done()
         d.addCallback(done)
 
     def maybe_done(self):
-        if not self.ping_new_slave_done or not self.ping_old_slave_done:
+        if not self.ping_new_subordinate_done or not self.ping_old_subordinate_done:
             return
 
         # both pings are done, so sort out the results
-        if self.old_slave_connected:
-            self.disconnect_new_slave()
+        if self.old_subordinate_connected:
+            self.disconnect_new_subordinate()
         else:
-            self.start_new_slave()
+            self.start_new_subordinate()
 
-    def start_new_slave(self, count=20):
-        if not self.new_slave_d:
+    def start_new_subordinate(self, count=20):
+        if not self.new_subordinate_d:
             return
 
-        # we need to wait until the old slave has actually disconnected, which
+        # we need to wait until the old subordinate has actually disconnected, which
         # can take a little while -- but don't wait forever!
-        if self.old_slave.isConnected():
-            if self.old_slave.slave:
-                self.old_slave.slave.broker.transport.loseConnection()
+        if self.old_subordinate.isConnected():
+            if self.old_subordinate.subordinate:
+                self.old_subordinate.subordinate.broker.transport.loseConnection()
             if count < 0:
-                log.msg("WEIRD: want to start new slave, but the old slave will not disconnect")
-                self.disconnect_new_slave()
+                log.msg("WEIRD: want to start new subordinate, but the old subordinate will not disconnect")
+                self.disconnect_new_subordinate()
             else:
-                reactor.callLater(0.1, self.start_new_slave, count-1)
+                reactor.callLater(0.1, self.start_new_subordinate, count-1)
             return
 
-        d = self.new_slave_d
-        self.new_slave_d = None
-        d.callback(self.old_slave)
+        d = self.new_subordinate_d
+        self.new_subordinate_d = None
+        d.callback(self.old_subordinate)
 
-    def disconnect_new_slave(self):
-        if not self.new_slave_d:
+    def disconnect_new_subordinate(self):
+        if not self.new_subordinate_d:
             return
-        d = self.new_slave_d
-        self.new_slave_d = None
-        log.msg("rejecting duplicate slave with exception")
-        d.errback(Failure(RuntimeError("rejecting duplicate slave")))
+        d = self.new_subordinate_d
+        self.new_subordinate_d = None
+        log.msg("rejecting duplicate subordinate with exception")
+        d.errback(Failure(RuntimeError("rejecting duplicate subordinate")))
 
 

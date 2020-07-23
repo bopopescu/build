@@ -37,7 +37,7 @@ class PubPoller(base.PollingChangeSource):
     # when there are multiple pub packages with the same version number
     # We fix this by prefix the revision with the package name
     revision = '%s-%s' % (package, version)
-    self.master.addChange(author='Pub: %s' % package,
+    self.main.addChange(author='Pub: %s' % package,
                           files=[],
                           repository=repo,
                           revlink=repo,

@@ -117,8 +117,8 @@ def get_bots():
   for skia_recipe in SKIA_RECIPES:
     skia_recipe = os.path.join(cwd, os.pardir, 'recipes', 'skia', skia_recipe)
     skia = imp.load_source('skia', skia_recipe)
-    for _, slaves in skia.TEST_BUILDERS.iteritems():
-      for _, builders in slaves.iteritems():
+    for _, subordinates in skia.TEST_BUILDERS.iteritems():
+      for _, builders in subordinates.iteritems():
         bots.extend(builders)
   bots.sort()
   return bots

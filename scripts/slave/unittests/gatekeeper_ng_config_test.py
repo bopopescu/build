@@ -18,7 +18,7 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-from slave import gatekeeper_ng_config
+from subordinate import gatekeeper_ng_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -36,14 +36,14 @@ class GatekeeperTest(unittest.TestCase):
 
     return gatekeeper_ng_config.load_gatekeeper_config(self.fname)
 
-  def add_master_config(self, master, cfg):
-    self.cfg['masters'] = self.cfg.get('masters', {})
+  def add_main_config(self, main, cfg):
+    self.cfg['mains'] = self.cfg.get('mains', {})
 
-    self.assertNotIn(master, self.cfg['masters'])
-    self.cfg['masters'][master] = [cfg]
+    self.assertNotIn(main, self.cfg['mains'])
+    self.cfg['mains'][main] = [cfg]
 
-  def add_builder_config(self, master, builder, cfg):
-    self.add_master_config(master, {'builders': {builder: cfg}})
+  def add_builder_config(self, main, builder, cfg):
+    self.add_main_config(main, {'builders': {builder: cfg}})
 
   def add_category(self, name, contents):
     self.cfg['categories'] = self.cfg.get('categories', {})
@@ -51,8 +51,8 @@ class GatekeeperTest(unittest.TestCase):
     self.assertNotIn(name, self.cfg['categories'])
     self.cfg['categories'][name] = contents
 
-  def testInheritCategoryFromMasterWithBuilderForgive(self):
-    self.add_master_config(
+  def testInheritCategoryFromMainWithBuilderForgive(self):
+    self.add_main_config(
         "http://example.com/test_master",
         {
           "categories": ["test"],

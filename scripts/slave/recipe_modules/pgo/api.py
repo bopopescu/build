@@ -102,12 +102,12 @@ class PGOApi(recipe_api.RecipeApi):
     # Augment the solution if needed.
     self.m.gclient.c.solutions[0].url += bot_config.get('url_suffix', '')
 
-    if self.m.properties.get('slavename') != 'fake_slave':
+    if self.m.properties.get('subordinatename') != 'fake_subordinate':
       self.m.chromium.taskkill()
 
     self.m.bot_update.ensure_checkout(force=True)
     if bot_config.get('patch_root'):
-      self.m.path['checkout'] = self.m.path['slave_build'].join(
+      self.m.path['checkout'] = self.m.path['subordinate_build'].join(
           bot_config.get('patch_root'))
 
     # First step: compilation of the instrumented build.

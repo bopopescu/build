@@ -14,12 +14,12 @@ TEST_HASH_MAIN='5e3250aadda2b170692f8e762d43b7e8deadbeef'
 TEST_COMMIT_POSITON_MAIN='refs/heads/B1@{#123456}'
 
 TEST_HASH_COMPONENT='deadbeefdda2b170692f8e762d43b7e8e7a96686'
-TEST_COMMIT_POSITON_COMPONENT='refs/heads/master@{#234}'
+TEST_COMMIT_POSITON_COMPONENT='refs/heads/main@{#234}'
 
 
 def RunSteps(api):
   api.archive.clusterfuzz_archive(
-      build_dir=api.path['slave_build'].join('src', 'out', 'Release'),
+      build_dir=api.path['subordinate_build'].join('src', 'out', 'Release'),
       update_properties=api.properties.get('update_properties'),
       gs_bucket='chromium',
       gs_acl=api.properties.get('gs_acl', ''),

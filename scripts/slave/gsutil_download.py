@@ -9,7 +9,7 @@ import distutils.version
 import optparse
 import time
 
-from slave import slave_utils
+from subordinate import subordinate_utils
 
 
 _POLL_INTERVAL_DEFAULT = 60 * 15  # 15 minutes
@@ -28,7 +28,7 @@ def DownloadLatestFile(base_url, partial_name, dst):
     Exception: If unable to find or download a file.
   """
   base_url_glob = '%s/**' % base_url.rstrip('/')
-  result = slave_utils.GSUtilListBucket(base_url_glob, ['-l'])
+  result = subordinate_utils.GSUtilListBucket(base_url_glob, ['-l'])
 
   if not result or result[0]:
     raise Exception('Could not find any archived files.')
@@ -41,7 +41,7 @@ def DownloadLatestFile(base_url, partial_name, dst):
 
   files = [distutils.version.LooseVersion(x) for x in files]
   newest_file = str(max(files))
-  slave_utils.GSUtilDownloadFile(newest_file, dst)
+  subordinate_utils.GSUtilDownloadFile(newest_file, dst)
 
 
 def DownloadFileWithPolling(url, dst,
@@ -63,7 +63,7 @@ def DownloadFileWithPolling(url, dst,
   start_time = time.time()
   time_passed = 0
   while time_passed < timeout:
-    if not slave_utils.GSUtilDownloadFile(url, dst):
+    if not subordinate_utils.GSUtilDownloadFile(url, dst):
       return
     print 'Retrying in %d seconds...' % poll_interval
     time.sleep(poll_interval)

@@ -116,24 +116,24 @@ SAMPLE_BUILDERS_PY = """\
         "config": "Release"
       },
       "recipe": "test_recipe",
-      "slave_pools": ["main"],
-      "slavebuilddir": "test"
+      "subordinate_pools": ["main"],
+      "subordinatebuilddir": "test"
     }
   },
   "git_repo_url": "https://chromium.googlesource.com/test/test.git",
-  "master_base_class": "_FakeBaseMaster",
-  "master_classname": "_FakeMaster",
-  "master_port": 20999,
-  "master_port_alt": 40999,
-  "slave_port": 30999,
-  "slave_pools": {
+  "main_base_class": "_FakeBaseMain",
+  "main_classname": "_FakeMain",
+  "main_port": 20999,
+  "main_port_alt": 40999,
+  "subordinate_port": 30999,
+  "subordinate_pools": {
     "main": {
-      "slave_data": {
+      "subordinate_data": {
         "bits": 64,
         "os":  "linux",
         "version": "precise"
       },
-      "slaves": ["vm9999-m1"],
+      "subordinates": ["vm9999-m1"],
     },
   },
   "templates": ["templates"],
@@ -141,18 +141,18 @@ SAMPLE_BUILDERS_PY = """\
 """
 
 
-class GetSlavesFromBuilders(unittest.TestCase):
+class GetSubordinatesFromBuilders(unittest.TestCase):
   def test_normal(self):
     try:
       fp = tempfile.NamedTemporaryFile(delete=False)
       fp.write(SAMPLE_BUILDERS_PY)
       fp.close()
 
-      slaves = chromium_utils.GetSlavesFromBuildersFile(fp.name)
-      self.assertEqual(slaves, [{
+      subordinates = chromium_utils.GetSubordinatesFromBuildersFile(fp.name)
+      self.assertEqual(subordinates, [{
           'hostname': 'vm9999-m1',
           'builder_name': ['Test Linux'],
-          'master': '_FakeMaster',
+          'main': '_FakeMain',
           'os': 'linux',
           'version': 'precise',
           'bits': 64,

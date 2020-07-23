@@ -11,7 +11,7 @@ import os
 from buildbot.steps import shell
 from buildbot.process.properties import WithProperties
 
-from master.factory import commands
+from main.factory import commands
 
 
 class WebMCommands(commands.FactoryCommands):

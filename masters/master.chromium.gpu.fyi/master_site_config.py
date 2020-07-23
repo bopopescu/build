@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumGPUFYI(Master.Master1):
+class ChromiumGPUFYI(Main.Main1):
   project_name = 'Chromium GPU FYI'
-  master_port = 8017
-  slave_port = 8117
-  master_port_alt = 8217
+  main_port = 8017
+  subordinate_port = 8117
+  main_port_alt = 8217
   buildbot_url = 'http://build.chromium.org/p/chromium.gpu.fyi/'

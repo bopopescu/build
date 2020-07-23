@@ -9,7 +9,7 @@ import re
 
 from collections import OrderedDict, namedtuple
 
-from common.cros_chromite import ChromiteTarget, SlaveType
+from common.cros_chromite import ChromiteTarget, SubordinateType
 
 
 class _AnnotatedCallable(object):
@@ -48,7 +48,7 @@ class BuilderConfig(object):
   FLOATING = None
   UNIQUE = False
   COLLAPSE = True
-  SLAVE_TYPE = SlaveType.BAREMETAL
+  SLAVE_TYPE = SubordinateType.BAREMETAL
   CBB_VARIANT = None
   TIMEOUT = None
 
@@ -70,7 +70,7 @@ class BuilderConfig(object):
 
   def _CmpTuple(self):
     """Returns (tuple): A comparable tuple to determine waterfall ordering."""
-    return (self.ordinal, not self.config.is_master, self.is_experimental,
+    return (self.ordinal, not self.config.is_main, self.is_experimental,
             self.config.name)
 
   @property
@@ -79,17 +79,17 @@ class BuilderConfig(object):
     return self.CLOSER
 
   @property
-  def slave_type(self):
-    """Returns (str): A SlaveType enumeration value."""
-    return self.config.get('buildslave_type', self._GetLegacySlaveType())
+  def subordinate_type(self):
+    """Returns (str): A SubordinateType enumeration value."""
+    return self.config.get('buildsubordinate_type', self._GetLegacySubordinateType())
 
   @property
   def cbb_variant(self):
     """Returns (str): Cbuildbot recipe variant for this builder type, or None.
     """
     variant = self.config.category
-    if variant and self.config.is_master:
-      return '%s-master' % (variant,)
+    if variant and self.config.is_main:
+      return '%s-main' % (variant,)
     return variant
 
   @property
@@ -115,7 +115,7 @@ class BuilderConfig(object):
 
   @property
   def floating(self):
-    """Returns (bool): Whether this builder should have a floating backup slave.
+    """Returns (bool): Whether this builder should have a floating backup subordinate.
     """
     return self.FLOATING
 
@@ -151,24 +151,24 @@ class BuilderConfig(object):
     """
     return self.config.name
 
-  def _GetLegacySlaveType(self):
+  def _GetLegacySubordinateType(self):
     """Returns (str): Returns the generated builder name.
 
     Unless overloaded, the builder name will default to the target configuration
     name.
 
     TODO(dnj): Deprecate this when release waterfall no longer uses old Chromite
-               configurations that don't supply the 'buildslave_type' parameter.
+               configurations that don't supply the 'buildsubordinate_type' parameter.
     """
     return self.SLAVE_TYPE
 
   def _IsExperimental(self):
     """Returns (bool): If this builder is experimental.
 
-    Unless overloaded, a builder is experimental if it's not a master builder or
+    Unless overloaded, a builder is experimental if it's not a main builder or
     important.
     """
-    return not (self.config.is_master or self.config.get('important'))
+    return not (self.config.is_main or self.config.get('important'))
 
 
 class PreCqLauncherBuilderConfig(BuilderConfig):
@@ -176,7 +176,7 @@ class PreCqLauncherBuilderConfig(BuilderConfig):
 
   UNIQUE = True
   CLOSER = True
-  SLAVE_TYPE = SlaveType.GCE_WIMPY
+  SLAVE_TYPE = SubordinateType.GCE_WIMPY
 
 
 class PaladinBuilderConfig(BuilderConfig):
@@ -219,20 +219,20 @@ class AsanBuilderConfig(BuilderConfig):
 class CanaryBuilderConfig(BuilderConfig):
   """BuilderConfig for canary/release launcher targets."""
 
-  def _GetLegacySlaveType(self):
-    if self.config.is_master and not self.config['boards']:
-      # For boardless release masters, use a wimpy builder.
+  def _GetLegacySubordinateType(self):
+    if self.config.is_main and not self.config['boards']:
+      # For boardless release mains, use a wimpy builder.
       #
       # NOTE: Currently only implemented on release branch.
       if self.branch:
-        return SlaveType.GCE_WIMPY
-    return SlaveType.BAREMETAL
+        return SubordinateType.GCE_WIMPY
+    return SubordinateType.BAREMETAL
 
 
 class SdkBuilderConfig(BuilderConfig):
   """BuilderConfig for SDK launcher targets."""
 
-  SLAVE_TYPE = SlaveType.GCE
+  SLAVE_TYPE = SubordinateType.GCE
   COLLAPSE = AlwaysCollapseFunc
   TIMEOUT = 22 * 3600 # 22 Hours.
 
@@ -243,14 +243,14 @@ class SdkBuilderConfig(BuilderConfig):
 class ToolchainBuilderConfig(BuilderConfig):
   """BuilderConfig for toolchain launcher targets.
 
-  Toolchain builders leverage a declared slave class to share slaves between
+  Toolchain builders leverage a declared subordinate class to share subordinates between
   them.
   """
 
-  def _GetLegacySlaveType(self):
-    if self.config.is_master and not self.config['boards']:
-      return SlaveType.GCE_WIMPY
-    return SlaveType.BAREMETAL
+  def _GetLegacySubordinateType(self):
+    if self.config.is_main and not self.config['boards']:
+      return SubordinateType.GCE_WIMPY
+    return SubordinateType.BAREMETAL
 
 
 # Map of cbuildbot target type to configuration class.
@@ -303,12 +303,12 @@ def GetBuilderConfigs(targets, **kwargs):
   return OrderedDict((c.config.name, c) for c in configs)
 
 
-def IsGCESlave(slavename):
-  """Returns (bool): Whether |slavename| is hosted on GCE.
+def IsGCESubordinate(subordinatename):
+  """Returns (bool): Whether |subordinatename| is hosted on GCE.
 
   Args:
-    slavename: The hostname of the slave.
+    subordinatename: The hostname of the subordinate.
   """
   # The "-c2" suffix indicates that a builder is in GCE (as opposed to
   # in the Chrome Golo, which has a -m2 suffix).
-  return bool(re.search(r'-c\d+$', slavename))
+  return bool(re.search(r'-c\d+$', subordinatename))

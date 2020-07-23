@@ -2,19 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
 
 from common.skia import global_constants
-from config_bootstrap import Master
+from config_bootstrap import Main
 
 
-class SkiaCompile(Master.Master3):
+class SkiaCompile(Main.Main3):
   project_name = 'SkiaCompile'
-  master_port = 8095
-  slave_port = 8195
-  master_port_alt = 8295
+  main_port = 8095
+  subordinate_port = 8195
+  main_port_alt = 8295
   repo_url = global_constants.SKIA_REPO
   buildbot_url = 'http://build.chromium.org/p/client.skia.compile/'
   service_account_file = global_constants.SERVICE_ACCOUNT_FILE
-  buildbucket_bucket = 'master.client.skia.compile'
+  buildbucket_bucket = 'main.client.skia.compile'

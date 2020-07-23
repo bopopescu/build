@@ -27,7 +27,7 @@ DEPS = [
 REPO = 'https://chromium.googlesource.com/chrome/tools/build'
 TEST_PACKAGE_PREFIX = 'infra/cipd_recipe_test'
 # What directory will be packaged?
-DIR_TO_PACKAGE = 'scripts/slave/recipe_modules/cipd'.split('/')
+DIR_TO_PACKAGE = 'scripts/subordinate/recipe_modules/cipd'.split('/')
 
 
 def RunSteps(api):
@@ -43,7 +43,7 @@ def outer(api):
   step = api.bot_update.ensure_checkout(force=True, patch_root='build')
 
   properties = {}
-  for attr in ['buildername', 'mastername', 'buildnumber', 'slavename']:
+  for attr in ['buildername', 'mainname', 'buildnumber', 'subordinatename']:
     properties[attr] = api.properties.get(attr)
   if api.tryserver.is_tryserver:
     assert not api.tryserver.is_gerrit_issue, 'Gerrit is not supported.'
@@ -62,7 +62,7 @@ def outer(api):
       script=api.path['checkout'].join('scripts', 'tools', 'run_recipe.py'),
       args=[
         'infra/cipd_test',
-        '--master-overrides-slave',
+        '--main-overrides-subordinate',
         '--properties-file',
         api.json.input(properties),
       ],
@@ -76,7 +76,7 @@ def inner(api):
   assert api.cipd.get_executable()
 
   test_package = '%s/%s' % (TEST_PACKAGE_PREFIX, api.cipd.platform_suffix())
-  test_package_file = api.path['slave_build'].join('test_package.cipd')
+  test_package_file = api.path['subordinate_build'].join('test_package.cipd')
   step = api.cipd.build(api.properties['dir_to_package'],
                         test_package_file,
                         test_package, install_mode='copy')
@@ -97,7 +97,7 @@ def inner(api):
     'revision': api.properties['revision_tag'],
     'git_repository': REPO,
     'buildbot_build': '%s/%s/%s' % (
-        api.properties['mastername'],
+        api.properties['mainname'],
         api.properties['buildername'],
         api.properties['buildnumber']
     ),
@@ -132,7 +132,7 @@ def inner(api):
   assert not unset_tags
 
   # Install test package we've just uploaded by ref.
-  cipd_root = api.path['slave_build'].join('cipd_test_package')
+  cipd_root = api.path['subordinate_build'].join('cipd_test_package')
   api.cipd.ensure(cipd_root, {test_package: 'latest'})
   # Someone might have changed the latest ref in the meantime,
   # so install again by exact instance_id.
@@ -158,35 +158,35 @@ def GenTests(api):
   yield (
       api.test('cipd-latest-ok-inner') +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='cipd-module-tester',
           revision_tag='deadbeaf',
           dir_to_package=(
-            '[SLAVE_BUILD]/build/scripts/slave/recipe_modules/cipd'),
+            '[SLAVE_BUILD]/build/scripts/subordinate/recipe_modules/cipd'),
       )
   )
   yield (
       api.test('cipd-latest-ok-inner-win') +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='cipd-module-tester',
           revision_tag='deadbeaf',
           dir_to_package=(
-            '[SLAVE_BUILD]/build/scripts/slave/recipe_modules/cipd'),
+            '[SLAVE_BUILD]/build/scripts/subordinate/recipe_modules/cipd'),
       ) +
       api.platform.name('win')
   )
   yield (
       api.test('cipd-latest-ok-outer') +
       api.properties.generic(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='cipd-module-tester',
       )
   )
   yield (
       api.test('cipd-latest-ok-outer-patch-rietveld') +
       api.properties.tryserver(
-          mastername='chromium.infra',
+          mainname='chromium.infra',
           buildername='cipd-module-tester',
           patch_project='build',
       )

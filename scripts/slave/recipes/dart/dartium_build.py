@@ -46,12 +46,12 @@ def RunSteps(api):
 
   # gclient api incorrectly sets Path('[CHECKOUT]') to build/src/dartium.deps
   # because Dartium has its DEPS file in dartium.deps, not directly in src.
-  api.path['checkout'] = api.path['slave_build'].join('src')
+  api.path['checkout'] = api.path['subordinate_build'].join('src')
 
   api.chromium.runhooks()
   api.chromium.compile()
   api.python('archive_build',
-                   api.path['slave_build'].join(
+                   api.path['subordinate_build'].join(
                        'src', 'dart', 'tools', 'dartium', 'multivm_archive.py'),
                    [s.revision])
 

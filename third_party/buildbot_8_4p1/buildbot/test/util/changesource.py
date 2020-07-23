@@ -21,7 +21,7 @@ class ChangeSourceMixin(object):
     This class is used for testing change sources, and handles a few things:
 
      - starting and stopping a ChangeSource service
-     - a fake C{self.master.addChange}, which adds its args
+     - a fake C{self.main.addChange}, which adds its args
        to the list C{self.chagnes_added}
     """
 
@@ -35,8 +35,8 @@ class ChangeSourceMixin(object):
             self.changes_added.append(kwargs)
             change = mock.Mock()
             return defer.succeed(change)
-        self.master = mock.Mock()
-        self.master.addChange = addChange
+        self.main = mock.Mock()
+        self.main.addChange = addChange
         return defer.succeed(None)
 
     def tearDownChangeSource(self):
@@ -48,9 +48,9 @@ class ChangeSourceMixin(object):
         return defer.succeed(None)
 
     def attachChangeSource(self, cs):
-        "Set up a change source for testing; sets its .master attribute"
+        "Set up a change source for testing; sets its .main attribute"
         self.changesource = cs
-        self.changesource.master = self.master
+        self.changesource.main = self.main
 
     def startChangeSource(self):
         "start the change source as a service"

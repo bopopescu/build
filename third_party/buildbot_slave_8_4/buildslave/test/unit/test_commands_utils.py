@@ -20,7 +20,7 @@ from twisted.trial import unittest
 from twisted.python import runtime
 import twisted.python.procutils
 
-from buildslave.commands import utils
+from buildsubordinate.commands import utils
 
 class GetCommand(unittest.TestCase):
 

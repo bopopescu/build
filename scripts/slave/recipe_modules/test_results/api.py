@@ -28,7 +28,7 @@ class TestResultsApi(recipe_api.RecipeApi):
           name='Upload to test-results [%s]' % test_type,
           script=self.resource('upload_gtest_test_results.py'),
           args=['--input-gtest-json', gtest_results_file,
-                '--master-name', self.m.properties['mastername'],
+                '--main-name', self.m.properties['mainname'],
                 '--builder-name', self.m.properties['buildername'],
                 '--build-number', self.m.properties['buildnumber'],
                 '--test-type', test_type,

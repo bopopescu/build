@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Cleans up the windows try slaves every night."""
+"""Cleans up the windows try subordinates every night."""
 
 from __future__ import with_statement
 import os
@@ -41,7 +41,7 @@ def run(base, jobs, subdir, extra_args):
   with open('LICENSE', 'a') as f:
     f.write('Foo\n')
   call('git stash -q')
-  call('git checkout master -q')
+  call('git checkout main -q')
   call('git branch -D try_job_cronjob_branch')
   call('git fetch origin -q')
   call('git checkout -b try_job_cronjob_branch origin/trunk -q')
@@ -51,14 +51,14 @@ def run(base, jobs, subdir, extra_args):
   call('svn up -q --non-interactive', cwd=os.path.join(base, 'build'))
   call('svn up -q --non-interactive', cwd=os.path.join(base, 'depot_tools'))
 
-  def count_slaves(builder):
+  def count_subordinates(builder):
     return len(capture(
-        os.path.join(base, 'build/scripts/tools/slaves.py') +
+        os.path.join(base, 'build/scripts/tools/subordinates.py') +
         ' -x t.c -w -l -m --builder ' +
         builder + ' -p').splitlines())
 
   def tryjob(builder, email):
-    for i in range(count_slaves(builder)):
+    for i in range(count_subordinates(builder)):
       cmd = (
           os.path.join(base, 'depot_tools/git-try') +
           ' --bot ' + builder +
@@ -71,7 +71,7 @@ def run(base, jobs, subdir, extra_args):
     tryjob(builder, emails)
 
   if old_branch == 'try_job_cronjob_branch':
-    old_branch = 'master'
+    old_branch = 'main'
   call('git checkout ' + old_branch + ' -q')
   call('git stash pop -q')
   call('git checkout LICENSE -q')

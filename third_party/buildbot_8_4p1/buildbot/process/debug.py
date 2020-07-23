@@ -26,7 +26,7 @@ class DebugPerspective(NewCredPerspective):
 
     def perspective_requestBuild(self, buildername, reason, branch, revision, properties={}):
         from buildbot.sourcestamp import SourceStamp
-        c = interfaces.IControl(self.master)
+        c = interfaces.IControl(self.main)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)
         bpr = Properties()
@@ -34,18 +34,18 @@ class DebugPerspective(NewCredPerspective):
         return bc.submitBuildRequest(ss, reason, bpr)
 
     def perspective_pingBuilder(self, buildername):
-        c = interfaces.IControl(self.master)
+        c = interfaces.IControl(self.main)
         bc = c.getBuilder(buildername)
         bc.ping()
 
     def perspective_reload(self):
         log.msg("doing reload of the config file")
-        self.master.loadTheConfigFile()
+        self.main.loadTheConfigFile()
 
     def perspective_pokeIRC(self):
         log.msg("saying something on IRC")
         from buildbot.status import words
-        for s in self.master:
+        for s in self.main:
             if isinstance(s, words.IRC):
                 bot = s.f
                 for channel in bot.channels:
@@ -55,12 +55,12 @@ class DebugPerspective(NewCredPerspective):
     def perspective_print(self, msg):
         log.msg("debug %s" % msg)
 
-def registerDebugClient(master, slavePortnum, debugPassword, pbmanager):
-    def perspFactory(master, mind, username):
+def registerDebugClient(main, subordinatePortnum, debugPassword, pbmanager):
+    def perspFactory(main, mind, username):
         persp = DebugPerspective()
-        persp.master = master
-        persp.botmaster = master
+        persp.main = main
+        persp.botmain = main
         return persp
     return pbmanager.register(
-        slavePortnum, "debug", debugPassword,
-        lambda mind, username : perspFactory(master, mind, username))
+        subordinatePortnum, "debug", debugPassword,
+        lambda mind, username : perspFactory(main, mind, username))

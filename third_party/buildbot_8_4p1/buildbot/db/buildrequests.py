@@ -35,7 +35,7 @@ class BrDict(dict):
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle buildrequests.  An instance is available
-    at C{master.db.buildrequests}.
+    at C{main.db.buildrequests}.
 
     Build Requests are represented as dictionaries with keys C{brid},
     C{buildsetid}, C{buildername}, C{priority}, C{claimed} (boolean),
@@ -80,7 +80,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         The C{claimed} parameter can be C{None} (the default) to ignore the
         claimed status of requests; C{True} to return only claimed builds,
         C{False} to return only unclaimed builds, or C{"mine"} to return only
-        builds claimed by this master instance.  A request is considered
+        builds claimed by this main instance.  A request is considered
         unclaimed if its C{claimed_at} column is either NULL or 0, and it is
         not complete.  If C{bsid} is specified, then only build requests for
         that buildset will be returned.
@@ -117,12 +117,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         (tbl.c.claimed_by_incarnation == None) &
                         (tbl.c.complete == 0))
                 elif claimed == "mine":
-                    master_name = self.db.master.master_name
-                    master_incarnation = self.db.master.master_incarnation
+                    main_name = self.db.main.main_name
+                    main_incarnation = self.db.main.main_incarnation
                     q = q.where(
                         (tbl.c.claimed_at != None) &
-                        (tbl.c.claimed_by_name == master_name) &
-                        (tbl.c.claimed_by_incarnation == master_incarnation))
+                        (tbl.c.claimed_by_name == main_name) &
+                        (tbl.c.claimed_by_incarnation == main_incarnation))
                 else:
                     q = q.where(
                         (tbl.c.claimed_at != None) &
@@ -147,15 +147,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def claimBuildRequests(self, brids, _reactor=reactor, _race_hook=None):
         """
-        Try to "claim" the indicated build requests for this buildmaster
+        Try to "claim" the indicated build requests for this buildmain
         instance.  The resulting deferred will fire normally on success, or
         fail with L{AleadyClaimedError} if I{any} of the build requests are
-        already claimed by another master instance, or don't exist.  In this
+        already claimed by another main instance, or don't exist.  In this
         case, none of the claims will take effect.
 
         This can be used to re-claim build requests, too.  That is, it will
         succeed in claiming a build request that is already claimed by this
-        master instance, and will update its claimed_at date.
+        main instance, and will update its claimed_at date.
 
         @param brids: ids of buildrequests to claim
         @type brids: list
@@ -185,16 +185,16 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # helper function to un-claim already-claimed requests, if we can't
             # claim all of them.  This may be redundant for the finer database
             # engines, but won't hurt.
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
             tbl = self.db.model.buildrequests
 
             # only select *my builds* in this set of brids
             q = tbl.update()
             q = q.where((tbl.c.id.in_(tmp.select())) &
                 ((tbl.c.claimed_at != None) &
-                 (tbl.c.claimed_by_name == master_name) &
-                 (tbl.c.claimed_by_incarnation == master_incarnation)))
+                 (tbl.c.claimed_by_name == main_name) &
+                 (tbl.c.claimed_by_incarnation == main_incarnation)))
             # and unclaim them
             conn.execute(q,
                 claimed_at=None,
@@ -205,8 +205,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # update conditioned on the request being unclaimed, or claimed by
             # this instance.  In either case, the claimed_at is set to the
             # current time, so this will re-claim an already-claimed requeset.
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
             tbl = self.db.model.buildrequests
 
             # first, create a temporary table containing all of the ID's
@@ -231,12 +231,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     (tbl.c.claimed_by_incarnation == None)) |
                     # .. or mine
                     ((tbl.c.claimed_at != None) &
-                    (tbl.c.claimed_by_name == master_name) &
-                    (tbl.c.claimed_by_incarnation == master_incarnation)))
+                    (tbl.c.claimed_by_name == main_name) &
+                    (tbl.c.claimed_by_incarnation == main_incarnation)))
                 res = conn.execute(q,
                     claimed_at=_reactor.seconds(),
-                    claimed_by_name=self.db.master.master_name,
-                    claimed_by_incarnation=self.db.master.master_incarnation)
+                    claimed_by_name=self.db.main.main_name,
+                    claimed_by_incarnation=self.db.main.main_incarnation)
                 updated_rows = res.rowcount
                 res.close()
 
@@ -256,14 +256,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     _race_hook(conn)
 
                 # but double-check to be sure all of the desired build requests
-                # now belong to this master
+                # now belong to this main
                 q = sa.select([tbl.c.claimed_by_name,
                             tbl.c.claimed_by_incarnation],
                             whereclause=(tbl.c.id.in_(tmp.select())))
                 res = conn.execute(q)
                 for row in res:
-                    if row.claimed_by_name != master_name or \
-                            row.claimed_by_incarnation != master_incarnation:
+                    if row.claimed_by_name != main_name or \
+                            row.claimed_by_incarnation != main_incarnation:
                         # note that the transaction is already committed here; too
                         # bad!  We'll just fake it by unclaiming those requests (so
                         # hopefully this was not a reclaim)
@@ -280,8 +280,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def unclaimBuildRequests(self, brids):
         """
-        Release this master's claim on all of the given build requests.  This
-        will check that the requests are claimed by this master, but will not
+        Release this main's claim on all of the given build requests.  This
+        will check that the requests are claimed by this main, but will not
         fail if they are not so claimed.
 
         @param brids: ids of buildrequests to unclaim
@@ -290,8 +290,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         @returns: Deferred
         """
         def thd(conn):
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
             tbl = self.db.model.buildrequests
 
             q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
@@ -300,8 +300,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 (tbl.c.complete == 0) &
                 # .. and mine only
                 (tbl.c.claimed_at != None) &
-                (tbl.c.claimed_by_name == master_name) &
-                (tbl.c.claimed_by_incarnation == master_incarnation))
+                (tbl.c.claimed_by_name == main_name) &
+                (tbl.c.claimed_by_incarnation == main_incarnation))
             res = conn.execute(q,
                 claimed_at=0,
                 claimed_by_name=None,
@@ -311,7 +311,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def completeBuildRequests(self, brids, results, _reactor=reactor):
         """
-        Complete a set of build requests, all of which are owned by this master
+        Complete a set of build requests, all of which are owned by this main
         instance.  This will fail with L{NotClaimedError} if the build request
         is not claimed by this instance, is already completed, or does not
         exist.
@@ -329,15 +329,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # the update here is simple, but a number of conditions are
             # attached to ensure that we do not update a row inappropriately
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
             tbl = self.db.model.buildrequests
 
             q = tbl.update(whereclause=(tbl.c.id.in_(brids)))
             q = q.where(
                 (tbl.c.claimed_at != None) &
-                (tbl.c.claimed_by_name == master_name) &
-                (tbl.c.claimed_by_incarnation == master_incarnation) &
+                (tbl.c.claimed_by_name == main_name) &
+                (tbl.c.claimed_by_incarnation == main_incarnation) &
                 (tbl.c.complete == 0))
             res = conn.execute(q,
                 complete=1,
@@ -353,18 +353,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def unclaimOldIncarnationRequests(self):
         """
         Find any incomplete build requests claimed by an old incarnation of
-        this master and mark them as unclaimed.
+        this main and mark them as unclaimed.
 
         @returns: Deferred
         """
         def thd(conn):
             tbl = self.db.model.buildrequests
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
 
             q = tbl.update(whereclause=(
-                    (tbl.c.claimed_by_name == master_name) &
-                    (tbl.c.claimed_by_incarnation != master_incarnation) &
+                    (tbl.c.claimed_by_name == main_name) &
+                    (tbl.c.claimed_by_incarnation != main_incarnation) &
                     (tbl.c.complete == 0)))
             res = conn.execute(q,
                 claimed_at=0,
@@ -375,7 +375,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def log_nonzero_count(count):
             if count != 0:
                 log.msg("unclaimed %d buildrequests for an old instance of "
-                        "this master" % (count,))
+                        "this main" % (count,))
         d.addCallback(log_nonzero_count)
         return d
 
@@ -384,7 +384,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         Find any incomplete claimed builds which are older than C{old} seconds,
         and clear their claim information.
 
-        This is intended to catch builds that were claimed by a master which
+        This is intended to catch builds that were claimed by a main which
         has since disappeared.
 
         @param old: number of seconds after which a claim is considered old
@@ -421,10 +421,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 and row.claimed_by_name is not None
                 and row.claimed_by_incarnation is not None):
             claimed = True
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
-            if (row.claimed_by_name == master_name and
-                row.claimed_by_incarnation == master_incarnation):
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
+            if (row.claimed_by_name == main_name and
+                row.claimed_by_incarnation == main_incarnation):
                mine = True
 
         def mkdt(epoch):

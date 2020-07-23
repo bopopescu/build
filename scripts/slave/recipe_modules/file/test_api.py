@@ -17,7 +17,7 @@ from recipe_engine import recipe_test_api
 # In order to enforce this, we accept a relative path and join it to the
 # location of build... determined by the relative location of this file in
 # the build repo on the user's local disk.
-# This script currently lives at scripts/slave/recipe_modules/file/test_api.py.
+# This script currently lives at scripts/subordinate/recipe_modules/file/test_api.py.
 # If you ever change that, you must update the path below.
 _ROOT = os.path.abspath(os.path.join(
   os.path.dirname(__file__),

@@ -19,7 +19,7 @@ def BaseConfig(CBB_CONFIG=None, CBB_BRANCH=None, CBB_BUILD_NUMBER=None,
     repositories = Dict(value_type=Set(basestring)),
 
     # Checkout Chromite at this branch. "origin/" will be prepended.
-    chromite_branch = Single(basestring, empty_val=CBB_BRANCH or 'master'),
+    chromite_branch = Single(basestring, empty_val=CBB_BRANCH or 'main'),
 
     # Should the Chrome version be supplied to cbuildbot?
     use_chrome_version = Single(bool),
@@ -35,7 +35,7 @@ def BaseConfig(CBB_CONFIG=None, CBB_BRANCH=None, CBB_BUILD_NUMBER=None,
       # The buildroot directory name to use.
       builddir = Single(basestring),
 
-      # If supplied, forward to cbuildbot as '--master-build-id'.
+      # If supplied, forward to cbuildbot as '--main-build-id'.
       build_id = Single(basestring),
 
       # If supplied, forward to cbuildbot as '--buildnumber'.
@@ -98,7 +98,7 @@ def base(c):
   ))
 
 
-  # If running on a testing slave, enable "--debug" so Chromite doesn't cause
+  # If running on a testing subordinate, enable "--debug" so Chromite doesn't cause
   # actual production effects.
   if 'TESTING_MASTER_HOST' in os.environ:  # pragma: no cover
     c.cbb.debug = True
@@ -116,21 +116,21 @@ def external(c):
       'https://chromium.googlesource.com/chromiumos/manifest-versions')
 
 
-@config_ctx(group='master', includes=['external'])
-def master_chromiumos_chromium(c):
+@config_ctx(group='main', includes=['external'])
+def main_chromiumos_chromium(c):
   c.use_chrome_version = True
   c.cbb.builddir = 'shared_external'
 
 
-@config_ctx(group='master', includes=['external'])
-def master_chromiumos(c):
-  c.cbb.builddir = 'external_master'
+@config_ctx(group='main', includes=['external'])
+def main_chromiumos(c):
+  c.cbb.builddir = 'external_main'
 
 @config_ctx()
 def chromiumos_paladin(c):
   c.read_cros_manifest = True
 
-@config_ctx(group='master', includes=['external'])
+@config_ctx(group='main', includes=['external'])
 def chromiumos_tryserver(c):
   c.cbb.disable_bootstrap = True
 

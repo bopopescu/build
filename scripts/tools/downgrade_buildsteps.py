@@ -6,8 +6,8 @@
 """Downgrades buildsteps in a directory of pickled buildbot builds.
 
   Buildbot archives builds by pickling them and storing basic versioning
-  information. When the master is upgraded to a new persistenceVersion (see
-  third_party/buildbot_8_4p1/buildbot/status/buildstep.py), the master will
+  information. When the main is upgraded to a new persistenceVersion (see
+  third_party/buildbot_8_4p1/buildbot/status/buildstep.py), the main will
   automatically update all pickled builds to the latest version. Buildbot
   provides no way to downgrade back to a previous persistenceVersion, which is
   what this script attempts to do.
@@ -26,7 +26,7 @@ import re
 import shutil
 import sys
 
-from common import master_cfg_utils
+from common import main_cfg_utils
 
 
 if True:
@@ -37,12 +37,12 @@ if True:
 def process_options():
   """Process options from the command line."""
   prog_desc = 'Downgrade buildsteps in a directory of pickled builds.'
-  usage = '%prog [options] [master name or filename]'
+  usage = '%prog [options] [main name or filename]'
   parser = optparse.OptionParser(usage=(usage + '\n\n' + prog_desc))
-  parser.add_option('--list-masters', action='store_true',
-                    help='list masters in search path')
-  parser.add_option('--master-dir', help='specify a master directory '
-                                         'instead of a mastername')
+  parser.add_option('--list-mains', action='store_true',
+                    help='list mains in search path')
+  parser.add_option('--main-dir', help='specify a main directory '
+                                         'instead of a mainname')
   parser.add_option('-t', '--target-version', default=None, type='int',
                     help='downgrade to specified version')
   parser.add_option('--commit', action='store_true',
@@ -57,7 +57,7 @@ def process_options():
     parser.error('too many arguments specified!')
 
   options.filename = None
-  options.mastername = None
+  options.mainname = None
 
   if args:
     if os.path.exists(args[0]):
@@ -65,7 +65,7 @@ def process_options():
       options.builderpath = os.path.join(os.path.dirname(args[0]),
                                          options.builder_name)
     else:
-      options.mastername = args[0]
+      options.mainname = args[0]
   return options
 
 
@@ -159,7 +159,7 @@ def processBuild(filename, builder, options):
 
 
 def locateBuilderDirs(path, options):
-  """Find all candidate builder dirs under a master."""
+  """Find all candidate builder dirs under a main."""
   dirs = [os.path.join(path, f) for f in os.listdir(path) if
           os.path.isdir(os.path.join(path, f))]
   builders = [os.path.relpath(f) for f in dirs
@@ -182,15 +182,15 @@ def processDirectory(path, options):
 
 
 def main(options):
-  if options.list_masters:
-    masterpairs = master_cfg_utils.GetMasters()
-    master_cfg_utils.PrettyPrintMasters(masterpairs)
+  if options.list_mains:
+    mainpairs = main_cfg_utils.GetMains()
+    main_cfg_utils.PrettyPrintMains(mainpairs)
     return 0
 
-  if options.master_dir:
-    path = options.master_dir
-  elif options.mastername:
-    path = master_cfg_utils.ChooseMaster(options.mastername)
+  if options.main_dir:
+    path = options.main_dir
+  elif options.mainname:
+    path = main_cfg_utils.ChooseMain(options.mainname)
     if not path:
       return 2
   else:

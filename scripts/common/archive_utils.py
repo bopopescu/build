@@ -57,7 +57,7 @@ class Config(object):
   # Create these directories, initially empty, in the archive.
   test_dirs_to_create = ['plugins', 'fonts']
 
-  archive_host = 'master1.golo.chromium.org'
+  archive_host = 'main1.golo.chromium.org'
 
   if (sys.platform in ['linux', 'linux2', 'darwin'] or
       os.environ.get('BUILDBOT_ARCHIVE_FORCE_SSH')):

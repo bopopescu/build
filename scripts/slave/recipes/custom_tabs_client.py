@@ -11,7 +11,7 @@ DEPS = [
 
 def _CheckoutSteps(api):
   # Checkout custom-tabs-client. The config is implemented at:
-  #   scripts/slave/recipe_modules/gclient/config.py
+  #   scripts/subordinate/recipe_modules/gclient/config.py
   api.gclient.set_config('custom_tabs_client')
   api.bot_update.ensure_checkout(force=True)
   api.gclient.runhooks()
@@ -24,7 +24,7 @@ def RunSteps(api):
 def GenTests(api):
   yield (
     api.test('basic') +
-    api.properties(mastername='master.tryserver.client.custom_tabs_client',
+    api.properties(mainname='main.tryserver.client.custom_tabs_client',
                    buildername='linux',
-                   slavename='linux_slave')
+                   subordinatename='linux_subordinate')
   )

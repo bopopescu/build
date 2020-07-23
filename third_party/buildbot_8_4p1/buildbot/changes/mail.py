@@ -57,7 +57,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 
         def add_change(chdict):
             if chdict:
-                return self.master.addChange(**chdict)
+                return self.main.addChange(**chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
         d.addCallback(add_change)

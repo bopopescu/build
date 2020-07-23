@@ -15,21 +15,21 @@
 
 import pprint
 
-class FakeSlaveBuilder:
+class FakeSubordinateBuilder:
     """
-    Simulates a SlaveBuilder, but just records the updates from sendUpdate
+    Simulates a SubordinateBuilder, but just records the updates from sendUpdate
     in its updates attribute.  Call show() to get a pretty-printed string
     showing the updates.  Set debug to True to show updates as they happen.
     """
     debug = False
-    def __init__(self, usePTY=False, basedir="/slavebuilder/basedir"):
+    def __init__(self, usePTY=False, basedir="/subordinatebuilder/basedir"):
         self.updates = []
         self.basedir = basedir
         self.usePTY = usePTY
 
     def sendUpdate(self, data):
         if self.debug:
-            print "FakeSlaveBuilder.sendUpdate", data
+            print "FakeSubordinateBuilder.sendUpdate", data
         self.updates.append(data)
 
     def show(self):

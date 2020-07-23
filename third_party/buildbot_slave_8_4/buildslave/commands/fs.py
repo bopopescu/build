@@ -20,8 +20,8 @@ import shutil
 from twisted.internet import defer
 from twisted.python import runtime, log
 
-from buildslave import runprocess
-from buildslave.commands import base, utils
+from buildsubordinate import runprocess
+from buildsubordinate.commands import base, utils
 
 class MakeDirectory(base.Command):
     """This is a Command which creates a directory. The args dict contains
@@ -99,7 +99,7 @@ class RemoveDirectory(base.Command):
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
-        # master, but not the rc=0 when it finishes. That job is left to
+        # main, but not the rc=0 when it finishes. That job is left to
         # _sendRC
         d = c.start()
         # The rm -rf may fail if there is a left-over subdir with chmod 000
@@ -195,7 +195,7 @@ class CopyDirectory(base.Command):
         return d
 
 class StatFile(base.Command):
-    """This is a command which stats a file on the slave. The args dict contains the following keys:
+    """This is a command which stats a file on the subordinate. The args dict contains the following keys:
 
         - ['file'] (required): file to stat
 

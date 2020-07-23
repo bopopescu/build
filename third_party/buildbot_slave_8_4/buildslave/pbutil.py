@@ -48,7 +48,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
     TCPClient).
     """
 
-    # hung connections wait for a relatively long time, since a busy master may
+    # hung connections wait for a relatively long time, since a busy main may
     # take a while to get back to us.
     hungConnectionTimer = None
     HUNG_CONNECTION_TIMEOUT = 120

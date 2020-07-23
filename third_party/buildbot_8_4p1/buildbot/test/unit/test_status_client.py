@@ -15,16 +15,16 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.status import master, client
+from buildbot.status import main, client
 from buildbot.test.fake import fakedb
 
 class TestStatusClientPerspective(unittest.TestCase):
 
     def makeStatusClientPersp(self):
-        m = mock.Mock(name='master')
+        m = mock.Mock(name='main')
         self.db = m.db = fakedb.FakeDBConnector(self)
         m.basedir = r'C:\BASEDIR'
-        s = master.Status(m) 
+        s = main.Status(m) 
         persp = client.StatusClientPerspective(s)
         return persp
 

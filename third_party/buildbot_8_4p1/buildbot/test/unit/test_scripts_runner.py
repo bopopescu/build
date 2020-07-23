@@ -40,7 +40,7 @@ class TestSendChangeOptions(unittest.TestCase):
 
     def test_defaults(self):
         opts = self.parse()
-        exp = dict(master=None, auth=None, who=None,
+        exp = dict(main=None, auth=None, who=None,
                 repository='', project='', branch=None, category=None,
                 revision=None, revision_file=None, property=None,
                 comments=None, logfile=None, when=None, revlink='',
@@ -56,30 +56,30 @@ class TestSendChangeOptions(unittest.TestCase):
         self.assertEqual(opts['properties'], dict(x="y", a="b"))
 
     def test_config_file(self):
-        self.options_file['master'] = 'MMM'
+        self.options_file['main'] = 'MMM'
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
         self.options_file['category'] = 'CCC'
         opts = self.parse()
-        exp = dict(master='MMM', who='WWW',
+        exp = dict(main='MMM', who='WWW',
                 branch='BBB', category='CCC')
         self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
 
     def test_short_args(self):
         opts = self.parse(*('-m m -a a -W w -R r -P p -b b ' +
             '-C c -r r -p pn:pv -c c -F f -w w -l l -e e').split())
-        exp = dict(master='m', auth='a', who='w', repository='r', project='p',
+        exp = dict(main='m', auth='a', who='w', repository='r', project='p',
                 branch='b', category='c', revision='r',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
         self.assertEqual(dict([(k, opts[k]) for k in exp]), exp)
 
     def test_long_args(self):
-        opts = self.parse(*('--master m --auth a --who w --repository r ' +
+        opts = self.parse(*('--main m --auth a --who w --repository r ' +
             '--project p --branch b --category c --revision r ' +
             '--revision_file rr --property pn:pv --comments c --logfile f ' +
             '--when w --revlink l --encoding e').split())
-        exp = dict(master='m', auth='a', who='w', repository='r', project='p',
+        exp = dict(main='m', auth='a', who='w', repository='r', project='p',
                 branch='b', category='c', revision='r', revision_file='rr',
                 properties=dict(pn='pv'), comments='c', logfile='f', when='w',
                 revlink='l', encoding='e')
@@ -88,8 +88,8 @@ class TestSendChangeOptions(unittest.TestCase):
 class TestSendChange(unittest.TestCase):
 
     class FakeSender:
-        def __init__(self, master, auth, encoding=None):
-            self.master = master
+        def __init__(self, main, auth, encoding=None):
+            self.main = main
             self.auth = auth
             self.encoding = encoding
             self.fail = False
@@ -117,10 +117,10 @@ class TestSendChange(unittest.TestCase):
         self.patch(sys, 'stdout', self.stdout)
 
     def test_sendchange_defaults(self):
-        d = runner.sendchange(dict(who='me', master='a:1'))
+        d = runner.sendchange(dict(who='me', main='a:1'))
         def check(_):
             # called correctly
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs),
                     ('a:1', ['change','changepw'], 'utf8', {
                         'branch': None,
@@ -141,11 +141,11 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_args(self):
         d = runner.sendchange(dict(encoding='utf16', who='me', auth='a:b',
-                master='a:1', branch='br', category='cat', revision='rr',
+                main='a:1', branch='br', category='cat', revision='rr',
                 properties={'a':'b'}, repository='rep', project='prj',
                 revlink='rl', when='1234', comments='comm', files=('a', 'b')))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs),
                     ('a:1', ['a','b'], 'utf16', {
                         'branch': 'br',
@@ -164,9 +164,9 @@ class TestSendChange(unittest.TestCase):
         return d
 
     def test_sendchange_deprecated_username(self):
-        d = runner.sendchange(dict(username='me', master='a:1'))
+        d = runner.sendchange(dict(username='me', main='a:1'))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['who']),
                     ('a:1', ['change','changepw'], 'utf8', 'me'))
             self.assertIn('is deprecated', self.stdout.getvalue())
@@ -175,9 +175,9 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_revision_file(self):
         open('rf', 'w').write('abcd')
-        d = runner.sendchange(dict(who='me', master='a:1', revision_file='rf'))
+        d = runner.sendchange(dict(who='me', main='a:1', revision_file='rf'))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['revision']),
                     ('a:1', ['change','changepw'], 'utf8', 'abcd'))
             self.assertEqual(self.stdout.getvalue(), '')
@@ -190,9 +190,9 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_logfile(self):
         open('lf', 'w').write('hello')
-        d = runner.sendchange(dict(who='me', master='a:1', logfile='lf'))
+        d = runner.sendchange(dict(who='me', main='a:1', logfile='lf'))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['comments']),
                     ('a:1', ['change','changepw'], 'utf8', 'hello'))
             self.assertEqual(self.stdout.getvalue(), '')
@@ -207,9 +207,9 @@ class TestSendChange(unittest.TestCase):
         stdin = mock.Mock()
         stdin.read = lambda : 'hi!'
         self.patch(sys, 'stdin', stdin)
-        d = runner.sendchange(dict(who='me', master='a:1', logfile='-'))
+        d = runner.sendchange(dict(who='me', main='a:1', logfile='-'))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding, self.sender.send_kwargs['comments']),
                     ('a:1', ['change','changepw'], 'utf8', 'hi!'))
             self.assertEqual(self.stdout.getvalue(), '')
@@ -222,9 +222,9 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_auth_prompt(self):
         self.patch(getpass, 'getpass', lambda prompt : 'sekrit')
-        d = runner.sendchange(dict(who='me', master='a:1', auth='user'))
+        d = runner.sendchange(dict(who='me', main='a:1', auth='user'))
         def check(_):
-            self.assertEqual((self.sender.master, self.sender.auth,
+            self.assertEqual((self.sender.main, self.sender.auth,
                     self.sender.encoding),
                     ('a:1', ['user','sekrit'], 'utf8'))
             self.assertEqual(self.stdout.getvalue(), '')
@@ -233,7 +233,7 @@ class TestSendChange(unittest.TestCase):
 
     def test_sendchange_who_required(self):
         d = defer.maybeDeferred(lambda :
-                runner.sendchange(dict(master='a:1')))
+                runner.sendchange(dict(main='a:1')))
         def cb(_):
             self.fail("shouldn't succeed")
         def eb(f):
@@ -242,7 +242,7 @@ class TestSendChange(unittest.TestCase):
         d.addCallbacks(cb, eb)
         return d
 
-    def test_sendchange_master_required(self):
+    def test_sendchange_main_required(self):
         d = defer.maybeDeferred(lambda :
                 runner.sendchange(dict(who='abc')))
         def cb(_):

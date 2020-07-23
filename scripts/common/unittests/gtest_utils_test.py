@@ -29,7 +29,7 @@ FLAKY_FAILURES = ['SomeOtherTest.FLAKY_Baz']
 
 TIMEOUT_MESSAGE = 'Killed (timed out).'
 
-RELOAD_ERRORS = (r'C:\b\slave\chrome-release-snappy\build\chrome\browser'
+RELOAD_ERRORS = (r'C:\b\subordinate\chrome-release-snappy\build\chrome\browser'
 r'\navigation_controller_unittest.cc:381: Failure' + """
 Value of: -1
 Expected: contents->controller()->GetPendingEntryIndex()
@@ -37,7 +37,7 @@ Which is: 0
 
 """)
 
-SPDY_ERRORS = (r'C:\b\slave\chrome-release-snappy\build\chrome\browser'
+SPDY_ERRORS = (r'C:\b\subordinate\chrome-release-snappy\build\chrome\browser'
 r'\navigation_controller_unittest.cc:439: Failure' + """
 Value of: -1
 Expected: contents->controller()->GetPendingEntryIndex()
@@ -45,13 +45,13 @@ Which is: 0
 
 """)
 
-SWITCH_ERRORS = (r'C:\b\slave\chrome-release-snappy\build\chrome\browser'
+SWITCH_ERRORS = (r'C:\b\subordinate\chrome-release-snappy\build\chrome\browser'
 r'\navigation_controller_unittest.cc:615: Failure' + """
 Value of: -1
 Expected: contents->controller()->GetPendingEntryIndex()
 Which is: 0
 
-""" + r'C:\b\slave\chrome-release-snappy\build\chrome\browser'
+""" + r'C:\b\subordinate\chrome-release-snappy\build\chrome\browser'
 r'\navigation_controller_unittest.cc:617: Failure' + """
 Value of: contents->controller()->GetPendingEntry()
   Actual: true
@@ -59,7 +59,7 @@ Expected: false
 
 """)
 
-TIMEOUT_ERRORS = ('[61613:263:0531/042613:2887943745568888:ERROR:/b/slave'
+TIMEOUT_ERRORS = ('[61613:263:0531/042613:2887943745568888:ERROR:/b/subordinate'
 '/chromium-rel-mac-builder/build/src/chrome/browser/extensions'
 '/extension_error_reporter.cc(56)] Extension error: Could not load extension '
 'from \'extensions/api_test/geolocation/no_permission\'. Manifest file is '
@@ -100,13 +100,13 @@ TEST_DATA = ("""
 """ % {'reload_errors': RELOAD_ERRORS,
        'spdy_errors': SPDY_ERRORS,
        'timeout_errors': TIMEOUT_ERRORS} +
-'[0531/042642:ERROR:/b/slave/chromium-rel-mac-builder/build/src/chrome'
+'[0531/042642:ERROR:/b/subordinate/chromium-rel-mac-builder/build/src/chrome'
 '/test/test_launcher/out_of_proc_test_runner.cc(79)] Test timeout (30000 ms) '
 'exceeded for BadTest.TimesOut' + """
 Handling SIGTERM.
 Successfully wrote to shutdown pipe, resetting signal handler.
 """ +
-'[61613:19971:0531/042642:2887973024284693:INFO:/b/slave/chromium-rel-mac-'
+'[61613:19971:0531/042642:2887973024284693:INFO:/b/subordinate/chromium-rel-mac-'
 'builder/build/src/chrome/browser/browser_main.cc(285)] Handling shutdown for '
 'signal 15.' + """
 
@@ -114,7 +114,7 @@ Successfully wrote to shutdown pipe, resetting signal handler.
 [ RUN      ] MoreBadTest.TimesOutAndFails
 %(morebad_errors)s
 """ % {'morebad_errors': MOREBAD_ERRORS} +
-'[0531/042642:ERROR:/b/slave/chromium-rel-mac-builder/build/src/chrome/test'
+'[0531/042642:ERROR:/b/subordinate/chromium-rel-mac-builder/build/src/chrome/test'
 '/test_launcher/out_of_proc_test_runner.cc(79)] Test timeout (30000 ms) '
 'exceeded for MoreBadTest.TimesOutAndFails' + """
 Handling SIGTERM.
@@ -257,13 +257,13 @@ TEST_DATA_SHARD_0 = ("""Note: This is test shard 1 of 30.
 [ RUN      ] BadTest.TimesOut
 %(timeout_errors)s
 """ % {'timeout_errors': TIMEOUT_ERRORS} +
-'[0531/042642:ERROR:/b/slave/chromium-rel-mac-builder/build/src/chrome/test'
+'[0531/042642:ERROR:/b/subordinate/chromium-rel-mac-builder/build/src/chrome/test'
 '/test_launcher/out_of_proc_test_runner.cc(79)] Test timeout (30000 ms) '
 'exceeded for BadTest.TimesOut' + """
 Handling SIGTERM.
 Successfully wrote to shutdown pipe, resetting signal handler.
 """ +
-'[61613:19971:0531/042642:2887973024284693:INFO:/b/slave/chromium-rel-mac-'
+'[61613:19971:0531/042642:2887973024284693:INFO:/b/subordinate/chromium-rel-mac-'
 'builder/build/src/chrome/browser/browser_main.cc(285)] Handling shutdown for '
 'signal 15.' + """
 
@@ -323,7 +323,7 @@ TEST_DATA_SHARD_1 = ("""Note: This is test shard 13 of 30.
 [ RUN      ] MoreBadTest.TimesOutAndFails
 %(morebad_errors)s
 """ % {'morebad_errors': MOREBAD_ERRORS} +
-'[0531/042642:ERROR:/b/slave/chromium-rel-mac-builder/build/src/chrome/test'
+'[0531/042642:ERROR:/b/subordinate/chromium-rel-mac-builder/build/src/chrome/test'
 '/test_launcher/out_of_proc_test_runner.cc(79)] Test timeout (30000 ms) '
 'exceeded for MoreBadTest.TimesOutAndFails' + """
 Handling SIGTERM.

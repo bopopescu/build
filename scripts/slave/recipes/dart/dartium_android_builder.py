@@ -36,7 +36,7 @@ def RunSteps(api):
   build_products_dir = \
       api.chromium.c.build_dir.join(api.chromium.c.build_config_fs)
   api.python('dartium_test',
-                   api.path['slave_build'].join('src', 'dart', 'tools',
+                   api.path['subordinate_build'].join('src', 'dart', 'tools',
                                                 'bots', 'dartium_android.py'),
                    args=['--build-products-dir', build_products_dir])
 

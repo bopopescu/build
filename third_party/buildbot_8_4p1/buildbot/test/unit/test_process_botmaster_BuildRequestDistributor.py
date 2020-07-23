@@ -18,20 +18,20 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import failure
 from buildbot.test.util import compat
-from buildbot.process import botmaster
+from buildbot.process import botmain
 from buildbot.util import epoch2datetime
 
 class Test(unittest.TestCase):
 
     def setUp(self):
-        self.botmaster = mock.Mock(name='botmaster')
-        self.botmaster.builders = {}
-        def prioritizeBuilders(master, builders):
+        self.botmain = mock.Mock(name='botmain')
+        self.botmain.builders = {}
+        def prioritizeBuilders(main, builders):
             # simple sort-by-name by default
             return sorted(builders, lambda b1,b2 : cmp(b1.name, b2.name))
-        self.botmaster.prioritizeBuilders = prioritizeBuilders
-        self.master = self.botmaster.master = mock.Mock(name='master')
-        self.brd = botmaster.BuildRequestDistributor(self.botmaster)
+        self.botmain.prioritizeBuilders = prioritizeBuilders
+        self.main = self.botmain.main = mock.Mock(name='main')
+        self.brd = botmain.BuildRequestDistributor(self.botmain)
         self.brd.startService()
 
         # TODO: this is a terrible way to detect the "end" of the test -
@@ -56,7 +56,7 @@ class Test(unittest.TestCase):
     def addBuilders(self, names):
         for name in names:
             bldr = mock.Mock(name=name)
-            self.botmaster.builders[name] = bldr
+            self.botmain.builders[name] = bldr
             self.builders[name] = bldr
             def maybeStartBuild(n=name):
                 self.maybeStartBuild_calls.append(n)
@@ -68,7 +68,7 @@ class Test(unittest.TestCase):
 
     def removeBuilder(self, name):
         del self.builders[name]
-        del self.botmaster.builders[name]
+        del self.botmain.builders[name]
 
     # tests
 
@@ -86,7 +86,7 @@ class Test(unittest.TestCase):
         # #1979.
         builders = ['bldr%02d' % i for i in xrange(15) ]
 
-        def slow_sorter(master, bldrs):
+        def slow_sorter(main, bldrs):
             bldrs.sort(lambda b1, b2 : cmp(b1.name, b2.name))
             d = defer.Deferred()
             reactor.callLater(0, d.callback, bldrs)
@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
                 return _
             d.addCallback(done)
             return d
-        self.brd.botmaster.prioritizeBuilders = slow_sorter
+        self.brd.botmain.prioritizeBuilders = slow_sorter
 
         self.addBuilders(builders)
         for bldr in builders:
@@ -152,7 +152,7 @@ class Test(unittest.TestCase):
     def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
             expected, returnDeferred=False):
         self.addBuilders(oldestRequestTimes.keys())
-        self.botmaster.prioritizeBuilders = prioritizeBuilders
+        self.botmain.prioritizeBuilders = prioritizeBuilders
 
         def mklambda(t): # work around variable-binding issues
             if returnDeferred:
@@ -188,8 +188,8 @@ class Test(unittest.TestCase):
                 ['bldr1', 'bldr3', 'bldr2'])
 
     def test_sortBuilders_custom(self):
-        def prioritizeBuilders(master, builders):
-            self.assertIdentical(master, self.master)
+        def prioritizeBuilders(main, builders):
+            self.assertIdentical(main, self.main)
             return sorted(builders, key=lambda b : b.name)
 
         return self.do_test_sortBuilders(prioritizeBuilders,
@@ -197,8 +197,8 @@ class Test(unittest.TestCase):
                 ['bldr1', 'bldr2', 'bldr3'])
 
     def test_sortBuilders_custom_async(self):
-        def prioritizeBuilders(master, builders):
-            self.assertIdentical(master, self.master)
+        def prioritizeBuilders(main, builders):
+            self.assertIdentical(main, self.main)
             return defer.succeed(sorted(builders, key=lambda b : b.name))
 
         return self.do_test_sortBuilders(prioritizeBuilders,
@@ -210,7 +210,7 @@ class Test(unittest.TestCase):
         self.addBuilders(['x', 'y'])
         def fail(m, b):
             raise RuntimeError("oh noes")
-        self.botmaster.prioritizeBuilders = fail
+        self.botmain.prioritizeBuilders = fail
 
         # expect to get the builders back in the same order in the event of an
         # exception

@@ -17,7 +17,7 @@ class SkiaSwarmingApi(recipe_api.RecipeApi):
   @property
   def swarming_temp_dir(self):
     """Path where artifacts like isolate file and json output will be stored."""
-    return self.m.path['slave_build'].join('swarming_temp_dir')
+    return self.m.path['subordinate_build'].join('swarming_temp_dir')
 
   @property
   def tasks_output_dir(self):
@@ -50,7 +50,7 @@ class SkiaSwarmingApi(recipe_api.RecipeApi):
                  '--platform=win32', '--no_auth', '--bucket', 'chromium-luci',
                  '-d', luci_go_dir.join('win64')])
     # Copy binaries to the expected location.
-    dest = self.m.path['slave_build'].join('luci-go')
+    dest = self.m.path['subordinate_build'].join('luci-go')
     self.m.file.rmtree('Go binary dir', dest)
     self.m.file.copytree('Copy Go binary',
                          source=luci_go_dir,

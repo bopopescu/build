@@ -26,13 +26,13 @@ from buildbot.util import epoch2datetime
 
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
-    them to the change master."""
+    them to the change main."""
     
     compare_attrs = ["repourl", "branch", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
                      
-    def __init__(self, repourl, branch='master', 
+    def __init__(self, repourl, branch='main', 
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
@@ -66,9 +66,9 @@ class GitPoller(base.PollingChangeSource):
                     "'%s'; consider setting workdir=" % self.workdir)
 
     def startService(self):
-        # make our workdir absolute, relative to the master's basedir
+        # make our workdir absolute, relative to the main's basedir
         if not os.path.isabs(self.workdir):
-            self.workdir = os.path.join(self.master.basedir, self.workdir)
+            self.workdir = os.path.join(self.main.basedir, self.workdir)
             log.msg("gitpoller: using workdir '%s'" % self.workdir)
 
         # initialize the repository we'll use to get changes; note that
@@ -121,9 +121,9 @@ class GitPoller(base.PollingChangeSource):
             return d
         d.addCallback(git_fetch_origin)
         
-        def set_master(_):
+        def set_main(_):
             log.msg('gitpoller: checking out %s' % self.branch)
-            if self.branch == 'master': # repo is already on branch 'master', so reset
+            if self.branch == 'main': # repo is already on branch 'main', so reset
                 d = utils.getProcessOutputAndValue(self.gitbin,
                         ['reset', '--hard', 'origin/%s' % self.branch],
                         path=self.workdir, env=os.environ)
@@ -134,7 +134,7 @@ class GitPoller(base.PollingChangeSource):
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
-        d.addCallback(set_master)
+        d.addCallback(set_main)
         def get_rev(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
                     ['rev-parse', self.branch],
@@ -152,7 +152,7 @@ class GitPoller(base.PollingChangeSource):
 
     def describe(self):
         status = ""
-        if not self.master:
+        if not self.main:
             status = "[STOPPED - check log]"
         str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
                 % (self.repourl, self.branch, status)
@@ -295,7 +295,7 @@ class GitPoller(base.PollingChangeSource):
 
     def add_change(self, author, revision, files, comments, when_timestamp,
                    revlink):
-        return self.master.addChange(
+        return self.main.addChange(
                author=author,
                revision=revision,
                files=files,

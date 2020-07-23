@@ -2,14 +2,14 @@
 
 # This is a Gnome-2 panel applet that uses the
 # buildbot.status.client.PBListener interface to display a terse summary of
-# the buildmaster. It displays one column per builder, with a box on top for
+# the buildmain. It displays one column per builder, with a box on top for
 # the status of the most recent build (red, green, or orange), and a somewhat
 # smaller box on the bottom for the current state of the builder (white for
 # idle, yellow for building, red for offline). There are tooltips available
 # to tell you which box is which.
 
 # Edit the line at the beginning of the MyApplet class to fill in the host
-# and portnumber of your buildmaster's PBListener status port. Eventually
+# and portnumber of your buildmain's PBListener status port. Eventually
 # this will move into a preferences dialog, but first we must create a
 # preferences dialog.
 
@@ -144,7 +144,7 @@ class Box:
 
 class MyApplet(pb.Referenceable):
     # CHANGE THIS TO POINT TO YOUR BUILDMASTER
-    buildmaster = "buildmaster.example.org", 12345
+    buildmain = "buildmain.example.org", 12345
     filled = None
 
     def __init__(self, container):
@@ -179,7 +179,7 @@ class MyApplet(pb.Referenceable):
         self.fill(self.hbox)
 
     def connect(self):
-        host, port = self.buildmaster
+        host, port = self.buildmain
         cf = pb.PBClientFactory()
         creds = credentials.UsernamePassword("statusClient", "clientpw")
         d = cf.login(creds)
@@ -258,9 +258,9 @@ class MyApplet(pb.Referenceable):
         p = Prefs(self)
         p.create()
 
-    def set_buildmaster(self, buildmaster):
-        host, port = buildmaster.split(":")
-        self.buildmaster = host, int(port)
+    def set_buildmain(self, buildmain):
+        host, port = buildmain.split(":")
+        self.buildmain = host, int(port)
         self.disconnect()
         reactor.callLater(0.5, self.connect)
 
@@ -280,10 +280,10 @@ class Prefs:
         self.w = w = gtk.Window()
         v = gtk.VBox()
         h = gtk.HBox()
-        h.pack_start(gtk.Label("buildmaster (host:port) : "))
-        self.buildmaster_entry = b = gtk.Entry()
-        if self.parent.buildmaster:
-            host, port = self.parent.buildmaster
+        h.pack_start(gtk.Label("buildmain (host:port) : "))
+        self.buildmain_entry = b = gtk.Entry()
+        if self.parent.buildmain:
+            host, port = self.parent.buildmain
             b.set_text("%s:%d" % (host, port))
         h.pack_start(b)
         v.add(h)
@@ -296,8 +296,8 @@ class Prefs:
         w.show_all()
 
     def done(self, widget):
-        buildmaster = self.buildmaster_entry.get_text()
-        self.parent.set_buildmaster(buildmaster)
+        buildmain = self.buildmain_entry.get_text()
+        self.parent.set_buildmain(buildmain)
         self.w.unmap()
 
 

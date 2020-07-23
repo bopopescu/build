@@ -2,19 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
 
 from common.skia import global_constants
-from config_bootstrap import Master
+from config_bootstrap import Main
 
 
-class SkiaAndroid(Master.Master3):
+class SkiaAndroid(Main.Main3):
   project_name = 'SkiaAndroid'
-  master_port = 8096
-  slave_port = 8196
-  master_port_alt = 8296
+  main_port = 8096
+  subordinate_port = 8196
+  main_port_alt = 8296
   repo_url = global_constants.SKIA_REPO
   buildbot_url = 'http://build.chromium.org/p/client.skia.android/'
   service_account_file = global_constants.SERVICE_ACCOUNT_FILE
-  buildbucket_bucket = 'master.client.skia.android'
+  buildbucket_bucket = 'main.client.skia.android'

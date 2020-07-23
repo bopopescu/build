@@ -36,7 +36,7 @@ def _FetchAppEngineSDKSteps(api):
       # which includes retrying requests.
       branch='fd119c547fd4e56eeab77d138b0426022ae1d159')
   api.python.inline('Run SDK downloader', script_content, args=['--dest=.'])
-  return api.path['slave_build'].join('google_appengine')
+  return api.path['subordinate_build'].join('google_appengine')
 
 
 def _RemoteSteps(api, app_engine_sdk_path):
@@ -76,9 +76,9 @@ def RunSteps(api):
 def GenTests(api):
   yield (
     api.test('basic') +
-    api.properties(mastername='master.client.catapult',
+    api.properties(mainname='main.client.catapult',
                    buildername='windows',
-                   slavename='windows_slave') +
+                   subordinatename='windows_subordinate') +
     api.step_data('Fetch SDK downloader',
                   api.gitiles.make_encoded_file(
                       '"<simulated contents of get_appengine.py>"')) +

@@ -8,7 +8,7 @@ Intended to be called periodically. Syncs to the Blink repo and runs
 'webkit-patch auto-rebaseline', which processes entries in
 LayoutTests/TestExpectations that are marked with 'NeedsRebaseline'.
 
-Slaves running this recipe will require SVN access credentials for submitting
+Subordinates running this recipe will require SVN access credentials for submitting
 patches with the new baselines.
 """
 
@@ -54,7 +54,7 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('rebaseline_o_matic') +
-         api.properties(mastername='chromium.infra.cron',
+         api.properties(mainname='chromium.infra.cron',
                         buildername='rebaseline-o-matic',
-                        slavename='fake-slave'))
+                        subordinatename='fake-subordinate'))
 

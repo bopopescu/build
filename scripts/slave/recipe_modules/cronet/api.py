@@ -48,7 +48,7 @@ class CronetApi(recipe_api.RecipeApi):
     self.m.chromium.runhooks()
     if self.m.chromium.c.project_generator.tool == 'mb':
       self.m.chromium.run_mb(
-          self.m.properties['mastername'],
+          self.m.properties['mainname'],
           self.m.properties['buildername'])
     self.m.chromium.compile()
 

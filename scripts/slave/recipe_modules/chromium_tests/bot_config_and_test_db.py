@@ -33,7 +33,7 @@ class BotConfig(object):
   def _get_builder_bot_config(self, bot_id):
     # WARNING: This doesn't take into account dynamic
     # tests from test spec etc. If you need that, please use bot_db.
-    return self._bots_dict.get(bot_id['mastername'], {}).get(
+    return self._bots_dict.get(bot_id['mainname'], {}).get(
         'builders', {}).get(bot_id['buildername'], {})
 
   def _get(self, bot_id, name, default=None):
@@ -42,14 +42,14 @@ class BotConfig(object):
   def get(self, name, default=None):
     return self._consistent_get(self._get, name, default)
 
-  def _get_master_setting(self, bot_id, name, default=None):
-    return self._bots_dict.get(bot_id['mastername'], {}).get(
+  def _get_main_setting(self, bot_id, name, default=None):
+    return self._bots_dict.get(bot_id['mainname'], {}).get(
         'settings', {}).get(name, default)
 
-  def get_master_setting(self, name, default=None):
-    return self._consistent_get(self._get_master_setting, name, default)
+  def get_main_setting(self, name, default=None):
+    return self._consistent_get(self._get_main_setting, name, default)
 
-  def _get_test_spec(self, chromium_tests_api, mastername):
+  def _get_test_spec(self, chromium_tests_api, mainname):
     if len(self._bot_ids) == 1:
       bot_config = self._get_builder_bot_config(self._bot_ids[0])
 
@@ -59,7 +59,7 @@ class BotConfig(object):
         return { self._bot_ids[0]['buildername']: bot_config['test_spec'] }
 
     test_spec_file = self.get('testing', {}).get(
-        'test_spec_file', '%s.json' % mastername)
+        'test_spec_file', '%s.json' % mainname)
 
     # TODO(phajdan.jr): Bots should have no generators instead.
     if self.get('disable_tests'):
@@ -74,21 +74,21 @@ class BotConfig(object):
       scripts_compile_targets = \
           chromium_tests_api.get_compile_targets_for_scripts().json.output
 
-    masternames = set(bot_id['mastername'] for bot_id in self._bot_ids)
-    for mastername in masternames:
-      test_spec = self._get_test_spec(chromium_tests_api, mastername)
+    mainnames = set(bot_id['mainname'] for bot_id in self._bot_ids)
+    for mainname in mainnames:
+      test_spec = self._get_test_spec(chromium_tests_api, mainname)
 
       # We manually thaw the path to the elements we are modifying, since the
       # builders are frozen.
-      master_dict = dict(self._bots_dict[mastername])
-      builders = master_dict['builders'] = dict(master_dict['builders'])
+      main_dict = dict(self._bots_dict[mainname])
+      builders = main_dict['builders'] = dict(main_dict['builders'])
       for loop_buildername in builders:
         builder_dict = builders[loop_buildername] = (
             dict(builders[loop_buildername]))
         builders[loop_buildername]['tests'] = (
             chromium_tests_api.generate_tests_from_test_spec(
                 chromium_tests_api.m, test_spec, builder_dict,
-                loop_buildername, mastername,
+                loop_buildername, mainname,
                 # TODO(phajdan.jr): Get enable_swarming value from builder_dict.
                 # Above should remove the need to get bot_config and buildername
                 # in this method.
@@ -99,8 +99,8 @@ class BotConfig(object):
                 bot_update_step
             ))
 
-      bot_db._add_master_dict_and_test_spec(
-          mastername, freeze(master_dict), freeze(test_spec))
+      bot_db._add_main_dict_and_test_spec(
+          mainname, freeze(main_dict), freeze(test_spec))
 
   def should_force_legacy_compiling(self, chromium_tests_api):
     """Determines if a given chromium revision needs to be built with gyp.
@@ -114,13 +114,13 @@ class BotConfig(object):
       config_pyl = chromium_tests_api.m.file.read(
           'Reading MB config',
           chromium_tests_api.m.path['checkout'].join(*MB_CONFIG_FILENAME),
-          test_data=('{\'masters\': {'
+          test_data=('{\'mains\': {'
                      '\'tryserver.chromium.perf\': {'
                      '\'linux_perf_bisect_builder\':'
                      '\'gyp_something_something\'}}}'))
       config = ast.literal_eval(config_pyl or '{}')
       for bot_id in self._bot_ids:
-        _ = config['masters'][bot_id['mastername']][bot_id['buildername']]
+        _ = config['mains'][bot_id['mainname']][bot_id['buildername']]
       result_text = 'MB is enabled for this builder at this revision.'
       log_name = 'Builder MB-ready'
       p = chromium_tests_api.m.step.active_result.presentation
@@ -138,21 +138,21 @@ class BotConfig(object):
     tests = []
     for bot_id in self._bot_ids:
       bot_config = bot_db.get_bot_config(
-          bot_id['mastername'], bot_id['buildername'])
+          bot_id['mainname'], bot_id['buildername'])
       tests.extend([copy.deepcopy(t) for t in bot_config.get('tests', [])])
 
       if bot_id.get('tester'):
         bot_config = bot_db.get_bot_config(
-            bot_id['mastername'], bot_id['tester'])
+            bot_id['mainname'], bot_id['tester'])
         tests.extend([copy.deepcopy(t) for t in bot_config.get('tests', [])])
 
     tests_including_triggered = list(tests)
     for bot_id in self._bot_ids:
       bot_config = bot_db.get_bot_config(
-          bot_id['mastername'], bot_id['buildername'])
+          bot_id['mainname'], bot_id['buildername'])
 
       for _, test_bot in bot_db.bot_configs_matching_parent_buildername(
-          bot_id['mastername'], bot_id['buildername']):
+          bot_id['mainname'], bot_id['buildername']):
         tests_including_triggered.extend(test_bot.get('tests', []))
 
     return tests, tests_including_triggered
@@ -161,10 +161,10 @@ class BotConfig(object):
     compile_targets = set()
     for bot_id in self._bot_ids:
       bot_config = bot_db.get_bot_config(
-          bot_id['mastername'], bot_id['buildername'])
+          bot_id['mainname'], bot_id['buildername'])
       compile_targets.update(set(bot_config.get('compile_targets', [])))
       compile_targets.update(bot_db.get_test_spec(
-          bot_id['mastername'], bot_id['buildername']).get(
+          bot_id['mainname'], bot_id['buildername']).get(
               'additional_compile_targets', []))
 
     if self.get('add_tests_as_compile_targets', True):
@@ -179,48 +179,48 @@ class BotConfig(object):
 
 class BotConfigAndTestDB(object):
   """An immutable database of bot configurations and test specifications.
-  Holds the data for potentially multiple waterfalls (masternames). Most
-  queries against this database are made with (mastername, buildername)
+  Holds the data for potentially multiple waterfalls (mainnames). Most
+  queries against this database are made with (mainname, buildername)
   pairs.
   """
 
   def __init__(self):
-    # Indexed by mastername. Each entry contains a master_dict and a
+    # Indexed by mainname. Each entry contains a main_dict and a
     # test_spec.
     self._db = {}
 
-  def _add_master_dict_and_test_spec(self, mastername, master_dict, test_spec):
+  def _add_main_dict_and_test_spec(self, mainname, main_dict, test_spec):
     """Only used during construction in chromium_tests.prepare_checkout. Do not
     call this externally.
     """
-    # TODO(kbr): currently the master_dicts that are created by
-    # get_master_dict_with_dynamic_tests are over-specialized to a
+    # TODO(kbr): currently the main_dicts that are created by
+    # get_main_dict_with_dynamic_tests are over-specialized to a
     # particular builder -- the "enable_swarming" flag paradoxically comes
     # from that builder, rather than from each individual builder and/or
     # the parent builder. This needs to be fixed so that there's exactly
-    # one master_dict per waterfall.
-    assert mastername not in self._db, (
-        'Illegal attempt to add multiple master dictionaries for waterfall %s' %
-        (mastername))
-    self._db[mastername] = { 'master_dict': master_dict,
+    # one main_dict per waterfall.
+    assert mainname not in self._db, (
+        'Illegal attempt to add multiple main dictionaries for waterfall %s' %
+        (mainname))
+    self._db[mainname] = { 'main_dict': main_dict,
                              'test_spec': test_spec }
 
-  def get_bot_config(self, mastername, buildername):
-    return self._db[mastername]['master_dict'].get('builders', {}).get(
+  def get_bot_config(self, mainname, buildername):
+    return self._db[mainname]['main_dict'].get('builders', {}).get(
         buildername)
 
-  def get_master_settings(self, mastername):
-    return self._db[mastername]['master_dict'].get('settings', {})
+  def get_main_settings(self, mainname):
+    return self._db[mainname]['main_dict'].get('settings', {})
 
   def bot_configs_matching_parent_buildername(
-      self, mastername, parent_buildername):
+      self, mainname, parent_buildername):
     """A generator of all the (buildername, bot_config) tuples whose
-    parent_buildername is the passed one on the given master.
+    parent_buildername is the passed one on the given main.
     """
-    for buildername, bot_config in self._db[mastername]['master_dict'].get(
+    for buildername, bot_config in self._db[mainname]['main_dict'].get(
         'builders', {}).iteritems():
       if bot_config.get('parent_buildername') == parent_buildername:
         yield buildername, bot_config
 
-  def get_test_spec(self, mastername, buildername):
-    return self._db[mastername]['test_spec'].get(buildername, {})
+  def get_test_spec(self, mainname, buildername):
+    return self._db[mainname]['test_spec'].get(buildername, {})

@@ -18,7 +18,7 @@ import os
 import platform
 import sys
 
-from slave.ios import utils
+from subordinate.ios import utils
 
 
 def check_for_tools():

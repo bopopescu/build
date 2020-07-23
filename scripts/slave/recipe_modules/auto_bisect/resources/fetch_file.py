@@ -24,7 +24,7 @@ def fetch_file(repo, commit, path):
   Args:
     path: The path relative to the root of the repository.
     repo: The name of the repo on chromium.googlesource.com, e.g. chromium/src.
-    commit: The commit at which to look at the file, e.g. master or git hash.
+    commit: The commit at which to look at the file, e.g. main or git hash.
 
   Returns:
     The text of the file as a string.
@@ -42,7 +42,7 @@ def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('path')
   parser.add_argument('--repo', default='chromium/src')
-  parser.add_argument('--commit', default='master')
+  parser.add_argument('--commit', default='main')
   args = parser.parse_args()
   print fetch_file(args.repo, args.commit, args.path)
 

@@ -295,7 +295,7 @@ def sendmail(host, options, ident):
 
 def senderror(failure, options):
     recipient = [options.sender]
-    sender = '"Internally Generated Message (%s)"<postmaster@%s>' % (sys.argv[0], smtp.DNSNAME)
+    sender = '"Internally Generated Message (%s)"<postmain@%s>' % (sys.argv[0], smtp.DNSNAME)
     error = StringIO.StringIO()
     failure.printTraceback(file=error)
     body = StringIO.StringIO(ERROR_FMT % error.getvalue())

@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 from common import chromium_utils
-from slave import build_directory
+from subordinate import build_directory
 
 # Method could be a function
 # pylint: disable=R0201

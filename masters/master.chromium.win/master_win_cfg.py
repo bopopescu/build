@@ -5,14 +5,14 @@
 from buildbot.scheduler import Triggerable
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='win_src',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=60,
                             builderNames=[
           'Win Builder',

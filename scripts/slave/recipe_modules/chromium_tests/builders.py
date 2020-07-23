@@ -61,7 +61,7 @@ BUILDERS = freeze({
   # when adding configuration options that will only be exercised in other
   # repositories.
   #
-  # Note that this master is not real, and consequently this build configuration
+  # Note that this main is not real, and consequently this build configuration
   # will never be used in production.
   'bot_update.always_on': {
     'builders': {

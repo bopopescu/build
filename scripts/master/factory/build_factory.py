@@ -8,7 +8,7 @@ properties."""
 from buildbot.process import factory
 from buildbot.process import properties
 
-from master.factory import build
+from main.factory import build
 
 
 class BuildFactory(factory.BuildFactory):

@@ -20,7 +20,7 @@ from buildbot.status.builder import SUCCESS, WARNINGS
 from twisted.internet import defer
 from twisted.python import log
 
-from master import build_utils
+from main import build_utils
 
 
 class TryMailNotifier(mail.MailNotifier):
@@ -42,7 +42,7 @@ class TryMailNotifier(mail.MailNotifier):
       return
 
     log.msg('Building try job email')
-    projectName = self.master_status.getTitle()
+    projectName = self.main_status.getTitle()
 
     if len(build) != 1:
       # TODO(maruel): Panic or process them all.
@@ -50,9 +50,9 @@ class TryMailNotifier(mail.MailNotifier):
 
     build = build[0]
     job_stamp = build.getSourceStamp()
-    build_url = self.master_status.getURLForThing(build)
-    builder_url = self.master_status.getURLForThing(build.getBuilder())
-    waterfall_url = self.master_status.getBuildbotURL()
+    build_url = self.main_status.getURLForThing(build)
+    builder_url = self.main_status.getURLForThing(build.getBuilder())
+    waterfall_url = self.main_status.getBuildbotURL()
     if results == SUCCESS:
       status_text_html = "You are awesome! Try succeeded!"
       res = "success"
@@ -113,8 +113,8 @@ class TryMailNotifier(mail.MailNotifier):
                           'builder': parent_name,
                           'build_url': parent_build,
                           'buildnum': parent_buildnum})
-    slave = build.getSlavename()
-    slave_url = '%s/buildslaves/%s' % (waterfall_url.rstrip('/'), slave)
+    subordinate = build.getSubordinatename()
+    subordinate_url = '%s/buildsubordinates/%s' % (waterfall_url.rstrip('/'), subordinate)
 
     html_params = {
         'subject': subject,
@@ -123,8 +123,8 @@ class TryMailNotifier(mail.MailNotifier):
         'status_text_html': status_text_html,
         'build_url': build_url,
         'parent_builder_html': parent_html,
-        'slave': slave,
-        'slave_url': slave_url,
+        'subordinate': subordinate,
+        'subordinate_url': subordinate_url,
         'build_number': build.getNumber(),
         'builder': build.getBuilder().getName(),
         'builder_url': builder_url,
@@ -144,7 +144,7 @@ class TryMailNotifier(mail.MailNotifier):
   %(status_text_html)s<p> %(parent_builder_html)s
   Build: <a href="%(build_url)s">%(build_number)s</a> on
          <a href="%(builder_url)s">%(builder)s</a><br>
-  slave: <a href="%(slave_url)s">%(slave)s</a><br>
+  subordinate: <a href="%(subordinate_url)s">%(subordinate)s</a><br>
     """) % html_params
 
     html_content += self.SpecialPropertiesAsHTML(build_props.asDict())

@@ -46,14 +46,14 @@ def in_reactor(f):
         return result[0]
     return wrap
 
-def isBuildmasterDir(dir):
+def isBuildmainDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     if not os.path.isfile(buildbot_tac):
         print "no buildbot.tac"
         return False
 
     contents = open(buildbot_tac, "r").read()
-    return "Application('buildmaster')" in contents
+    return "Application('buildmain')" in contents
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -176,11 +176,11 @@ class MakerBase(OptionsWithOptionsFile):
 
 makefile_sample = """# -*- makefile -*-
 
-# This is a simple makefile which lives in a buildmaster
+# This is a simple makefile which lives in a buildmain
 # directory (next to the buildbot.tac file). It allows you to start/stop the
-# master by doing 'make start' or 'make stop'.
+# main by doing 'make start' or 'make stop'.
 
-# The 'reconfig' target will tell a buildmaster to reload its config file.
+# The 'reconfig' target will tell a buildmain to reload its config file.
 
 start:
 	twistd --no_save -y buildbot.tac
@@ -259,19 +259,19 @@ class Maker:
         f.close()
 
     def sampleconfig(self, source):
-        target = "master.cfg.sample"
+        target = "main.cfg.sample"
         config_sample = open(source, "rt").read()
         if os.path.exists(target):
             oldcontents = open(target, "rt").read()
             if oldcontents == config_sample:
                 if not self.quiet:
-                    print "master.cfg.sample already exists and is up-to-date"
+                    print "main.cfg.sample already exists and is up-to-date"
                 return
             if not self.quiet:
-                print "replacing master.cfg.sample"
+                print "replacing main.cfg.sample"
         else:
             if not self.quiet:
-                print "creating master.cfg.sample"
+                print "creating main.cfg.sample"
         f = open(target, "wt")
         f.write(config_sample)
         f.close()
@@ -295,8 +295,8 @@ class Maker:
 
     def create_db(self):
         from buildbot.db import connector
-        from buildbot.master import BuildMaster
-        db = connector.DBConnector(BuildMaster(self.basedir),
+        from buildbot.main import BuildMain
+        db = connector.DBConnector(BuildMain(self.basedir),
                 self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
         d = db.model.upgrade()
@@ -347,16 +347,16 @@ class Maker:
             self.populate_if_missing(os.path.join(webdir, target),
                                  source)
 
-    def check_master_cfg(self, expected_db_url=None):
-        """Check the buildmaster configuration, returning a deferred that
+    def check_main_cfg(self, expected_db_url=None):
+        """Check the buildmain configuration, returning a deferred that
         fires with an approprate exit status (so 0=success)."""
-        from buildbot.master import BuildMaster
+        from buildbot.main import BuildMain
         from twisted.python import log
 
-        master_cfg = os.path.join(self.basedir, "master.cfg")
-        if not os.path.exists(master_cfg):
+        main_cfg = os.path.join(self.basedir, "main.cfg")
+        if not os.path.exists(main_cfg):
             if not self.quiet:
-                print "No master.cfg found"
+                print "No main.cfg found"
             return defer.succeed(1)
 
         # side-effects of loading the config file:
@@ -367,14 +367,14 @@ class Maker:
         #  "builder created" event).
 
         # we put basedir in front of sys.path, because that's how the
-        # buildmaster itself will run, and it is quite common to have the
-        # buildmaster import helper classes from other .py files in its
+        # buildmain itself will run, and it is quite common to have the
+        # buildmain import helper classes from other .py files in its
         # basedir.
 
         if sys.path[0] != self.basedir:
             sys.path.insert(0, self.basedir)
 
-        m = BuildMaster(self.basedir)
+        m = BuildMain(self.basedir)
 
         # we need to route log.msg to stdout, so any problems can be seen
         # there. But if everything goes well, I'd rather not clutter stdout
@@ -384,10 +384,10 @@ class Maker:
         log.addObserver(messages.append)
 
         # this will errback if there's something wrong with the config file.
-        # Note that this BuildMaster instance is never started, so it won't
+        # Note that this BuildMain instance is never started, so it won't
         # actually do anything with the configuration.
         d = defer.maybeDeferred(lambda :
-            m.loadConfig(open(master_cfg, "r"), checkOnly=True))
+            m.loadConfig(open(main_cfg, "r"), checkOnly=True))
         def check_db_url(config):
             if (expected_db_url and 
                 config.get('db_url', 'sqlite:///state.sqlite') != expected_db_url):
@@ -405,8 +405,8 @@ class Maker:
                     print "".join(m['message'])
                 f.printTraceback()
                 print
-                print "An error was detected in the master.cfg file."
-                print "Please correct the problem and run 'buildbot upgrade-master' again."
+                print "An error was detected in the main.cfg file."
+                print "Please correct the problem and run 'buildbot upgrade-main' again."
                 print
             return 1
         d.addCallbacks(cb, eb)
@@ -414,7 +414,7 @@ class Maker:
 
 DB_HELP = """
     The --db string is evaluated to build the DB object, which specifies
-    which database the buildmaster should use to hold scheduler state and
+    which database the buildmain should use to hold scheduler state and
     status information. The default (which creates an SQLite database in
     BASEDIR/state.sqlite) is equivalent to:
 
@@ -425,7 +425,7 @@ DB_HELP = """
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
 """
 
-class UpgradeMasterOptions(MakerBase):
+class UpgradeMainOptions(MakerBase):
     optFlags = [
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
@@ -435,16 +435,16 @@ class UpgradeMasterOptions(MakerBase):
         ]
 
     def getSynopsis(self):
-        return "Usage:    buildbot upgrade-master [options] [<basedir>]"
+        return "Usage:    buildbot upgrade-main [options] [<basedir>]"
 
     longdesc = """
-    This command takes an existing buildmaster working directory and
+    This command takes an existing buildmain working directory and
     adds/modifies the files there to work with the current version of
-    buildbot. When this command is finished, the buildmaster directory should
-    look much like a brand-new one created by the 'create-master' command.
+    buildbot. When this command is finished, the buildmain directory should
+    look much like a brand-new one created by the 'create-main' command.
 
     Use this after you've upgraded your buildbot installation and before you
-    restart the buildmaster to use the new version.
+    restart the buildmain to use the new version.
 
     If you have modified the files in your working directory, this command
     will leave them untouched, but will put the new recommended contents in a
@@ -462,7 +462,7 @@ class UpgradeMasterOptions(MakerBase):
 
 @in_reactor
 @defer.deferredGenerator
-def upgradeMaster(config):
+def upgradeMain(config):
     m = Maker(config)
 
     if not config['quiet']: print "upgrading basedir"
@@ -476,25 +476,25 @@ def upgradeMaster(config):
             'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
             'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
         })
-    m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
+    m.populate_if_missing(os.path.join(basedir, "main.cfg.sample"),
                             util.sibpath(__file__, "sample.cfg"),
                             overwrite=True)
     # if index.html exists, use it to override the root page tempalte
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                         os.path.join(basedir, "templates/root.html"))
 
-    if not config['quiet']: print "checking master.cfg"
+    if not config['quiet']: print "checking main.cfg"
     wfd = defer.waitForDeferred(
-            m.check_master_cfg(expected_db_url=config['db']))
+            m.check_main_cfg(expected_db_url=config['db']))
     yield wfd
     rc = wfd.getResult()
 
     if rc == 0:
         from buildbot.db import connector
-        from buildbot.master import BuildMaster
+        from buildbot.main import BuildMain
 
         if not config['quiet']: print "upgrading database"
-        db = connector.DBConnector(BuildMaster(config['basedir']),
+        db = connector.DBConnector(BuildMain(config['basedir']),
                             config['db'],
                             basedir=config['basedir'])
 
@@ -509,17 +509,17 @@ def upgradeMaster(config):
         yield rc
 
 
-class MasterOptions(MakerBase):
+class MainOptions(MakerBase):
     optFlags = [
         ["force", "f",
-         "Re-use an existing directory (will not overwrite master.cfg file)"],
+         "Re-use an existing directory (will not overwrite main.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
         ["no-logrotate", "n",
-         "Do not permit buildmaster rotate logs by itself"]
+         "Do not permit buildmain rotate logs by itself"]
         ]
     optParameters = [
-        ["config", "c", "master.cfg", "name of the buildmaster config file"],
+        ["config", "c", "main.cfg", "name of the buildmain config file"],
         ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
         ["log-count", "l", "10",
@@ -528,25 +528,25 @@ class MasterOptions(MakerBase):
          "which DB to use for scheduler/status state. See below for syntax."],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot create-master [options] [<basedir>]"
+        return "Usage:    buildbot create-main [options] [<basedir>]"
 
     longdesc = """
-    This command creates a buildmaster working directory and buildbot.tac file.
-    The master will live in <dir> and create various files there.  If
+    This command creates a buildmain working directory and buildbot.tac file.
+    The main will live in <dir> and create various files there.  If
     --relocatable is given, then the resulting buildbot.tac file will be
     written such that its containing directory is assumed to be the basedir.
     This is generally a good idea.
 
-    At runtime, the master will read a configuration file (named
-    'master.cfg' by default) in its basedir. This file should contain python
-    code which eventually defines a dictionary named 'BuildmasterConfig'.
-    The elements of this dictionary are used to configure the Buildmaster.
+    At runtime, the main will read a configuration file (named
+    'main.cfg' by default) in its basedir. This file should contain python
+    code which eventually defines a dictionary named 'BuildmainConfig'.
+    The elements of this dictionary are used to configure the Buildmain.
     See doc/config.xhtml for details about what can be controlled through
     this interface.
 """ + DB_HELP + """
     The --db string is stored verbatim in the buildbot.tac file, and
     evaluated as 'buildbot start' time to pass a DBConnector instance into
-    the newly-created BuildMaster object.
+    the newly-created BuildMain object.
     """
 
     def postOptions(self):
@@ -559,11 +559,11 @@ class MasterOptions(MakerBase):
                                    " or None")
 
 
-masterTACTemplate = ["""
+mainTACTemplate = ["""
 import os
 
 from twisted.application import service
-from buildbot.master import BuildMaster
+from buildbot.main import BuildMain
 
 basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
@@ -574,9 +574,9 @@ if basedir == '.':
     import os.path
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-# note: this line is matched against to check that this is a buildmaster
+# note: this line is matched against to check that this is a buildmain
 # directory; do not edit it.
-application = service.Application('buildmaster')
+application = service.Application('buildmain')
 """,
 """
 try:
@@ -592,7 +592,7 @@ except ImportError:
 """
 configfile = r'%(config)s'
 
-m = BuildMaster(basedir, configfile)
+m = BuildMain(basedir, configfile)
 m.setServiceParent(application)
 m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
@@ -600,17 +600,17 @@ m.log_rotation.maxRotatedFiles = maxRotatedFiles
 """]
 
 @in_reactor
-def createMaster(config):
+def createMain(config):
     m = Maker(config)
     m.mkdir()
     m.chdir()
     if config['relocatable']:
         config['basedir'] = '.'
     if config['no-logrotate']:
-        masterTAC = "".join([masterTACTemplate[0]] + masterTACTemplate[2:])
+        mainTAC = "".join([mainTACTemplate[0]] + mainTACTemplate[2:])
     else:
-        masterTAC = "".join(masterTACTemplate)
-    contents = masterTAC % config
+        mainTAC = "".join(mainTACTemplate)
+    contents = mainTAC % config
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
@@ -624,7 +624,7 @@ def createMaster(config):
 
     def print_status(r):
         if not m.quiet:
-            print "buildmaster configured in %s" % m.basedir
+            print "buildmain configured in %s" % m.basedir
     d.addCallback(print_status)
     return d
 
@@ -633,8 +633,8 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildmasterDir(config['basedir']):
-        print "not a buildmaster directory"
+    if not isBuildmainDir(config['basedir']):
+        print "not a buildmain directory"
         sys.exit(1)
 
     os.chdir(basedir)
@@ -673,8 +673,8 @@ def restart(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildmasterDir(basedir):
-        print "not a buildmaster directory"
+    if not isBuildmainDir(basedir):
+        print "not a buildmain directory"
         sys.exit(1)
 
     from buildbot.scripts.startup import start
@@ -719,20 +719,20 @@ class DebugClientOptions(OptionsWithOptionsFile):
         ['help', 'h', "Display this message"],
         ]
     optParameters = [
-        ["master", "m", None,
-         "Location of the buildmaster's slaveport (host:port)"],
+        ["main", "m", None,
+         "Location of the buildmain's subordinateport (host:port)"],
         ["passwd", "p", None, "Debug password to use"],
         ]
     buildbotOptions = [
-        [ 'debugMaster', 'passwd' ],
-        [ 'master', 'master' ],
+        [ 'debugMain', 'passwd' ],
+        [ 'main', 'main' ],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot debugclient [options]"
 
     def parseArgs(self, *args):
         if len(args) > 0:
-            self['master'] = args[0]
+            self['main'] = args[0]
         if len(args) > 1:
             self['passwd'] = args[1]
         if len(args) > 2:
@@ -741,9 +741,9 @@ class DebugClientOptions(OptionsWithOptionsFile):
 def debugclient(config):
     from buildbot.clients import debug
 
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
+    main = config.get('main')
+    if main is None:
+        raise usage.UsageError("main must be specified: on the command "
                                "line or in ~/.buildbot/options")
 
     passwd = config.get('passwd')
@@ -751,7 +751,7 @@ def debugclient(config):
         raise usage.UsageError("passwd must be specified: on the command "
                                "line or in ~/.buildbot/options")
 
-    d = debug.DebugWidget(master, passwd)
+    d = debug.DebugWidget(main, passwd)
     d.run()
 
 class StatusClientOptions(OptionsWithOptionsFile):
@@ -759,18 +759,18 @@ class StatusClientOptions(OptionsWithOptionsFile):
         ['help', 'h', "Display this message"],
         ]
     optParameters = [
-        ["master", "m", None,
-         "Location of the buildmaster's status port (host:port)"],
+        ["main", "m", None,
+         "Location of the buildmain's status port (host:port)"],
         ["username", "u", "statusClient", "Username performing the trial build"],
         ["passwd", None, "clientpw", "password for PB authentication"],
         ]
     buildbotOptions = [
-        [ 'masterstatus', 'master' ],
+        [ 'mainstatus', 'main' ],
     ]
 
     def parseArgs(self, *args):
         if len(args) > 0:
-            self['master'] = args[0]
+            self['main'] = args[0]
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
@@ -784,24 +784,24 @@ class StatusGuiOptions(StatusClientOptions):
 
 def statuslog(config):
     from buildbot.clients import base
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
+    main = config.get('main')
+    if main is None:
+        raise usage.UsageError("main must be specified: on the command "
                                "line or in ~/.buildbot/options")
     passwd = config.get('passwd')
     username = config.get('username')
-    c = base.TextClient(master, username=username, passwd=passwd)
+    c = base.TextClient(main, username=username, passwd=passwd)
     c.run()
 
 def statusgui(config):
     from buildbot.clients import gtkPanes
-    master = config.get('master')
-    if master is None:
-        raise usage.UsageError("master must be specified: on the command "
+    main = config.get('main')
+    if main is None:
+        raise usage.UsageError("main must be specified: on the command "
                                "line or in ~/.buildbot/options")
     passwd = config.get('passwd')
     username = config.get('username')
-    c = gtkPanes.GtkClient(master, username=username, passwd=passwd)
+    c = gtkPanes.GtkClient(main, username=username, passwd=passwd)
     c.run()
 
 class SendChangeOptions(OptionsWithOptionsFile):
@@ -810,8 +810,8 @@ class SendChangeOptions(OptionsWithOptionsFile):
         self['properties'] = {}
 
     optParameters = [
-        ("master", "m", None,
-         "Location of the buildmaster's PBListener (host:port)"),
+        ("main", "m", None,
+         "Location of the buildmain's PBListener (host:port)"),
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
         ("username", "u", None, "deprecated name for --who"),
         ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
@@ -834,7 +834,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ]
 
     buildbotOptions = [
-        [ 'master', 'master' ],
+        [ 'main', 'main' ],
         [ 'who', 'who' ],
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
         [ 'username', 'username' ],
@@ -852,7 +852,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
 
 
 def sendchange(config, runReactor=False):
-    """Send a single change to the buildmaster's PBChangeSource. The
+    """Send a single change to the buildmain's PBChangeSource. The
     connection will be drpoped as soon as the Change has been sent."""
     from buildbot.clients import sendchange
 
@@ -862,7 +862,7 @@ def sendchange(config, runReactor=False):
         print "NOTE: --username/-u is deprecated: use --who/-W'"
         who = config.get('username')
     auth = config.get('auth')
-    master = config.get('master')
+    main = config.get('main')
     branch = config.get('branch')
     category = config.get('category')
     revision = config.get('revision')
@@ -899,9 +899,9 @@ def sendchange(config, runReactor=False):
     auth = auth.split(':', 1)
 
     assert who, "you must provide a committer (--who)"
-    assert master, "you must provide the master location"
+    assert main, "you must provide the main location"
 
-    s = sendchange.Sender(master, auth, encoding=encoding)
+    s = sendchange.Sender(main, auth, encoding=encoding)
     d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
@@ -943,17 +943,17 @@ class ForceOptions(OptionsWithOptionsFile):
 class TryOptions(OptionsWithOptionsFile):
     optParameters = [
         ["connect", "c", None,
-         "How to reach the buildmaster, either 'ssh' or 'pb'"],
+         "How to reach the buildmain, either 'ssh' or 'pb'"],
         # for ssh, use --host, --username, and --jobdir
         ["host", None, None,
-         "Hostname (used by ssh) for the buildmaster"],
+         "Hostname (used by ssh) for the buildmain"],
         ["jobdir", None, None,
-         "Directory (on the buildmaster host) where try jobs are deposited"],
+         "Directory (on the buildmain host) where try jobs are deposited"],
         ["username", "u", None,
          "Username performing the try build"],
-        # for PB, use --master, --username, and --passwd
-        ["master", "m", None,
-         "Location of the buildmaster's PBListener (host:port)"],
+        # for PB, use --main, --username, and --passwd
+        ["main", "m", None,
+         "Location of the buildmain's PBListener (host:port)"],
         ["passwd", None, None,
          "Password for PB authentication"],
         ["who", "w", None,
@@ -1016,16 +1016,16 @@ class TryOptions(OptionsWithOptionsFile):
         [ 'try_username', 'username' ],
         [ 'try_jobdir', 'jobdir' ],
         [ 'try_password', 'passwd' ],
-        [ 'try_master', 'master' ],
+        [ 'try_main', 'main' ],
         [ 'try_who', 'who' ],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
-        [ 'try_masterstatus', 'masterstatus' ],
+        [ 'try_mainstatus', 'mainstatus' ],
         # Deprecated command mappings from the quirky old days:
         [ 'try_topdir', 'try-topdir' ],
         [ 'try_topfile', 'try-topfile' ],
         [ 'try_host', 'tryhost' ],
         [ 'try_dir', 'trydir' ],        # replaced by try_jobdir/jobdir
-        [ 'masterstatus', 'master' ],   # replaced by try_masterstatus/masterstatus
+        [ 'mainstatus', 'main' ],   # replaced by try_mainstatus/mainstatus
     ]
 
     def __init__(self):
@@ -1110,13 +1110,13 @@ class CheckConfigOptions(OptionsWithOptionsFile):
 
     def getSynopsis(self):
         return "Usage:		buildbot checkconfig [configFile]\n" + \
-         "		If not specified, 'master.cfg' will be used as 'configFile'"
+         "		If not specified, 'main.cfg' will be used as 'configFile'"
 
     def parseArgs(self, *args):
         if len(args) >= 1:
             self['configFile'] = args[0]
         else:
-            self['configFile'] = 'master.cfg'
+            self['configFile'] = 'main.cfg'
 
 
 @in_reactor
@@ -1149,22 +1149,22 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-master', None, MasterOptions,
-         "Create and populate a directory for a new buildmaster"],
-        ['upgrade-master', None, UpgradeMasterOptions,
-         "Upgrade an existing buildmaster directory for the current version"],
-        ['start', None, StartOptions, "Start a buildmaster"],
-        ['stop', None, StopOptions, "Stop a buildmaster"],
+        ['create-main', None, MainOptions,
+         "Create and populate a directory for a new buildmain"],
+        ['upgrade-main', None, UpgradeMainOptions,
+         "Upgrade an existing buildmain directory for the current version"],
+        ['start', None, StartOptions, "Start a buildmain"],
+        ['stop', None, StopOptions, "Stop a buildmain"],
         ['restart', None, RestartOptions,
-         "Restart a buildmaster"],
+         "Restart a buildmain"],
 
         ['reconfig', None, ReconfigOptions,
-         "SIGHUP a buildmaster to make it re-read the config file"],
+         "SIGHUP a buildmain to make it re-read the config file"],
         ['sighup', None, ReconfigOptions,
-         "SIGHUP a buildmaster to make it re-read the config file"],
+         "SIGHUP a buildmain to make it re-read the config file"],
 
         ['sendchange', None, SendChangeOptions,
-         "Send a change to the buildmaster"],
+         "Send a change to the buildmain"],
 
         ['debugclient', None, DebugClientOptions,
          "Launch a small debug panel GUI"],
@@ -1178,10 +1178,10 @@ class Options(usage.Options):
         ['try', None, TryOptions, "Run a build with your local changes"],
 
         ['tryserver', None, TryServerOptions,
-         "buildmaster-side 'try' support function, not for users"],
+         "buildmain-side 'try' support function, not for users"],
 
         ['checkconfig', None, CheckConfigOptions,
-         "test the validity of a master.cfg config file"],
+         "test the validity of a main.cfg config file"],
 
         # TODO: 'watch'
         ]
@@ -1214,15 +1214,15 @@ def run():
     command = config.subCommand
     so = config.subOptions
 
-    if command == "create-master":
-        createMaster(so)
-    elif command == "upgrade-master":
-        upgradeMaster(so)
+    if command == "create-main":
+        createMain(so)
+    elif command == "upgrade-main":
+        upgradeMain(so)
     elif command == "start":
         from buildbot.scripts.startup import start
 
-        if not isBuildmasterDir(so['basedir']):
-            print "not a buildmaster directory"
+        if not isBuildmainDir(so['basedir']):
+            print "not a buildmain directory"
             sys.exit(1)
 
         start(so)
@@ -1231,7 +1231,7 @@ def run():
             stop(so, wait=True)
         except BuildbotNotRunningError:
             if not so['quiet']:
-                print "buildmaster not running"
+                print "buildmain not running"
             sys.exit(0)
 
     elif command == "restart":

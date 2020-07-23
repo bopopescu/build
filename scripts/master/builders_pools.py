@@ -50,12 +50,12 @@ class BuildersPools(object):
 
     # self.parent is of type TryJob.
     # self.parent.parent is of type buildbot.schedulers.SchedulerManager.
-    # self.parent.parent.master is of type buildbot.master.BuildMaster.
-    # self.parent.parent.master.botmaster is of type buildbot.master.BotMaster.
-    botmaster = self.parent.parent.master.botmaster
+    # self.parent.parent.main is of type buildbot.main.BuildMain.
+    # self.parent.parent.main.botmain is of type buildbot.main.BotMain.
+    botmain = self.parent.parent.main.botmain
     # Collect the set of connected builders.
     available = set([name for name in self.ListBuilderNames()
-                     if name in botmaster.builders])
+                     if name in botmain.builders])
 
     # Fall back on default pool name.
     if not pool_name:

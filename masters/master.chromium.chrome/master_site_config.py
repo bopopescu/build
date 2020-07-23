@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumChrome(Master.Master1):
+class ChromiumChrome(Main.Main1):
   project_name = 'Chromium Chrome'
-  master_port = 8015
-  slave_port = 8115
-  master_port_alt = 8215
+  main_port = 8015
+  subordinate_port = 8115
+  main_port_alt = 8215
   buildbot_url = 'http://build.chromium.org/p/chromium.chrome/'

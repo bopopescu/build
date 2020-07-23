@@ -17,7 +17,7 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
     as http POSTs to one or more webhook URLs.
 
     The easiest way to deploy this is to place it next to your
-    master.cfg and do something like this (assuming you've got a
+    main.cfg and do something like this (assuming you've got a
     postbin URL for purposes of demonstration):
 
       from webhook_status import WebHookTransmitter

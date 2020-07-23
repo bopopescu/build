@@ -17,7 +17,7 @@ import tempfile
 import urllib
 
 from common import chromium_utils
-from slave import slave_utils
+from subordinate import subordinate_utils
 
 
 class FullDriveException(Exception):
@@ -72,10 +72,10 @@ def function_logger(header):
     print 'Done %s!' % header
 
 
-def remove_old_isolate_directories(slave_path):
+def remove_old_isolate_directories(subordinate_path):
   """Removes all the old isolate directories."""
   with function_logger('removing any old isolate directories'):
-    for path in glob.iglob(os.path.join(slave_path, '*', 'build', 'isolate*')):
+    for path in glob.iglob(os.path.join(subordinate_path, '*', 'build', 'isolate*')):
       print 'Removing %s' % path
       cleanup_directory(path)
 
@@ -87,17 +87,17 @@ def remove_old_isolate_execution_directories_impl_(directory):
     cleanup_directory(path)
 
 
-def remove_old_isolate_execution_directories(slave_path):
+def remove_old_isolate_execution_directories(subordinate_path):
   """Removes all the old directories from past isolate executions."""
   with function_logger('removing any old isolate execution directories'):
     remove_old_isolate_execution_directories_impl_(tempfile.gettempdir())
-    remove_old_isolate_execution_directories_impl_(slave_path)
+    remove_old_isolate_execution_directories_impl_(subordinate_path)
 
 
-def remove_build_dead(slave_path):
+def remove_build_dead(subordinate_path):
   """Removes all the build.dead directories."""
   with function_logger('removing any build.dead directories'):
-    for path in glob.iglob(os.path.join(slave_path, '*', 'build.dead')):
+    for path in glob.iglob(os.path.join(subordinate_path, '*', 'build.dead')):
       print 'Removing %s' % path
       cleanup_directory(path)
 
@@ -142,20 +142,20 @@ def check_free_space_path(path, min_free_space=1024*1024*1024):
 def main_win():
   """Main function for Windows platform."""
   with function_logger('removing any Chrome temporary files'):
-    slave_utils.RemoveChromeTemporaryFiles()
+    subordinate_utils.RemoveChromeTemporaryFiles()
   if os.path.isdir('e:\\'):
-    slave_path = 'e:\\b\\build\\slave'
+    subordinate_path = 'e:\\b\\build\\subordinate'
   else:
-    slave_path = 'c:\\b\\build\\slave'
-  remove_build_dead(slave_path)
-  remove_old_isolate_directories(slave_path)
-  remove_old_isolate_execution_directories(slave_path)
+    subordinate_path = 'c:\\b\\build\\subordinate'
+  remove_build_dead(subordinate_path)
+  remove_old_isolate_directories(subordinate_path)
+  remove_old_isolate_execution_directories(subordinate_path)
   remove_temp()
   check_free_space_path('c:\\')
   if os.path.isdir('e:\\'):
     check_free_space_path('e:\\')
   check_free_space_path(os.path.dirname(os.path.abspath(__file__)))
-  # Do not add the following cleanup in slaves_utils.py since we don't want to
+  # Do not add the following cleanup in subordinates_utils.py since we don't want to
   # clean them between each test, as the crash dumps may be processed by
   # 'process build' step.
   with function_logger('removing any crash reports'):
@@ -173,10 +173,10 @@ def main_win():
 def main_mac():
   """Main function for Mac platform."""
   with function_logger('removing any Chrome temporary files'):
-    slave_utils.RemoveChromeTemporaryFiles()
-  remove_build_dead('/b/build/slave')
-  remove_old_isolate_directories('/b/build/slave')
-  remove_old_isolate_execution_directories('/b/build/slave')
+    subordinate_utils.RemoveChromeTemporaryFiles()
+  remove_build_dead('/b/build/subordinate')
+  remove_old_isolate_directories('/b/build/subordinate')
+  remove_old_isolate_execution_directories('/b/build/subordinate')
   # On the Mac, clearing out the entire tmp folder could be problematic,
   # as it might remove files in use by apps not related to the build.
   if os.path.isdir('/b'):
@@ -189,10 +189,10 @@ def main_mac():
 def main_linux():
   """Main function for linux platform."""
   with function_logger('removing any Chrome temporary files'):
-    slave_utils.RemoveChromeTemporaryFiles()
-  remove_build_dead('/b/build/slave')
-  remove_old_isolate_directories('/b/build/slave')
-  remove_old_isolate_execution_directories('/b/build/slave')
+    subordinate_utils.RemoveChromeTemporaryFiles()
+  remove_build_dead('/b/build/subordinate')
+  remove_old_isolate_directories('/b/build/subordinate')
+  remove_old_isolate_execution_directories('/b/build/subordinate')
   # TODO(maruel): Temporary, add back.
   # cleanup_directory('/tmp')
   if os.path.isdir('/b'):

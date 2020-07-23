@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 
 AF = annotator_factory.AnnotatorFactory()
@@ -17,5 +17,5 @@ smoke_test_builder = {
 }
 
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   c['builders'].append(smoke_test_builder)

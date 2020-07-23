@@ -15,15 +15,15 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb, fakemain
 from buildbot import sourcestamp
 
 class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_fromSsdict_changes(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
-        master.db.insertTestData([
+        main = fakemain.make_main()
+        main.db = fakedb.FakeDBConnector(self)
+        main.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
                         repository='svn://...', project='world-domination'),
             fakedb.Change(changeid=14, branch='trunk', revision='9284',
@@ -41,9 +41,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         ])
         # use getSourceStamp to minimize the risk from changes to the format of
         # the ssdict
-        d = master.db.sourcestamps.getSourceStamp(234)
+        d = main.db.sourcestamps.getSourceStamp(234)
         d.addCallback(lambda ssdict :
-                    sourcestamp.SourceStamp.fromSsdict(master, ssdict))
+                    sourcestamp.SourceStamp.fromSsdict(main, ssdict))
         def check(ss):
             self.assertEqual(ss.ssid, 234)
             self.assertEqual(ss.branch, 'trunk')
@@ -57,9 +57,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return d
 
     def test_fromSsdict_patch(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
-        master.db.insertTestData([
+        main = fakemain.make_main()
+        main.db = fakedb.FakeDBConnector(self)
+        main.db.insertTestData([
             fakedb.Patch(id=99, subdir='/foo', patchlevel=3,
                         patch_base64='LS0gKys='),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
@@ -68,9 +68,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         ])
         # use getSourceStamp to minimize the risk from changes to the format of
         # the ssdict
-        d = master.db.sourcestamps.getSourceStamp(234)
+        d = main.db.sourcestamps.getSourceStamp(234)
         d.addCallback(lambda ssdict :
-                    sourcestamp.SourceStamp.fromSsdict(master, ssdict))
+                    sourcestamp.SourceStamp.fromSsdict(main, ssdict))
         def check(ss):
             self.assertEqual(ss.ssid, 234)
             self.assertEqual(ss.branch, 'trunk')
@@ -83,17 +83,17 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return d
 
     def test_fromSsdict_simple(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
-        master.db.insertTestData([
+        main = fakemain.make_main()
+        main.db = fakedb.FakeDBConnector(self)
+        main.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
                         repository='svn://...', project='world-domination'),
         ])
         # use getSourceStamp to minimize the risk from changes to the format of
         # the ssdict
-        d = master.db.sourcestamps.getSourceStamp(234)
+        d = main.db.sourcestamps.getSourceStamp(234)
         d.addCallback(lambda ssdict :
-                    sourcestamp.SourceStamp.fromSsdict(master, ssdict))
+                    sourcestamp.SourceStamp.fromSsdict(main, ssdict))
         def check(ss):
             self.assertEqual(ss.ssid, 234)
             self.assertEqual(ss.branch, 'trunk')

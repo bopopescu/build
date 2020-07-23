@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Set of utilities to build the chromium master."""
+"""Set of utilities to build the chromium main."""
 
 import os
 
@@ -10,11 +10,11 @@ from buildbot.steps import shell
 from buildbot.interfaces import IRenderable
 from buildbot.process.properties import Property, WithProperties
 
-from master import chromium_step
-from master.factory import build_factory
-from master.factory import chromeos_build_factory
-from master.factory import annotator_factory
-from master.master_utils import ConditionalProperty
+from main import chromium_step
+from main.factory import build_factory
+from main.factory import chromeos_build_factory
+from main.factory import annotator_factory
+from main.main_utils import ConditionalProperty
 
 
 class _ChromiteRecipeFactoryFunc(object):
@@ -47,7 +47,7 @@ class _ChromiteRecipeFactoryFunc(object):
     kwargs.setdefault('timeout', cls._CHROMITE_TIMEOUT)
 
     factory_properties = kwargs.setdefault('factory_properties', {})
-    # Set the 'cbb_debug' property if we're not running in a production master.
+    # Set the 'cbb_debug' property if we're not running in a production main.
     if kwargs.pop('debug', False):
       factory_properties['cbb_debug'] = True
     kwargs.setdefault('max_time', cls._DEFAULT_MAX_TIME)
@@ -75,13 +75,13 @@ class ChromiteFactory(object):
       factory: a factory with pre-existing steps to extend rather than start
           fresh.  Allows composing.
       use_chromeos_factory: indicates we want a default of a chromeos factory.
-      slave_manager: whether we should manage the script area for the bot.
+      subordinate_manager: whether we should manage the script area for the bot.
       chromite_patch: a url and ref pair (dict) to patch the checked out
           chromite. Fits well with a single change from a codereview, to use
           on one or more builders for realistic testing, or experiments.
       show_gclient_output: Set to False to hide the output of 'gclient sync'.
-          Used by external masters to prevent leaking sensitive information,
-          since both external and internal slaves use internal.DEPS/.
+          Used by external mains to prevent leaking sensitive information,
+          since both external and internal subordinates use internal.DEPS/.
       max_time: Max overall time from the start before the command is killed.
   """
   _default_git_base = 'https://chromium.googlesource.com/chromiumos'
@@ -89,8 +89,8 @@ class ChromiteFactory(object):
   _default_max_time = 16 * 60 * 60
 
   def __init__(self, script, params=None, b_params=None, timeout=9000,
-               branch='master', chromite_repo=_default_chromite,
-               factory=None, use_chromeos_factory=False, slave_manager=True,
+               branch='main', chromite_repo=_default_chromite,
+               factory=None, use_chromeos_factory=False, subordinate_manager=True,
                chromite_patch=None, show_gclient_output=True,
                max_time=_default_max_time):
     if chromite_patch:
@@ -101,7 +101,7 @@ class ChromiteFactory(object):
     self.chromite_repo = chromite_repo
     self.timeout = timeout
     self.show_gclient_output = show_gclient_output
-    self.slave_manager = slave_manager
+    self.subordinate_manager = subordinate_manager
     self.step_args = {}
     self.step_args['maxTime'] = max_time
 
@@ -160,13 +160,13 @@ class ChromiteFactory(object):
     * clearing of chromite
     * clean checkout of chromite
     """
-    if self.slave_manager:
-      build_slave_sync = ['gclient', 'sync', '--verbose', '--force',
+    if self.subordinate_manager:
+      build_subordinate_sync = ['gclient', 'sync', '--verbose', '--force',
                           '--delete_unversioned_trees']
       self.f_cbuild.addStep(shell.ShellCommand,
-                            command=build_slave_sync,
+                            command=build_subordinate_sync,
                             name='update_scripts',
-                            description='Sync buildbot slave files',
+                            description='Sync buildbot subordinate files',
                             workdir='/b',
                             timeout=300,
                             want_stdout=self.show_gclient_output,
@@ -267,11 +267,11 @@ class CbuildbotFactory(ChromiteFactory):
        '--buildbot',
     ]
 
-    # Add '--master-build-id' flag when build ID property is present
+    # Add '--main-build-id' flag when build ID property is present
     cmd.append(
         ConditionalProperty(
-            'master_build_id',
-            WithProperties('--master-build-id=%(master_build_id)s'),
+            'main_build_id',
+            WithProperties('--main-build-id=%(main_build_id)s'),
             [], # Will be flattened to nothing.
         )
     )

@@ -83,8 +83,8 @@ class ChromiteConfigTestCase(unittest.TestCase):
       'unittests': True,
     },
     'pre-cq-group': {},
-    'master-thing': {
-      'master': True,
+    'main-thing': {
+      'main': True,
     },
   }
 
@@ -138,8 +138,8 @@ class ChromiteConfigTestCase(unittest.TestCase):
     self.assertTrue(pre_cq_group.IsPreCqBuilder())
     self.assertTrue(pre_cq_group.IsGeneralPreCqBuilder())
 
-  def testIsMaster(self):
-    self.assertTrue(self.config['master-thing'].is_master)
+  def testIsMain(self):
+    self.assertTrue(self.config['main-thing'].is_main)
 
   def testCategorize(self):
     # Type-based: name, build_type => base, suffix, category
@@ -168,8 +168,8 @@ class ChromiteConfigTestCase(unittest.TestCase):
           'my-board', 'toolchain-major', 'TOOLCHAIN'),
       ('my-board-toolchain-minor', None,
           'my-board', 'toolchain-minor', 'TOOLCHAIN'),
-      ('master-toolchain', None,
-          'master', 'toolchain', 'TOOLCHAIN'),
+      ('main-toolchain', None,
+          'main', 'toolchain', 'TOOLCHAIN'),
       ('llvm-toolchain-group', None,
           'llvm', 'toolchain-group', 'TOOLCHAIN'),
     )

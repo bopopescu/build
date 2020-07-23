@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class CatapultTryserver(Master.Master4a):
+class CatapultTryserver(Main.Main4a):
   project_name = 'CatapultTryserver'
-  master_port = 21400
-  slave_port = 31400
-  master_port_alt = 26400
+  main_port = 21400
+  subordinate_port = 31400
+  main_port_alt = 26400
   buildbot_url = 'https://build.chromium.org/p/tryserver.client.catapult/'
-  buildbucket_bucket = 'master.tryserver.client.catapult'
+  buildbucket_bucket = 'main.tryserver.client.catapult'
   service_account_file = 'service-account-chromium-tryserver.json'

@@ -17,9 +17,9 @@ import os
 
 from twisted.internet import defer
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave import runprocess
-from buildslave.commands.base import AbandonChain
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate import runprocess
+from buildsubordinate.commands.base import AbandonChain
 
 
 class Git(SourceBaseCommand):
@@ -28,7 +28,7 @@ class Git(SourceBaseCommand):
 
     ['repourl'] (required):        the upstream GIT repository string
     ['branch'] (optional):         which version (i.e. branch or tag)
-                                   to retrieve. Default: "master".
+                                   to retrieve. Default: "main".
     ['submodules'] (optional):     whether to initialize and update
                                    submodules. Default: False.
     ['ignore_ignores'] (optional): ignore ignores when purging changes
@@ -50,7 +50,7 @@ class Git(SourceBaseCommand):
         self.repourl = args['repourl']
         self.branch = args.get('branch')
         if not self.branch:
-            self.branch = "master"
+            self.branch = "main"
         self.sourcedata = "%s %s\n" % (self.repourl, self.branch)
         self.submodules = args.get('submodules')
         self.ignore_ignores = args.get('ignore_ignores', True)

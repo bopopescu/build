@@ -22,7 +22,7 @@ from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
 
 # deprecated, use BuildFactory.addStep
 def s(steptype, **kwargs):
-    # convenience function for master.cfg files, to create step
+    # convenience function for main.cfg files, to create step
     # specification tuples
     return (steptype, kwargs)
 

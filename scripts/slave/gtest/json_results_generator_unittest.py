@@ -11,10 +11,10 @@
 
 import unittest
 
-from slave.gtest.json_results_generator import generate_test_timings_trie
-from slave.gtest.json_results_generator import JSONResultsGenerator
-from slave.gtest.test_result import TestResult
-from slave.gtest.test_result import canonical_name
+from subordinate.gtest.json_results_generator import generate_test_timings_trie
+from subordinate.gtest.json_results_generator import JSONResultsGenerator
+from subordinate.gtest.test_result import TestResult
+from subordinate.gtest.test_result import canonical_name
 import simplejson
 
 

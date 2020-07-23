@@ -17,7 +17,7 @@ DEPS = [
 
 
 def RunSteps(api):
-  """Generates the sequence of steps that will be run by the slave."""
+  """Generates the sequence of steps that will be run by the subordinate."""
   api.gclient.set_config('crashpad')
   api.gclient.checkout()
 

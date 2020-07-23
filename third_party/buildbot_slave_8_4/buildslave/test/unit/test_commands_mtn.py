@@ -19,9 +19,9 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import mtn
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.sourcecommand import SourceCommandTestMixin
+from buildsubordinate.commands import mtn
 
 class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
     repourl='mtn://code.monotone.ca/sandbox'

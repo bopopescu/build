@@ -107,7 +107,7 @@ def get_project_config(api, project, headers=None):
     parse_protobuf for details on the format to expect.
   """
   url = 'https://luci-config.appspot.com/_ah/api/config/v1/config_sets/'
-  url += api.url.quote('projects/%s/refs/heads/master' % project, safe='')
+  url += api.url.quote('projects/%s/refs/heads/main' % project, safe='')
   url += '/config/recipes.cfg'
 
   fetch_result = api.url.fetch(url, step_name='Get %s deps' % project,
@@ -326,7 +326,7 @@ def checkout_project(api, proj, proj_config, root_dir, patch=None):
 
 PROJECTS_TO_TRY = [
   'build',
-  'build_limited_scripts_slave',
+  'build_limited_scripts_subordinate',
   'recipe_engine',
   'depot_tools',
 ]
@@ -382,7 +382,7 @@ def RunSteps(api, patches_raw, rietveld, issue, patchset, patch_project,
   patches = parse_patches(
       api, patches_raw, rietveld, issue, patchset, patch_project)
 
-  root_dir = api.path['slave_build']
+  root_dir = api.path['subordinate_build']
 
   url_mapping = get_url_mapping(api, headers)
 
@@ -421,7 +421,7 @@ def GenTests(api):
         'deps {',
         '  project_id: "%s"' % dep,
         '  url: "https://repo.url/foo.git"',
-        '  branch: "master"',
+        '  branch: "main"',
         '  revision: "deadbeef"',
         '}',
       ]

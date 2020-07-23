@@ -112,7 +112,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         d = self.setUpChangeSource()
         def create_poller(_):
             self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
-            self.poller.master = self.master
+            self.poller.main = self.main
         d.addCallback(create_poller)
         return d
         
@@ -168,7 +168,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                                         epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
+            self.assertEqual(self.changes_added[0]['branch'], 'main')
             self.assertEqual(self.changes_added[0]['files'], [ '/etc/442' ])
             self.assertEqual(self.changes_added[1]['author'], 'by:64a5dc2a')
             self.assertEqual(self.changes_added[1]['when_timestamp'],

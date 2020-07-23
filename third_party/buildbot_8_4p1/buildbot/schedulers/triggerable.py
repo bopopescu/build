@@ -71,7 +71,7 @@ class Triggerable(base.BaseScheduler):
     def _updateWaiters(self):
         if self._waiters and not self._bsc_subscription:
             self._bsc_subscription = \
-                    self.master.subscribeToBuildsetCompletions(
+                    self.main.subscribeToBuildsetCompletions(
                                                 self._buildsetComplete)
         elif not self._waiters and self._bsc_subscription:
             self._bsc_subscription.unsubscribe()

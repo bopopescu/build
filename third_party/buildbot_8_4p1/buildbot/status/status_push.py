@@ -46,8 +46,8 @@ class StatusPush(StatusReceiverMultiService):
 
     It uses IQueue to batch push requests and queue the data when
     the receiver is down.
-    When a PersistentQueue object is used, the items are saved to disk on master
-    shutdown so they can be pushed back when the master is restarted.
+    When a PersistentQueue object is used, the items are saved to disk on main
+    shutdown so they can be pushed back when the main is restarted.
     """
 
     def __init__(self, serverPushCb, queue=None, path=None, filter=True,
@@ -324,11 +324,11 @@ class StatusPush(StatusReceiverMultiService):
     def changeAdded(self, change):
         self.push('changeAdded', change=change)
 
-    def slaveConnected(self, slavename):
-        self.push('slaveConnected', slave=self.status.getSlave(slavename))
+    def subordinateConnected(self, subordinatename):
+        self.push('subordinateConnected', subordinate=self.status.getSubordinate(subordinatename))
 
-    def slaveDisconnected(self, slavename):
-        self.push('slaveDisconnected', slavename=slavename)
+    def subordinateDisconnected(self, subordinatename):
+        self.push('subordinateDisconnected', subordinatename=subordinatename)
 
 
 class HttpStatusPush(StatusPush):

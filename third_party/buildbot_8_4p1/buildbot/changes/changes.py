@@ -57,21 +57,21 @@ class Change:
     revision = None # used to create a source-stamp
 
     @classmethod
-    def fromChdict(cls, master, chdict):
+    def fromChdict(cls, main, chdict):
         """
         Class method to create a L{Change} from a dictionary as returned
         by L{ChangesConnectorComponent.getChange}.
 
-        @param master: build master instance
+        @param main: build main instance
         @param ssdict: change dictionary
 
         @returns: L{Change} via Deferred
         """
-        cache = master.caches.get_cache("Changes", cls._make_ch)
-        return cache.get(chdict['changeid'], chdict=chdict, master=master)
+        cache = main.caches.get_cache("Changes", cls._make_ch)
+        return cache.get(chdict['changeid'], chdict=chdict, main=main)
 
     @classmethod
-    def _make_ch(cls, changeid, master, chdict):
+    def _make_ch(cls, changeid, main, chdict):
         change = cls(None, None, None, _fromChdict=True)
         change.who = chdict['author']
         change.comments = chdict['comments']
@@ -278,8 +278,8 @@ class Change:
         return data
 
 
-class ChangeMaster: # pragma: no cover
-    # this is a stub, retained to allow the "buildbot upgrade-master" tool to
+class ChangeMain: # pragma: no cover
+    # this is a stub, retained to allow the "buildbot upgrade-main" tool to
     # read old changes.pck pickle files and convert their contents into the
     # new database format. This is only instantiated by that tool, or by
     # test_db.py which tests that tool. The functionality that previously
@@ -343,7 +343,7 @@ class ChangeMaster: # pragma: no cover
         if not quiet:
             print "converted %d strings" % nconvert
 
-class OldChangeMaster(ChangeMaster): # pragma: no cover
-    # this is a reminder that the ChangeMaster class is old
+class OldChangeMain(ChangeMain): # pragma: no cover
+    # this is a reminder that the ChangeMain class is old
     pass
 # vim: set ts=4 sts=4 sw=4 et:

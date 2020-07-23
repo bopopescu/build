@@ -3,15 +3,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Routines to list, select, and load masters and builders in master.cfg.
+"""Routines to list, select, and load mains and builders in main.cfg.
 
-These routines help to load up master.cfgs in all directories, then locate
-masters and builders among those loaded. This is intended to simplify  master
+These routines help to load up main.cfgs in all directories, then locate
+mains and builders among those loaded. This is intended to simplify  main
 selection and processing in frontend and build analysis tools, especially the
 buildrunner.
 
-When run standalone, the script acts as example usage which lists masters
-and builders of a selected master.
+When run standalone, the script acts as example usage which lists mains
+and builders of a selected main.
 """
 
 # pylint: disable=C0323
@@ -36,10 +36,10 @@ from common import chromium_utils
 
 
 @contextlib.contextmanager
-def TemporaryMasterPasswords():
+def TemporaryMainPasswords():
   all_paths = [os.path.join(BASE_DIR, 'site_config', '.bot_password')]
   all_paths.extend(os.path.join(path, '.apply_issue_password')
-                   for path in chromium_utils.ListMasters())
+                   for path in chromium_utils.ListMains())
   created_paths = []
   for path in all_paths:
     if not os.path.exists(path):
@@ -60,10 +60,10 @@ def TemporaryMasterPasswords():
 
 
 def ExecuteConfig(canonical_config):
-  """Execute a master.cfg file and return its dictionary.
+  """Execute a main.cfg file and return its dictionary.
 
-  WARNING: executing a master.cfg loads modules into the python process.
-  Attempting to load another master.cfg with similar module names will
+  WARNING: executing a main.cfg loads modules into the python process.
+  Attempting to load another main.cfg with similar module names will
   cause subtle (and not-so-subtle) errors. It is recommended to only call
   this once per process.
   """
@@ -85,14 +85,14 @@ def ExecuteConfig(canonical_config):
     f.close()
 
 
-def LoadConfig(basedir, config_file='master.cfg', suppress=False):
-  """Load and execute a master.cfg file from a directory.
+def LoadConfig(basedir, config_file='main.cfg', suppress=False):
+  """Load and execute a main.cfg file from a directory.
 
   This is a nicer wrapper around ExecuteConfig which will trap IO or execution
   errors and provide an informative message if one occurs.
 
-  WARNING: executing a master.cfg loads modules into the python process.
-  Attempting to load another master.cfg with similar module names will
+  WARNING: executing a main.cfg loads modules into the python process.
+  Attempting to load another main.cfg with similar module names will
   cause subtle (and not-so-subtle) errors. It is recommended to only call
   this once per process.
   """
@@ -100,7 +100,7 @@ def LoadConfig(basedir, config_file='master.cfg', suppress=False):
   canonical_basedir = os.path.abspath(os.path.expanduser(basedir))
   canonical_config = os.path.join(canonical_basedir, config_file)
 
-  with TemporaryMasterPasswords():
+  with TemporaryMainPasswords():
     try:
       localdict = ExecuteConfig(canonical_config)
     except IOError as err:
@@ -150,37 +150,37 @@ def PrettyPrintInternal(items, columns, title, notfound, spacing=4):
     print spac.join([itemdata[col][i].rjust(lengths[col]) for col in columns])
 
 
-def PrettyPrintBuilders(builders, master):
-  """Pretty-print a list of builders from a master."""
+def PrettyPrintBuilders(builders, main):
+  """Pretty-print a list of builders from a main."""
 
-  columns = ['name', 'slavename', 'category']
-  title = 'outputting builders for: %s' % master
+  columns = ['name', 'subordinatename', 'category']
+  title = 'outputting builders for: %s' % main
   notfound = 'no builders found.'
-  builders = Denormalize(builders, 'slavenames', 'slavename', columns)
+  builders = Denormalize(builders, 'subordinatenames', 'subordinatename', columns)
   PrettyPrintInternal(builders, columns, title, notfound)
 
 
-def PrettyPrintMasters(masterpairs):
-  masters = []
-  for mastername, path in masterpairs:
+def PrettyPrintMains(mainpairs):
+  mains = []
+  for mainname, path in mainpairs:
     abspath = os.path.abspath(path)
     relpath = os.path.relpath(path)
     shortpath = abspath if len(abspath) < len(relpath) else relpath
-    master = {}
-    master['mastername'] = mastername
-    master['path'] = shortpath
-    masters.append(master)
+    main = {}
+    main['mainname'] = mainname
+    main['path'] = shortpath
+    mains.append(main)
 
-  columns = ['mastername', 'path']
-  title = 'listing available masters:'
-  notfound = 'no masters found.'
-  PrettyPrintInternal(masters, columns, title, notfound)
+  columns = ['mainname', 'path']
+  title = 'listing available mains:'
+  notfound = 'no mains found.'
+  PrettyPrintInternal(mains, columns, title, notfound)
 
 
 def Denormalize(items, over, newcol, wanted):
   """Splits a one-to-many hash into many one-to-ones.
 
-  PrettyPrintInternal needs a list of many builders with one slave, this will
+  PrettyPrintInternal needs a list of many builders with one subordinate, this will
   properly format the data as such.
 
   items: a list of dictionaries to be denormalized
@@ -246,61 +246,61 @@ def OnlyGetOne(seq, key, source):
     return res[0]
 
 
-def GetMasters(include_public=True, include_internal=True):
-  """Return a pair of (mastername, path) for all masters found."""
+def GetMains(include_public=True, include_internal=True):
+  """Return a pair of (mainname, path) for all mains found."""
 
-  # note: ListMasters uses master.cfg hardcoded as part of its search path
-  def parse_master_name(masterpath):
-    """Returns a mastername from a pathname to a master."""
-    _, tail = os.path.split(masterpath)
+  # note: ListMains uses main.cfg hardcoded as part of its search path
+  def parse_main_name(mainpath):
+    """Returns a mainname from a pathname to a main."""
+    _, tail = os.path.split(mainpath)
     sep = '.'
-    hdr = 'master'
+    hdr = 'main'
     chunks = tail.split(sep)
     if not chunks or chunks[0] != hdr or len(chunks) < 2:
-      raise ValueError('unable to parse mastername from path! (%s)' % tail)
+      raise ValueError('unable to parse mainname from path! (%s)' % tail)
     return sep.join(chunks[1:])
 
-  return [(parse_master_name(m), m) for m in
-          chromium_utils.ListMasters(include_public=include_public,
+  return [(parse_main_name(m), m) for m in
+          chromium_utils.ListMains(include_public=include_public,
                                      include_internal=include_internal)]
 
 
-def ChooseMaster(searchname):
-  """Given a string, find all masters and pick the master that matches."""
-  masters = GetMasters()
-  masternames = []
-  master_lookup = {}
-  for mn, path in masters:
-    master = {}
-    master['mastername'] = mn
-    master_lookup[mn] = path
-    masternames.append(master)
+def ChooseMain(searchname):
+  """Given a string, find all mains and pick the main that matches."""
+  mains = GetMains()
+  mainnames = []
+  main_lookup = {}
+  for mn, path in mains:
+    main = {}
+    main['mainname'] = mn
+    main_lookup[mn] = path
+    mainnames.append(main)
 
-  candidates = [mn for mn in masternames if mn['mastername'] == searchname]
+  candidates = [mn for mn in mainnames if mn['mainname'] == searchname]
 
   errstring = 'string \'%s\' matches' % searchname
-  master = OnlyGetOne(candidates, 'mastername', errstring)
-  if not master:
+  main = OnlyGetOne(candidates, 'mainname', errstring)
+  if not main:
     return None
 
-  return master_lookup[master]
+  return main_lookup[main]
 
 
 def SearchBuilders(builders, spec):
   """Return a list of builders which match what is specified in 'spec'.
 
-  'spec' can be a hash with a key of either 'name', 'slavename', or 'either'.
+  'spec' can be a hash with a key of either 'name', 'subordinatename', or 'either'.
   This allows for flexibility in how a frontend gets information from the user.
   """
   if 'builder' in spec:
     return [b for b in builders if b['name'] ==
             spec['builder']]
   elif 'hostname' in spec:
-    return [b for b in builders if b['slavename']
+    return [b for b in builders if b['subordinatename']
             == spec['hostname']]
   else:
     return [b for b in builders if (b['name'] ==
-            spec['either']) or (b['slavename'] == spec['either'])]
+            spec['either']) or (b['subordinatename'] == spec['either'])]
 
 
 def GetBuilderName(builders, keyval):
@@ -312,7 +312,7 @@ def GetBuilderName(builders, keyval):
 def ChooseBuilder(builders, spec):
   """Search through builders matching 'spec' and return it."""
 
-  denormedbuilders = Denormalize(builders, 'slavenames', 'slavename', ['name'])
+  denormedbuilders = Denormalize(builders, 'subordinatenames', 'subordinatename', ['name'])
   candidates = SearchBuilders(denormedbuilders, spec)
   buildername = GetBuilderName(candidates, spec.values()[0])
 
@@ -321,51 +321,51 @@ def ChooseBuilder(builders, spec):
 
   builder = [b for b in builders if b['name'] == buildername][0]
   if 'hostname' in spec:
-    builder['slavename'] = spec['hostname']
-  elif 'either' in spec and spec['either'] in builder['slavenames']:
-    builder['slavename'] = spec['either']
+    builder['subordinatename'] = spec['hostname']
+  elif 'either' in spec and spec['either'] in builder['subordinatenames']:
+    builder['subordinatename'] = spec['either']
   else:
-    # User selected builder instead of slavename, so just pick the first
-    # slave the builder has.
-    builder['slavename'] = builder['slavenames'][0]
+    # User selected builder instead of subordinatename, so just pick the first
+    # subordinate the builder has.
+    builder['subordinatename'] = builder['subordinatenames'][0]
 
   return builder
 
 
 def main():
-  prog_desc = 'List all masters or builders within a master.'
-  usage = '%prog [master] [builder or slave]'
+  prog_desc = 'List all mains or builders within a main.'
+  usage = '%prog [main] [builder or subordinate]'
   parser = optparse.OptionParser(usage=(usage + '\n\n' + prog_desc))
   (_, args) = parser.parse_args()
 
   if len(args) > 2:
     parser.error("Too many arguments specified!")
 
-  masterpairs = GetMasters()
+  mainpairs = GetMains()
 
   if len(args) < 1:
-    PrettyPrintMasters(masterpairs)
+    PrettyPrintMains(mainpairs)
     return 0
 
-  master_path = ChooseMaster(args[0])
-  if not master_path:
+  main_path = ChooseMain(args[0])
+  if not main_path:
     return 2
 
-  config = LoadConfig(master_path)
+  config = LoadConfig(main_path)
   if not config:
     return 2
 
-  mastername = config['BuildmasterConfig']['properties']['mastername']
-  builders = config['BuildmasterConfig']['builders']
+  mainname = config['BuildmainConfig']['properties']['mainname']
+  builders = config['BuildmainConfig']['builders']
   if len(args) < 2:
-    PrettyPrintBuilders(builders, mastername)
+    PrettyPrintBuilders(builders, mainname)
     return 0
 
   my_builder = ChooseBuilder(builders, {'either': args[1]})
 
   if not my_builder:
     return 2
-  print "Matched %s/%s." % (mastername, my_builder['name'])
+  print "Matched %s/%s." % (mainname, my_builder['name'])
 
   return 0
 

@@ -16,35 +16,35 @@ DEPS = [
 
 
 def RunSteps(api):
-  api.gclient.set_config('infradata_master_manager')
+  api.gclient.set_config('infradata_main_manager')
   api.bot_update.ensure_checkout(
-      force=True, patch_root='infra-data-master-manager', patch_oauth2=True)
+      force=True, patch_root='infra-data-main-manager', patch_oauth2=True)
   api.gclient.runhooks()
 
-  api.python('master manager configuration test',
-             api.path['slave_build'].join('infra', 'run.py'),
-             ['infra.services.master_manager_launcher',
+  api.python('main manager configuration test',
+             api.path['subordinate_build'].join('infra', 'run.py'),
+             ['infra.services.main_manager_launcher',
               '--verify',
               '--ts-mon-endpoint=none',
               '--json-file',
-             api.path['slave_build'].join(
-                 'infra-data-master-manager',
-                 'desired_master_state.json')])
+             api.path['subordinate_build'].join(
+                 'infra-data-main-manager',
+                 'desired_main_state.json')])
 
 
 def GenTests(api):
   yield (
-      api.test('master_manager_config') +
+      api.test('main_manager_config') +
       api.properties.git_scheduled(
           buildername='infradata_config',
           buildnumber=123,
-          mastername='internal.infra',
+          mainname='internal.infra',
           repository='https://chrome-internal.googlesource.com/infradata'))
   yield (
-      api.test('master_manager_config_patch') +
+      api.test('main_manager_config_patch') +
       api.properties.git_scheduled(
           buildername='infradata_config',
           buildnumber=123,
-          mastername='internal.infra.try',
+          mainname='internal.infra.try',
           patch_project='infra-data-configs',
           repository='https://chrome-internal.googlesource.com/infradata'))

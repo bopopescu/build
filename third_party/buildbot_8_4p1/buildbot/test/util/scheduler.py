@@ -17,7 +17,7 @@ import os
 import mock
 from buildbot.test.fake import fakedb
 
-class FakeMaster(object):
+class FakeMain(object):
 
     def __init__(self, basedir, db):
         self.basedir = basedir
@@ -66,7 +66,7 @@ class FakeMaster(object):
     # useful assertions
 
     def getSubscriptionCallbacks(self):
-        """get the subscription callbacks set on the master, in a dictionary
+        """get the subscription callbacks set on the main, in a dictionary
         with keys @{buildsets}, @{buildset_completion}, and C{changes}."""
         return dict(buildsets=self.bset_subscr_cb,
                     buildset_completion=self.bset_completion_subscr_cb,
@@ -75,7 +75,7 @@ class FakeMaster(object):
 
 class SchedulerMixin(object):
     """
-    This class fakes out enough of a master and the various relevant database
+    This class fakes out enough of a main and the various relevant database
     connectors to test schedulers.  All of the database methods have identical
     signatures to the real database connectors, but for ease of testing always
     return an already-fired Deferred, meaning that there is no need to wait for
@@ -86,8 +86,8 @@ class SchedulerMixin(object):
     has been called.
 
     @ivar sched: scheduler instance
-    @ivar master: the fake master
-    @ivar db: the fake db (same as C{self.master.db}, but shorter)
+    @ivar main: the fake main
+    @ivar db: the fake db (same as C{self.main.db}, but shorter)
     """
 
     def setUpScheduler(self):
@@ -98,18 +98,18 @@ class SchedulerMixin(object):
         pass
 
     def attachScheduler(self, scheduler, schedulerid):
-        """Set up a scheduler with a fake master and db; sets self.sched, and
-        sets the master's basedir to the absolute path of 'basedir' in the test
+        """Set up a scheduler with a fake main and db; sets self.sched, and
+        sets the main's basedir to the absolute path of 'basedir' in the test
         directory.
 
         @returns: scheduler
         """
         scheduler.schedulerid = schedulerid
 
-        # set up a fake master
+        # set up a fake main
         db = self.db = fakedb.FakeDBConnector(self)
-        self.master = FakeMaster(os.path.abspath('basedir'), db)
-        scheduler.master = self.master
+        self.main = FakeMain(os.path.abspath('basedir'), db)
+        scheduler.main = self.main
 
         self.sched = scheduler
         return scheduler

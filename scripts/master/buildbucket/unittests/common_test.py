@@ -9,7 +9,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611
 
-from master.buildbucket import common
+from main.buildbucket import common
 
 
 class CommonUnitTest(unittest.TestCase):

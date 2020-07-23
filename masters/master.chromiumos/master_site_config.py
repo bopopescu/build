@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumOS(Master.ChromiumOSBase):
+class ChromiumOS(Main.ChromiumOSBase):
   project_name = 'ChromiumOS'
-  master_port = 8082
-  slave_port = 8182
-  master_port_alt = 8282
+  main_port = 8082
+  subordinate_port = 8182
+  main_port_alt = 8282
   buildbot_url = 'http://build.chromium.org/p/chromiumos/'

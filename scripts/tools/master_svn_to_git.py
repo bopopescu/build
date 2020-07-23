@@ -12,7 +12,7 @@ import tempfile
 
 GCLIENT_CONFIG = """solutions = [
   {
-    "name"      : "master.DEPS",
+    "name"      : "main.DEPS",
     "url"       : "https://chrome-internal.googlesource.com/chrome/tools/build/master.DEPS.git",
     "deps_file" : ".DEPS.git",
     "managed"   : True,
@@ -38,7 +38,7 @@ def main():
   assert os.path.isdir(buildbot_dir)
 
   tmpdir = tempfile.mkdtemp(dir=os.path.realpath(buildbot_dir),
-                            prefix='master_svn_to_git')
+                            prefix='main_svn_to_git')
   try:
     # Create new temp Git checkout.
     with open(os.path.join(tmpdir, '.gclient'), 'w') as gclient_file:
@@ -107,7 +107,7 @@ def main():
   # Reset changes to known troublesome files (CRLF/LF changes).
   crlf_fix_files = [
       'third_party/buildbot_8_4p1/contrib/windows/buildbot.bat',
-      'third_party/buildbot_slave_8_4/contrib/windows/buildslave.bat',
+      'third_party/buildbot_subordinate_8_4/contrib/windows/buildsubordinate.bat',
       'third_party/sqlalchemy_migrate_0_7_1/migrate/tests/fixture/warnings.py']
   for file_path in crlf_fix_files:
     check_call(['git', 'checkout', file_path],

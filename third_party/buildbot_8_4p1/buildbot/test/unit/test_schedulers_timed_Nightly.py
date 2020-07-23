@@ -277,14 +277,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     def test_iterations_simple_with_branch(self):
         # see timezone warning above
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
-                branch='master', minute=[5, 35])
+                branch='main', minute=[5, 35])
 
         sched.startService()
 
         self.clock.advance(0)
         while self.clock.seconds() < 10*60: # run for 10 minutes
             self.clock.advance(60)
-        self.assertEqual(self.events, [ 'B(master)@300' ])
+        self.assertEqual(self.events, [ 'B(main)@300' ])
         self.db.schedulers.assertState(self.SCHEDULERID, {'last_build': 300})
 
         d = sched.stopService()

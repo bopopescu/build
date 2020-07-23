@@ -49,25 +49,25 @@ def GenTests(api):
               'numberings': [
                   {
                       'number': '111',
-                      'numbering_identifier': 'refs/heads/master',
+                      'numbering_identifier': 'refs/heads/main',
                       'numbering_type': 'COMMIT_POSITION',
                   }
               ]})))
 
   yield (
       api.test('valid_commit_position') +
-      api.properties(commit_position='refs/heads/master@{#111}') +
+      api.properties(commit_position='refs/heads/main@{#111}') +
       api.step_data(
-          name='crrev get commit hash for refs/heads/master@{#111}',
+          name='crrev get commit hash for refs/heads/main@{#111}',
           stdout=api.json.output({
               'git_sha': 'abcdeabcde0123456789abcdeabcde0123456789'
           })))
 
   yield (
       api.test('empty_commit_hash_output') +
-      api.properties(commit_position='refs/heads/master@{#111}') +
+      api.properties(commit_position='refs/heads/main@{#111}') +
       api.step_data(
-          name='crrev get commit hash for refs/heads/master@{#111}',
+          name='crrev get commit hash for refs/heads/main@{#111}',
           stdout=api.json.output({})))
 
   yield (

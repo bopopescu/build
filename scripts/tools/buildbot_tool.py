@@ -37,8 +37,8 @@ def parse_args(argv):
   subps = parser.add_subparsers()
 
   subp = subps.add_parser('gen', help=run_gen.__doc__)
-  subp.add_argument('master_dirname', nargs=1,
-                    help='Path to master config directory (must contain '
+  subp.add_argument('main_dirname', nargs=1,
+                    help='Path to main config directory (must contain '
                          'a builders.pyl file).')
   subp.set_defaults(func=run_gen)
 
@@ -54,7 +54,7 @@ def parse_args(argv):
 
 
 def generate(builders_path, fs, print_prefix=''):
-  """Generate a new master config."""
+  """Generate a new main config."""
 
   out_dir = fs.dirname(builders_path)
   out_subpath = fs.relpath(out_dir, BASE_DIR)
@@ -74,10 +74,10 @@ def generate(builders_path, fs, print_prefix=''):
 
 
 def run_gen(args, fs):
-  """Generate a new master config."""
+  """Generate a new main config."""
 
-  master_dirname = args.master_dirname[0]
-  builders_path = fs.join(master_dirname, 'builders.pyl')
+  main_dirname = args.main_dirname[0]
+  builders_path = fs.join(main_dirname, 'builders.pyl')
 
   if not fs.exists(builders_path):
     print("%s not found" % builders_path, file=sys.stderr)
@@ -88,21 +88,21 @@ def run_gen(args, fs):
 
 
 def run_gen_all(args, fs):
-  """Generate new master configs for all masters that use builders.pyl."""
+  """Generate new main configs for all mains that use builders.pyl."""
 
-  masters_dirs = [
-    fs.join(BASE_DIR, 'masters'),
-    fs.join(BASE_DIR, '..', 'build_internal', 'masters'),
+  mains_dirs = [
+    fs.join(BASE_DIR, 'mains'),
+    fs.join(BASE_DIR, '..', 'build_internal', 'mains'),
   ]
-  for masters_dir in masters_dirs:
-    if not fs.isdir(masters_dir):
+  for mains_dir in mains_dirs:
+    if not fs.isdir(mains_dir):
       continue
-    for master_dir in fs.listdirs(masters_dir):
-      if not master_dir.startswith('master.'):
+    for main_dir in fs.listdirs(mains_dir):
+      if not main_dir.startswith('main.'):
         continue
-      builders_path = fs.join(masters_dir, master_dir, 'builders.pyl')
+      builders_path = fs.join(mains_dir, main_dir, 'builders.pyl')
       if fs.isfile(builders_path):
-        print('%s:' % master_dir)
+        print('%s:' % main_dir)
         generate(builders_path, fs, print_prefix='  ')
   return 0
 
@@ -115,16 +115,16 @@ def run_help(args, fs):
   return main(['--help'], fs)
 
 
-def _expand(template, values, source, master_subpath):
+def _expand(template, values, source, main_subpath):
   try:
     contents = template % values
   except:
     print("Error populating template %s" % source, file=sys.stderr)
     raise
-  return _update_generated_file_disclaimer(contents, source, master_subpath)
+  return _update_generated_file_disclaimer(contents, source, main_subpath)
 
 
-def _update_generated_file_disclaimer(contents, source, master_subpath):
+def _update_generated_file_disclaimer(contents, source, main_subpath):
   pattern = '# This file is used by scripts/tools/buildbot-tool.*'
   replacement = ('# This file was generated from\n'
                  '# %s\n'

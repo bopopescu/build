@@ -10,7 +10,7 @@ import optparse
 import os
 import sys
 
-from slave import build_directory
+from subordinate import build_directory
 from common import chromium_utils
 
 

@@ -17,8 +17,8 @@ import urllib
 import urllib2
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 
 def GetLatestRevision(url, platform):
@@ -76,7 +76,7 @@ def real_main(options):
     revision = GetLatestRevision(options.build_url, platform)
     if not revision:
       print 'Failed to get revision number.'
-      return slave_utils.ERROR_EXIT_CODE
+      return subordinate_utils.ERROR_EXIT_CODE
 
   archive_url = GetBuildUrl(options.build_url, platform, revision)
   archive_name = 'dynamorio.' + os.path.basename(archive_url).split('.', 1)[1]
@@ -96,7 +96,7 @@ def real_main(options):
         print '\nFailed to download build'
         failure = True
         if options.halt_on_missing_build:
-          return slave_utils.ERROR_EXIT_CODE
+          return subordinate_utils.ERROR_EXIT_CODE
       if failure:
         continue
 
@@ -127,7 +127,7 @@ def real_main(options):
     chromium_utils.RemoveDirectory(temp_dir)
 
   # If we get here, that means that it failed 3 times. We return a failure.
-  return slave_utils.ERROR_EXIT_CODE
+  return subordinate_utils.ERROR_EXIT_CODE
 
 
 def main():

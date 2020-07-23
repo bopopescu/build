@@ -13,7 +13,7 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web import client
 
-from master.factory.commands import DEFAULT_TESTS
+from main.factory.commands import DEFAULT_TESTS
 
 
 def text_to_dict(text):
@@ -195,7 +195,7 @@ class TryJobBase(TryBase):
 
   def setServiceParent(self, parent):
     TryBase.setServiceParent(self, parent)
-    self.valid_builders = self.master.botmaster.builders.keys()
+    self.valid_builders = self.main.botmain.builders.keys()
 
   def gotChange(self, change, important):  # pylint: disable=R0201
     log.msg('ERROR: gotChange was unexpectedly called.')
@@ -267,7 +267,7 @@ class TryJobBase(TryBase):
         raise BadJobfile('incoming Try job patch is %s bytes, '
                          'must be less than 20MB' % (patchsize))
 
-    d = self.master.db.sourcestamps.addSourceStamp(
+    d = self.main.db.sourcestamps.addSourceStamp(
         branch=parsed_job['branch'],
         revision=parsed_job['revision'],
         patch_body=parsed_job['patch'],

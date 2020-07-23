@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Removes checkouts from try slaves."""
+"""Removes checkouts from try subordinates."""
 
 import os
 import subprocess
@@ -12,65 +12,65 @@ import sys
 ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 
 
-def parse_master(master):
-  sys.path.append(os.path.join(ROOT_DIR, 'scripts', 'master', 'unittests'))
+def parse_main(main):
+  sys.path.append(os.path.join(ROOT_DIR, 'scripts', 'main', 'unittests'))
   import test_env  # pylint: disable=F0401,W0612
 
-  masterpath = os.path.join(ROOT_DIR, 'masters', master)
-  os.chdir(masterpath)
+  mainpath = os.path.join(ROOT_DIR, 'mains', main)
+  os.chdir(mainpath)
   variables = {}
-  master = os.path.join(masterpath, 'master.cfg')
-  execfile(master, variables)
+  main = os.path.join(mainpath, 'main.cfg')
+  execfile(main, variables)
   return variables['c']
 
 
 def main():
-  """It starts a fake in-process buildbot master just enough to parse
-  master.cfg.
+  """It starts a fake in-process buildbot main just enough to parse
+  main.cfg.
 
-  Then it queries all the builders and all the slaves to determine the current
+  Then it queries all the builders and all the subordinates to determine the current
   configuration and process accordingly.
   """
-  c = parse_master('master.tryserver.chromium.linux')
+  c = parse_main('main.tryserver.chromium.linux')
   print 'Parsing done.'
 
-  # Create a mapping of slavebuilddir with each slaves connected to it.
-  slavebuilddirs = {}
-  # Slaves per OS
-  all_slaves = {}
+  # Create a mapping of subordinatebuilddir with each subordinates connected to it.
+  subordinatebuilddirs = {}
+  # Subordinates per OS
+  all_subordinates = {}
   for builder in c['builders']:
     builder_os = builder['name'].split('_', 1)[0]
     if builder_os in ('cros', 'android'):
       builder_os = 'linux'
-    slavenames = set(builder['slavenames'])
+    subordinatenames = set(builder['subordinatenames'])
 
-    all_slaves.setdefault(builder_os, set())
-    all_slaves[builder_os] |= slavenames
+    all_subordinates.setdefault(builder_os, set())
+    all_subordinates[builder_os] |= subordinatenames
 
-    slavebuilddir = builder.get('slavebuilddir', builder['name'])
-    slavebuilddirs.setdefault(builder_os, {})
-    slavebuilddirs[builder_os].setdefault(slavebuilddir, set())
-    slavebuilddirs[builder_os][slavebuilddir] |= slavenames
+    subordinatebuilddir = builder.get('subordinatebuilddir', builder['name'])
+    subordinatebuilddirs.setdefault(builder_os, {})
+    subordinatebuilddirs[builder_os].setdefault(subordinatebuilddir, set())
+    subordinatebuilddirs[builder_os][subordinatebuilddir] |= subordinatenames
 
-  # Queue of commands to run, per slave.
+  # Queue of commands to run, per subordinate.
   queue = {}
-  for builder_os, slavebuilddirs in slavebuilddirs.iteritems():
-    os_slaves = all_slaves[builder_os]
-    for slavebuilddir, slaves in slavebuilddirs.iteritems():
-      for slave in os_slaves - slaves:
-        queue.setdefault((builder_os, slave), []).append(slavebuilddir)
+  for builder_os, subordinatebuilddirs in subordinatebuilddirs.iteritems():
+    os_subordinates = all_subordinates[builder_os]
+    for subordinatebuilddir, subordinates in subordinatebuilddirs.iteritems():
+      for subordinate in os_subordinates - subordinates:
+        queue.setdefault((builder_os, subordinate), []).append(subordinatebuilddir)
 
-  print 'Out of %d slaves, %d will be cleaned' % (len(c['slaves']), len(queue))
+  print 'Out of %d subordinates, %d will be cleaned' % (len(c['subordinates']), len(queue))
   commands = []
   for key in sorted(queue):
-    slave_os, slavename = key
+    subordinate_os, subordinatename = key
     dirs = queue[key]
-    if slave_os == 'win':
+    if subordinate_os == 'win':
       cmd = 'cmd.exe /c rd /q %s' % ' '.join(
-          'e:\\b\\build\\slave\\%s' % s for s in dirs)
+          'e:\\b\\build\\subordinate\\%s' % s for s in dirs)
     else:
-      cmd = 'rm -rf %s' % ' '.join('/b/build/slave/%s' % s for s in dirs)
-    commands.append(('ssh', slavename, cmd))
+      cmd = 'rm -rf %s' % ' '.join('/b/build/subordinate/%s' % s for s in dirs)
+    commands.append(('ssh', subordinatename, cmd))
 
   # TODO(maruel): Use pssh.
   failed = []
@@ -80,7 +80,7 @@ def main():
       failed.append(command[1])
 
   if failed:
-    print 'These slaves failed:'
+    print 'These subordinates failed:'
     for i in failed:
       print ' %s' % i
   return 0

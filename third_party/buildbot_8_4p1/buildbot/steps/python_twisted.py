@@ -156,9 +156,9 @@ class TrialTestCaseCounter(LogLineObserver):
     def outLineReceived(self, line):
         # different versions of Twisted emit different per-test lines with
         # the bwverbose reporter.
-        #  2.0.0: testSlave (buildbot.test.test_runner.Create) ... [OK]
-        #  2.1.0: buildbot.test.test_runner.Create.testSlave ... [OK]
-        #  2.4.0: buildbot.test.test_runner.Create.testSlave ... [OK]
+        #  2.0.0: testSubordinate (buildbot.test.test_runner.Create) ... [OK]
+        #  2.1.0: buildbot.test.test_runner.Create.testSubordinate ... [OK]
+        #  2.4.0: buildbot.test.test_runner.Create.testSubordinate ... [OK]
         # Let's just handle the most recent version, since it's the easiest.
         # Note that doctests create lines line this:
         #  Doctest: viff.field.GF ... [OK]
@@ -187,8 +187,8 @@ class Trial(ShellCommand):
 
     name = "trial"
     progressMetrics = ('output', 'tests', 'test.log')
-    # note: the slash only works on unix buildslaves, of course, but we have
-    # no way to know what the buildslave uses as a separator. 
+    # note: the slash only works on unix buildsubordinates, of course, but we have
+    # no way to know what the buildsubordinate uses as a separator. 
     # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
@@ -411,13 +411,13 @@ class Trial(ShellCommand):
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
 
-        # if our slave is too old to understand logfiles=, fetch them
+        # if our subordinate is too old to understand logfiles=, fetch them
         # manually. This is a fallback for the Twisted buildbot and some old
-        # buildslaves.
+        # buildsubordinates.
         self._needToPullTestDotLog = False
-        if self.slaveVersionIsOlderThan("shell", "2.1"):
-            log.msg("Trial: buildslave %s is too old to accept logfiles=" %
-                    self.getSlaveName())
+        if self.subordinateVersionIsOlderThan("shell", "2.1"):
+            log.msg("Trial: buildsubordinate %s is too old to accept logfiles=" %
+                    self.getSubordinateName())
             log.msg(" falling back to 'cat _trial_temp/test.log' instead")
             self.logfiles = {}
             self._needToPullTestDotLog = True
@@ -429,7 +429,7 @@ class Trial(ShellCommand):
         if not self._needToPullTestDotLog:
             return self._gotTestDotLog(cmd)
 
-        # if the buildslave was too old, pull test.log now
+        # if the buildsubordinate was too old, pull test.log now
         catcmd = ["cat", "_trial_temp/test.log"]
         c2 = RemoteShellCommand(command=catcmd, workdir=self.workdir)
         loog = self.addLog("test.log")

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master.v8.v8_notifier import V8Notifier
+from main.v8.v8_notifier import V8Notifier
 
 
 V8_STEPS = [
@@ -27,17 +27,17 @@ V8_STEPS = [
 ]
 
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   c['status'].extend([
     V8Notifier(
         config,
-        active_master,
+        active_main,
         categories_steps={'release': V8_STEPS},
         sendToInterestedUsers=True,
     ),
     V8Notifier(
         config,
-        active_master,
+        active_main,
         categories_steps={'mips': V8_STEPS},
         extraRecipients=[
           'akos.palfi@imgtec.com',
@@ -49,7 +49,7 @@ def Update(config, active_master, c):
     ),
     V8Notifier(
         config,
-        active_master,
+        active_main,
         categories_steps={'ppc': V8_STEPS},
         extraRecipients=[
           'mbrandy@us.ibm.com',

@@ -15,10 +15,10 @@ import sqlalchemy as sa
 class BuildRequestGateway(object):
   """Simplifies BuildRequest API for BuildBucketIntegrator."""
 
-  def __init__(self, master, build_request=None, brid=None):
-    assert master
+  def __init__(self, main, build_request=None, brid=None):
+    assert main
     assert build_request is not None or brid is not None
-    self.master = master
+    self.main = main
     self.build_request = build_request
     self.brid = brid
     if not self.brid and self.build_request:
@@ -29,8 +29,8 @@ class BuildRequestGateway(object):
     if self.build_request:
       return
     assert self.brid
-    brdict = yield self.master.db.buildrequests.getBuildRequest(self.brid)
-    self.build_request = yield BuildRequest.fromBrdict(self.master, brdict)
+    brdict = yield self.main.db.buildrequests.getBuildRequest(self.brid)
+    self.build_request = yield BuildRequest.fromBrdict(self.main, brdict)
 
   @inlineCallbacks
   def get_property(self, name):
@@ -55,7 +55,7 @@ class BuildRequestGateway(object):
 
     Performs a database query, does not a cached value.
     """
-    brdict = yield self.master.db.buildrequests.getBuildRequest(self.brid)
+    brdict = yield self.main.db.buildrequests.getBuildRequest(self.brid)
     returnValue(
         brdict.get('complete', False) and
         brdict.get('results') == build_results.FAILURE
@@ -63,7 +63,7 @@ class BuildRequestGateway(object):
 
   @inlineCallbacks
   def has_builds(self):
-    builds = yield self.master.db.builds.getBuildsForRequest(self.brid)
+    builds = yield self.main.db.builds.getBuildsForRequest(self.brid)
     returnValue(bool(builds))
 
 
@@ -73,28 +73,28 @@ class BuildbotGateway(object):
   Handy to mock.
   """
 
-  def __init__(self, master):
+  def __init__(self, main):
     """Creates a BuildbotGateway.
 
     Args:
-      master (buildbot.master.BuildMaster): the buildbot master.
+      main (buildbot.main.BuildMain): the buildbot main.
     """
-    assert master, 'master not specified'
-    self.master = master
+    assert main, 'main not specified'
+    self.main = main
 
   def find_changes_by_revision(self, revision):
     """Searches for Changes in database by |revision| and returns change ids."""
     def find(conn):
-      table = self.master.db.model.changes
+      table = self.main.db.model.changes
       q = sa.select([table.c.changeid]).where(table.c.revision == revision)
       return [row.changeid for row in conn.execute(q)]
-    return self.master.db.pool.do(find)
+    return self.main.db.pool.do(find)
 
   @inlineCallbacks
   def get_change_by_id(self, change_id):
     """Returns buildot.changes.changes.Change as Deferred for |change_id|."""
-    chdict = yield self.master.db.changes.getChange(change_id)
-    change = yield Change.fromChdict(self.master, chdict)
+    chdict = yield self.main.db.changes.getChange(change_id)
+    change = yield Change.fromChdict(self.main, chdict)
     returnValue(change)
 
   def get_cache(self, name, miss_fn):
@@ -105,14 +105,14 @@ class BuildbotGateway(object):
         same object.
       miss_fn (func): function cache_key -> value. Used on cache miss.
     """
-    return self.master.caches.get_cache(name, miss_fn)
+    return self.main.caches.get_cache(name, miss_fn)
 
   def add_change_to_db(self, **kwargs):
     """Adds a change to buildbot database.
 
     See buildbot.db.changes.ChangesConnectorComponent.addChange for arguments.
     """
-    return self.master.db.changes.addChange(**kwargs)
+    return self.main.db.changes.addChange(**kwargs)
 
   def insert_source_stamp_to_db(self, **kwargs):
     """Inserts a SourceStamp to buildbot database.
@@ -120,37 +120,37 @@ class BuildbotGateway(object):
     See buildbot.db.sourcestamps.SourceStampsConnectorComponent.addSourceStamp
     for arguments.
     """
-    return self.master.db.sourcestamps.addSourceStamp(**kwargs)
+    return self.main.db.sourcestamps.addSourceStamp(**kwargs)
 
   def get_builders(self):
     """Returns a map of builderName -> buildbot.status.builder.BuilderStatus."""
-    status = self.master.getStatus()
+    status = self.main.getStatus()
     names = status.getBuilderNames()
     return {name:status.getBuilder(name) for name in names}
 
-  def get_slaves(self):
-    """Returns a list of all slaves.
+  def get_subordinates(self):
+    """Returns a list of all subordinates.
 
     Returns:
-      A list of buildbot.status.slave.SlaveStatus.
+      A list of buildbot.status.subordinate.SubordinateStatus.
     """
-    status = self.master.getStatus()
-    return map(status.getSlave, status.getSlaveNames())
+    status = self.main.getStatus()
+    return map(status.getSubordinate, status.getSubordinateNames())
 
-  def get_connected_slaves(self):
-    """Returns a list of all connected slaves.
+  def get_connected_subordinates(self):
+    """Returns a list of all connected subordinates.
 
     Returns:
-      A list of buildbot.status.slave.SlaveStatus.
+      A list of buildbot.status.subordinate.SubordinateStatus.
     """
-    return filter(lambda s: s.isConnected(), self.get_slaves())
+    return filter(lambda s: s.isConnected(), self.get_subordinates())
 
   @inlineCallbacks
   def add_build_request(
       self, ssid, reason, builder_name, properties_with_source,
       external_idstring):
     """Adds a build request to buildbot database."""
-    _, brids = yield self.master.addBuildset(
+    _, brids = yield self.main.addBuildset(
         ssid=ssid,
         reason=reason,
         builderNames=[builder_name],
@@ -158,7 +158,7 @@ class BuildbotGateway(object):
         external_idstring=external_idstring,
     )
     assert len(brids) == 1
-    returnValue(BuildRequestGateway(self.master, brid=brids[builder_name]))
+    returnValue(BuildRequestGateway(self.main, brid=brids[builder_name]))
 
   @inlineCallbacks
   def get_incomplete_build_requests(self):
@@ -166,23 +166,23 @@ class BuildbotGateway(object):
 
     Does not return build requests for non-existing builders.
     """
-    build_request_dicts = yield self.master.db.buildrequests.getBuildRequests(
+    build_request_dicts = yield self.main.db.buildrequests.getBuildRequests(
         complete=False,
-        buildername=self.master.getStatus().getBuilderNames())
+        buildername=self.main.getStatus().getBuilderNames())
     requests = []
     for brdict in build_request_dicts:
       # TODO(nodir): optimize: run these queries in parallel.
-      req = yield BuildRequest.fromBrdict(self.master, brdict)
-      requests.append(BuildRequestGateway(self.master, build_request=req))
+      req = yield BuildRequest.fromBrdict(self.main, brdict)
+      requests.append(BuildRequestGateway(self.main, build_request=req))
     returnValue(requests)
 
   def get_build_url(self, build):
     """Returns a URL for the |build|."""
-    return self.master.getStatus().getURLForThing(build)
+    return self.main.getStatus().getURLForThing(build)
 
   def stop_build(self, build, reason):
     """Stops the |build|."""
-    control = IControl(self.master)  # request IControl from self.master.
+    control = IControl(self.main)  # request IControl from self.main.
     builder_control = control.getBuilder(build.getBuilder().getName())
     assert builder_control
     build_control = builder_control.getBuild(build.getNumber())

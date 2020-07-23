@@ -4,7 +4,7 @@
 # found in the LICENSE file.
 
 """
-Estimates capacity needs for all builders of a given master.
+Estimates capacity needs for all builders of a given main.
 """
 
 import argparse
@@ -23,15 +23,15 @@ BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def get_builds(mastername, buildername, days):
+def get_builds(mainname, buildername, days):
   results = []
   for day in days:
     cursor = ''
     while True:
       response = urllib2.urlopen(
           'https://chrome-build-extract.appspot.com/get_builds'
-          '?master=%s&builder=%s&day=%s&cursor=%s' % (
-              urllib.quote(mastername),
+          '?main=%s&builder=%s&day=%s&cursor=%s' % (
+              urllib.quote(mainname),
               urllib.quote(buildername),
               urllib.quote(str(day)),
               urllib.quote(cursor)))
@@ -150,8 +150,8 @@ def estimate_swarming_capacity(swarming_py, builds):
           swarming_py, 'query',
           '-S', 'chromium-swarm.appspot.com',
           'tasks/list?'
-          'tags=master:%s&tags=buildername:%s&tags=buildnumber:%s' % (
-              urllib.quote(properties['mastername']),
+          'tags=main:%s&tags=buildername:%s&tags=buildnumber:%s' % (
+              urllib.quote(properties['mainname']),
               urllib.quote(properties['buildername']),
               urllib.quote(str(properties['buildnumber']))),
           '--json', tmp_filename]), None
@@ -200,7 +200,7 @@ def estimate_swarming_capacity(swarming_py, builds):
 
 def main(argv):
   parser = argparse.ArgumentParser()
-  parser.add_argument('master')
+  parser.add_argument('main')
   parser.add_argument('--days', type=int, default=14)
   parser.add_argument('--exclude-by-blamelist')
   parser.add_argument('--filter-by-blamelist')
@@ -214,25 +214,25 @@ def main(argv):
   with tempfile.NamedTemporaryFile() as f:
     subprocess.check_call([
         os.path.join(BASE_DIR, 'scripts', 'tools', 'runit.py'),
-        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_master_cfg.py'),
-        'masters/%s' % args.master,
+        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_main_cfg.py'),
+        'mains/%s' % args.main,
         f.name])
-    master_config = json.load(f)
+    main_config = json.load(f)
 
   builder_pools = []
-  for builder in master_config['builders']:
+  for builder in main_config['builders']:
     if args.filter_by_builder and builder['name'] != args.filter_by_builder:
       continue
 
-    slave_set = set(builder['slavenames'])
-    builddir = builder.get('slavebuilddir', builder['name'])
+    subordinate_set = set(builder['subordinatenames'])
+    builddir = builder.get('subordinatebuilddir', builder['name'])
     for pool in builder_pools:
-      if pool['slave_set'] == slave_set:
+      if pool['subordinate_set'] == subordinate_set:
         pool['builders'].setdefault(builddir, []).append(builder['name'])
         break
     else:
       builder_pools.append({
-        'slave_set': slave_set,
+        'subordinate_set': subordinate_set,
         'builders': {builddir: [builder['name']]},
       })
 
@@ -253,7 +253,7 @@ def main(argv):
       print '  builddir "%s":' % builddir
       for builder in builders:
         raw_builds = get_builds(
-            args.master.replace('master.', ''), builder, days)
+            args.main.replace('main.', ''), builder, days)
 
         builds = []
         for build in raw_builds:
@@ -318,7 +318,7 @@ def main(argv):
         ' ' * 40,
         pool_capacity['daily_bots'],
         pool_capacity['hourly_bots'],
-        len(pool['slave_set']),
+        len(pool['subordinate_set']),
         sum(pool_capacity['build_times_s']))
 
   if args.swarming_py:

@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Infra(Master.Master1):
+class Infra(Main.Main1):
   project_name = 'Infra'
-  master_port_id = 11
+  main_port_id = 11
   buildbot_url = 'https://build.chromium.org/p/chromium.infra/'
   service_account_file = 'service-account-infra.json'
-  buildbucket_bucket = 'master.chromium.infra'
+  buildbucket_bucket = 'main.chromium.infra'
   pubsub_service_account_file = 'service-account-luci-milo.json'
   pubsub_topic_url = 'projects/luci-milo/topics/public-buildbot'
   name = 'chromium.infra'

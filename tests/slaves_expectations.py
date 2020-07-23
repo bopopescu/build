@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Dumps a list of known slaves, along with their OS and master."""
+"""Dumps a list of known subordinates, along with their OS and main."""
 
 import argparse
 import collections
@@ -16,7 +16,7 @@ import sys
 # This file is located inside tests. Update this path if that changes.
 BUILD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS = os.path.join(BUILD, 'scripts')
-LIST_SLAVES = os.path.join(SCRIPTS, 'tools', 'list_slaves.py')
+LIST_SLAVES = os.path.join(SCRIPTS, 'tools', 'list_subordinates.py')
 
 sys.path.append(SCRIPTS)
 
@@ -31,51 +31,51 @@ def main():
     '--generate',
     action='store_true',
     dest='generate',
-    help='Generate slaves.expected for all masters.',
+    help='Generate subordinates.expected for all mains.',
   )
   args = parser.parse_args()
 
-  masters = chromium_utils.ListMastersWithSlaves()
-  master_map = {}
+  mains = chromium_utils.ListMainsWithSubordinates()
+  main_map = {}
 
-  for master_path in masters:
-    # Convert ~/<somewhere>/master.<whatever> to just whatever.
-    master = os.path.basename(master_path).split('.', 1)[-1]
+  for main_path in mains:
+    # Convert ~/<somewhere>/main.<whatever> to just whatever.
+    main = os.path.basename(main_path).split('.', 1)[-1]
     botmap = json.loads(subprocess.check_output([
-        LIST_SLAVES, '--json', '--master', master]))
+        LIST_SLAVES, '--json', '--main', main]))
 
-    slave_map = collections.defaultdict(set)
+    subordinate_map = collections.defaultdict(set)
 
     for entry in botmap:
-      assert entry['mastername'] == 'master.%s' % master
+      assert entry['mainname'] == 'main.%s' % main
 
       for builder in entry['builder']:
-        slave_map[builder].add(entry['hostname'])
+        subordinate_map[builder].add(entry['hostname'])
 
-    master_map[master_path] = {}
+    main_map[main_path] = {}
 
-    for buildername in sorted(slave_map.keys()):
-      master_map[master_path][buildername] = sorted(slave_map[buildername])
+    for buildername in sorted(subordinate_map.keys()):
+      main_map[main_path][buildername] = sorted(subordinate_map[buildername])
 
   retcode = 0
 
-  for master_path, slaves_expectation in master_map.iteritems():
-    if os.path.exists(master_path):
-      slaves_expectation_file = os.path.join(master_path, 'slaves.expected')
+  for main_path, subordinates_expectation in main_map.iteritems():
+    if os.path.exists(main_path):
+      subordinates_expectation_file = os.path.join(main_path, 'subordinates.expected')
 
       if args.generate:
-        with open(slaves_expectation_file, 'w') as fp:
-          json.dump(slaves_expectation, fp, indent=2, sort_keys=True)
-        print 'Wrote expectation: %s.' % slaves_expectation_file
+        with open(subordinates_expectation_file, 'w') as fp:
+          json.dump(subordinates_expectation, fp, indent=2, sort_keys=True)
+        print 'Wrote expectation: %s.' % subordinates_expectation_file
       else:
-        if os.path.exists(slaves_expectation_file):
-          with open(slaves_expectation_file) as fp:
-            if json.load(fp) != slaves_expectation:
+        if os.path.exists(subordinates_expectation_file):
+          with open(subordinates_expectation_file) as fp:
+            if json.load(fp) != subordinates_expectation:
               logging.error(
-                  'Mismatched expectation: %s.', slaves_expectation_file)
+                  'Mismatched expectation: %s.', subordinates_expectation_file)
               retcode = 1
         else:
-          logging.error('File not found: %s.', slaves_expectation_file)
+          logging.error('File not found: %s.', subordinates_expectation_file)
           retcode = 1
 
   return retcode

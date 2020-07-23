@@ -23,20 +23,20 @@ from buildbot.db import state, buildsets, buildrequests, builds
 class DBConnector(service.MultiService):
     """
     The connection between Buildbot and its backend database.  This is
-    generally accessible as master.db, but is also used during upgrades.
+    generally accessible as main.db, but is also used during upgrades.
 
     Most of the interesting operations available via the connector are
     implemented in connector components, available as attributes of this
     object, and listed below.
     """
 
-    # Period, in seconds, of the cleanup task.  This master will perform
+    # Period, in seconds, of the cleanup task.  This main will perform
     # periodic cleanup actions on this schedule.
     CLEANUP_PERIOD = 3600
 
-    def __init__(self, master, db_url, basedir):
+    def __init__(self, main, db_url, basedir):
         service.MultiService.__init__(self)
-        self.master = master
+        self.main = main
         self.basedir = basedir
 
         self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
@@ -55,7 +55,7 @@ class DBConnector(service.MultiService):
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self.doCleanup)
         self.cleanup_timer.setServiceParent(self)
 
-        self.changeHorizon = None # default value; set by master
+        self.changeHorizon = None # default value; set by main
 
     def doCleanup(self):
         """
@@ -63,6 +63,6 @@ class DBConnector(service.MultiService):
 
         @returns: Deferred
         """
-        d = self.changes.pruneChanges(self.master.config.changeHorizon)
+        d = self.changes.pruneChanges(self.main.config.changeHorizon)
         d.addErrback(log.err, 'while pruning changes')
         return d

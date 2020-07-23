@@ -111,7 +111,7 @@ class PerfTryJobApi(recipe_api.RecipeApi):
           'There are no modifications to Telemetry benchmarks,'
           ' aborting the try job.')
       return
-    self._compile('With Patch', self.m.properties['mastername'],
+    self._compile('With Patch', self.m.properties['mainname'],
                   self.m.properties['buildername'], update_step, bot_db)
 
     if self.m.chromium.c.TARGET_PLATFORM == 'android':
@@ -168,11 +168,11 @@ class PerfTryJobApi(recipe_api.RecipeApi):
 
     return update_step
 
-  def _compile(self, name, mastername, buildername, update_step, bot_db):
+  def _compile(self, name, mainname, buildername, update_step, bot_db):
     """Runs compile and related steps for given builder."""
     # TODO(phajdan.jr): Change this method to take bot_config as parameter.
     bot_config = self.m.chromium_tests.create_bot_config_object(
-        mastername, buildername)
+        mainname, buildername)
     compile_targets = self.m.chromium_tests.get_compile_targets(
         bot_config, bot_db, tests=[])
     if self.m.chromium.c.TARGET_PLATFORM == 'android':
@@ -217,7 +217,7 @@ class PerfTryJobApi(recipe_api.RecipeApi):
                            **kwargs):
     """Compiles binaries and runs tests for a given a revision."""
     update_step = self._checkout_revision(update_step, bot_db, revision)
-    self._compile(kwargs['name'], self.m.properties['mastername'],
+    self._compile(kwargs['name'], self.m.properties['mainname'],
                   self.m.properties['buildername'], update_step, bot_db)
 
     if self.m.chromium.c.TARGET_PLATFORM == 'android':

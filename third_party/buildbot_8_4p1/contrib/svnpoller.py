@@ -27,7 +27,7 @@ import os.path
 # change these settings to match your project
 svnurl = "https://pse.cheme.cmu.edu/svn/ascend/code/trunk"
 statefilename = "~/changemonitor/config.ini"
-buildmaster = "buildbot.example.org:9989" # connects to a PBChangeSource
+buildmain = "buildbot.example.org:9989" # connects to a PBChangeSource
 
 xml1 = commands.getoutput(
     "svn log --non-interactive --verbose --xml --limit=1 " + svnurl)
@@ -80,7 +80,7 @@ except ConfigParser.NoSectionError:
 if lastrevision != revision:
 
     #comments = codecs.encodings.unicode_escape.encode(comments)
-    cmd = "buildbot sendchange --master="+buildmaster+" --branch=trunk \
+    cmd = "buildbot sendchange --main="+buildmain+" --branch=trunk \
 --revision=\""+revision+"\" --username=\""+author+"\" --comments=\""+\
 comments+"\" "+" ".join(paths)
 

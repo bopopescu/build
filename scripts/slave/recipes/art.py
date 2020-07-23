@@ -44,26 +44,26 @@ _ANDROID_CLEAN_DIRS = ['/data/local/tmp', '/data/art-test',
 
 def checkout(api):
   api.repo.init('https://android.googlesource.com/platform/manifest',
-      '-b', 'master-art')
+      '-b', 'main-art')
   api.repo.sync()
 
 def full_checkout(api):
   api.repo.init('https://android.googlesource.com/platform/manifest',
-      '-b', 'master')
+      '-b', 'main')
   api.repo.sync()
 
 def clobber(api):
   # buildbot sets 'clobber' to the empty string which is falsey, check with 'in'
   if 'clobber' in api.properties:
-    api.file.rmtree('clobber', api.path['slave_build'].join('out'))
+    api.file.rmtree('clobber', api.path['subordinate_build'].join('out'))
 
 def setup_host_x86(api, debug, bitness, concurrent_collector=False):
   with api.step.defer_results():
     checkout(api)
     clobber(api)
 
-    build_top_dir = api.path['slave_build']
-    art_tools = api.path['slave_build'].join('art', 'tools')
+    build_top_dir = api.path['subordinate_build']
+    art_tools = api.path['subordinate_build'].join('art', 'tools')
     env = { 'TARGET_PRODUCT': 'sdk',
             'TARGET_BUILD_VARIANT': 'eng',
             'TARGET_BUILD_TYPE': 'release',
@@ -133,8 +133,8 @@ def setup_target(api,
     debug,
     device,
     concurrent_collector=False):
-  build_top_dir = api.path['slave_build']
-  art_tools = api.path['slave_build'].join('art', 'tools')
+  build_top_dir = api.path['subordinate_build']
+  art_tools = api.path['subordinate_build'].join('art', 'tools')
   android_root = '/data/local/tmp/system'
 
   env = {'TARGET_BUILD_VARIANT': 'eng',
@@ -267,7 +267,7 @@ def setup_aosp_builder(api):
            ['make', '-j8', 'out/host/linux-x86/bin/dex2oats'],
            env=env)
 
-  # Re-enable when we have Java8 jdk on the slave
+  # Re-enable when we have Java8 jdk on the subordinate
   #builds = ['x86', 'x86_64', 'arm', 'arm64']
   # TODO: adds mips and mips64 once we have enough storage on the bot.
   # ['mips', 'mips64']
@@ -389,17 +389,17 @@ _CONFIG_DISPATCH_MAP = {
 }
 
 def RunSteps(api):
-  if api.properties['mastername'] not in _CONFIG_MAP: # pragma: no cover
-    error = "Master not found in recipe's local config!"
+  if api.properties['mainname'] not in _CONFIG_MAP: # pragma: no cover
+    error = "Main not found in recipe's local config!"
     raise KeyError(error)
 
   builder_found = False
-  config = _CONFIG_MAP[api.properties['mastername']]
+  config = _CONFIG_MAP[api.properties['mainname']]
   for builder_type in config:
     if api.properties['buildername'] in config[builder_type]:
       builder_found = True
       builder_dict = config[builder_type][api.properties['buildername']]
-      _CONFIG_DISPATCH_MAP[api.properties['mastername']][builder_type](api,
+      _CONFIG_DISPATCH_MAP[api.properties['mainname']][builder_type](api,
           **builder_dict)
       break
 
@@ -408,17 +408,17 @@ def RunSteps(api):
     raise KeyError(error)
 
 def GenTests(api):
-  for mastername, config_dict in _CONFIG_MAP.iteritems():
+  for mainname, config_dict in _CONFIG_MAP.iteritems():
     for builders in config_dict.values():
       for buildername in builders:
         for clb in (None, True):
           yield (
-              api.test("%s__ON__%s__%s" % (buildername, mastername,
+              api.test("%s__ON__%s__%s" % (buildername, mainname,
                 ("" if clb else "no") + "clobber")) +
               api.properties(
-                mastername=mastername,
+                mainname=mainname,
                 buildername=buildername,
-                slavename='TestSlave',
+                subordinatename='TestSubordinate',
                 # Buildbot uses clobber='' to mean clobber, however
                 # api.properties(clobber=None) will set clobber=None!
                 # so we have to not even mention it to avoid our
@@ -428,59 +428,59 @@ def GenTests(api):
   yield (
       api.test('x86_32_test_failure') +
       api.properties(
-        mastername='client.art',
+        mainname='client.art',
         buildername='host-x86-ndebug',
-        slavename='TestSlave',
+        subordinatename='TestSubordinate',
       ) +
       api.step_data('test jdwp', retcode=1))
   yield (
       api.test('target_hammerhead_setup_failure') +
       api.properties(
-        mastername='client.art',
+        mainname='client.art',
         buildername='hammerhead-ndebug',
-        slavename='TestSlave',
+        subordinatename='TestSubordinate',
       )
       + api.step_data('setup device', retcode=1))
   yield (
       api.test('target_hammerhead_test_failure') +
       api.properties(
-        mastername='client.art',
+        mainname='client.art',
         buildername='hammerhead-ndebug',
-        slavename='TestSlave',
+        subordinatename='TestSubordinate',
       ) +
       api.step_data('test jdwp', retcode=1))
   yield (
       api.test('target_hammerhead_device_cleanup_failure') +
       api.properties(
-        mastername='client.art',
+        mainname='client.art',
         buildername='hammerhead-ndebug',
-        slavename='TestSlave',
+        subordinatename='TestSubordinate',
       ) +
       api.step_data('device cleanup', retcode=1))
   yield (
       api.test('aosp_x86_build_failure') +
       api.properties(
-        mastername='client.art',
+        mainname='client.art',
         buildername='aosp-builder',
-        slavename='TestSlave',
+        subordinatename='TestSubordinate',
       ) +
       api.step_data('build dex2oats', retcode=1))
 #  These tests *should* exist, but can't be included as they cause the recipe
 #  simulation to error out, instead of showing that the build should become
 #  purple instead. This may need to be fixed in the simulation test script.
 #  yield (
-#      api.test('invalid mastername') +
+#      api.test('invalid mainname') +
 #      api.properties(
-#        mastername='client.art.does_not_exist',
+#        mainname='client.art.does_not_exist',
 #        buildername='aosp-builder',
-#        slavename='TestSlave',
+#        subordinatename='TestSubordinate',
 #      )
 #    )
 #  yield (
 #      api.test('invalid buildername') +
 #      api.properties(
-#        mastername='client.art',
+#        mainname='client.art',
 #        buildername='builder_does_not_exist',
-#        slavename='TestSlave',
+#        subordinatename='TestSubordinate',
 #      )
 #    )

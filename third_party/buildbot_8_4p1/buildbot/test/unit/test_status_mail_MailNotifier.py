@@ -140,11 +140,11 @@ class TestMailNotifier(unittest.TestCase):
                                                     buildername='Builder'),
                                 fakedb.Build(number=0, brid=11, results=SUCCESS)
                                 ])
-        mn.master = self # FIXME: Should be FakeMaster
+        mn.main = self # FIXME: Should be FakeMain
         
         self.status = Mock()
-        mn.master_status = Mock()
-        mn.master_status.getBuilder = fakeGetBuilder
+        mn.main_status = Mock()
+        mn.main_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict = Mock()
         mn.buildMessageDict.return_value = {"body":"body", "type":"text",
                                             "subject":"subject"}

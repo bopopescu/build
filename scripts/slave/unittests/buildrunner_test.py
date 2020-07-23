@@ -5,7 +5,7 @@
 
 """Unit tests for runbuild.py.
 
-This is a basic check that runbuild.py can load masters properly.
+This is a basic check that runbuild.py can load mains properly.
 
 """
 
@@ -35,13 +35,13 @@ class BuildrunnerTest(unittest.TestCase):
     self.runbuild = os.path.join(SCRIPT_DIR,
                                  '..', 'runbuild.py')
     self.capture = chromium_utils.FilterCapture()
-    self.master_dir = os.path.join(SCRIPT_DIR, 'data', 'runbuild_master')
+    self.main_dir = os.path.join(SCRIPT_DIR, 'data', 'runbuild_main')
 
-    self.failing_master_dir = os.path.join(SCRIPT_DIR, 'data',
-                                           'failing_master')
+    self.failing_main_dir = os.path.join(SCRIPT_DIR, 'data',
+                                           'failing_main')
 
-  def testSampleMaster(self):
-    sample = '--master-dir=%s' % self.master_dir
+  def testSampleMain(self):
+    sample = '--main-dir=%s' % self.main_dir
     cmd = [sys.executable, self.runbuild, sample, '--list-builders']
     ret = runScript(cmd, filter_obj=self.capture, print_cmd=False)
 
@@ -49,7 +49,7 @@ class BuildrunnerTest(unittest.TestCase):
     self.assertEqual(self.capture.text[-1].split(' ')[0], 'runtests')
 
   def testListSteps(self):
-    sample = '--master-dir=%s' % self.master_dir
+    sample = '--main-dir=%s' % self.main_dir
     cmd = [sys.executable, self.runbuild, sample, '--svn-rev=12345',
            'runtests', '--list-steps']
     ret = runScript(cmd, filter_obj=self.capture, print_cmd=False)
@@ -64,9 +64,9 @@ class BuildrunnerTest(unittest.TestCase):
     self.assertTrue('donotrun' in steps)
 
   def testRunSteps(self):
-    sample = '--master-dir=%s' % self.master_dir
-    slavedir = '--slave-dir=%s' % self.master_dir
-    cmd = [sys.executable, self.runbuild, sample, slavedir, '--svn-rev=12345',
+    sample = '--main-dir=%s' % self.main_dir
+    subordinatedir = '--subordinate-dir=%s' % self.main_dir
+    cmd = [sys.executable, self.runbuild, sample, subordinatedir, '--svn-rev=12345',
            '--log=-', 'runtests']
     ret = runScript(cmd, filter_obj=self.capture, print_cmd=False)
 
@@ -75,7 +75,7 @@ class BuildrunnerTest(unittest.TestCase):
     self.assertTrue('buildrunner should not run this' not in self.capture.text)
 
   def testCatchDupSteps(self):
-    sample = '--master-dir=%s' % self.failing_master_dir
+    sample = '--main-dir=%s' % self.failing_main_dir
     cmd = [sys.executable, self.runbuild, sample, 'runtests', '--list-steps']
     ret = runScript(cmd, filter_obj=self.capture, print_cmd=False)
 

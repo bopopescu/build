@@ -112,22 +112,22 @@ def RunSteps(api):
 def GenTests(api):
   yield (
       api.test('basic') +
-      api.properties.scheduled(mastername="chromium.fyi",
+      api.properties.scheduled(mainname="chromium.fyi",
                                buildername='linux_ecs_ozone',
-                               slavename="test_slave")
+                               subordinatename="test_subordinate")
   )
 
   yield (
       api.test('trybot') +
-      api.properties.tryserver(mastername="chromium.fyi",
+      api.properties.tryserver(mainname="chromium.fyi",
                                buildername='linux_ecs_ozone',
-                               slavename="test_slave")
+                               subordinatename="test_subordinate")
   )
 
   yield (
     api.test('check_ecs_deps_fail') +
-    api.properties.scheduled(mastername="chromium.fyi",
+    api.properties.scheduled(mainname="chromium.fyi",
                             buildername='linux_ecs_ozone',
-                            slavename="test_slave") +
+                            subordinatename="test_subordinate") +
     api.step_data('check ecs deps', retcode=1)
   )

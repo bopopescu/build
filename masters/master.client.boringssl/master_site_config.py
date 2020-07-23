@@ -2,14 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Boringssl(Master.Master3):
+class Boringssl(Main.Main3):
   project_name = 'Boringssl'
   project_url = 'https://boringssl.googlesource.com/boringssl/'
-  master_port = 20311
-  slave_port = 30311
-  master_port_alt = 25311
+  main_port = 20311
+  subordinate_port = 30311
+  main_port_alt = 25311
   buildbot_url = 'http://build.chromium.org/p/client.boringssl/'

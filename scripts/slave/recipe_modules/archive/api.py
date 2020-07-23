@@ -98,7 +98,7 @@ class ArchiveApi(recipe_api.RecipeApi):
     args = [
         '--show-path',
         'python',
-        self.package_repo_resource('scripts', 'slave', 'zip_build.py'),
+        self.package_repo_resource('scripts', 'subordinate', 'zip_build.py'),
         '--target', target,
     ]
     if build_url:
@@ -178,7 +178,7 @@ class ArchiveApi(recipe_api.RecipeApi):
 
   def _get_comparable_upload_path_for_sort_key(self, branch, number):
     """Returns a sortable string corresponding to the commit position."""
-    if branch and branch != 'refs/heads/master':
+    if branch and branch != 'refs/heads/main':
       branch = branch.replace('/', '_')
       return '%s-%s' % (branch, number)
     return str(number)
@@ -205,11 +205,11 @@ class ArchiveApi(recipe_api.RecipeApi):
 
     Example: cool-project-mac-debug-x10-component-234.zip
     The archive name is "cool-project" and the component's name is "x10". The
-    component is checked out in branch master with commit position number 234.
+    component is checked out in branch main with commit position number 234.
 
     Args:
       build_dir: The absolute path to the build output directory, e.g.
-                 [slave-build]/src/out/Release
+                 [subordinate-build]/src/out/Release
       update_properties: The properties from the bot_update step (containing
                          commit information)
       gs_bucket: Name of the google storage bucket to upload to
@@ -231,7 +231,7 @@ class ArchiveApi(recipe_api.RecipeApi):
     build_git_commit = self._get_git_commit(update_properties, primary_project)
 
     if fixed_staging_dir:
-      staging_dir = self.m.path['slave_build'].join('chrome_staging')
+      staging_dir = self.m.path['subordinate_build'].join('chrome_staging')
       self.m.file.rmtree('purge staging dir', staging_dir)
       self.m.file.makedirs('create staging dir', staging_dir)
     else:
@@ -306,7 +306,7 @@ class ArchiveApi(recipe_api.RecipeApi):
     args = [
         '--show-path',
         'python',
-        self.package_repo_resource('scripts', 'slave', 'extract_build.py'),
+        self.package_repo_resource('scripts', 'subordinate', 'extract_build.py'),
         '--target', target,
     ]
     if build_archive_url:
@@ -319,11 +319,11 @@ class ArchiveApi(recipe_api.RecipeApi):
         args.extend(['--src-dir', src_dir])
 
     properties = (
-      ('mastername', '--master-name'),
+      ('mainname', '--main-name'),
       ('buildnumber', '--build-number'),
       ('parent_builddir', '--parent-build-dir'),
       ('parentname', '--parent-builder-name'),
-      ('parentslavename', '--parent-slave-name'),
+      ('parentsubordinatename', '--parent-subordinate-name'),
       ('parent_buildnumber', '--parent-build-number'),
       ('webkit_dir', '--webkit-dir'),
       ('revision_dir', '--revision-dir'),
@@ -356,7 +356,7 @@ class ArchiveApi(recipe_api.RecipeApi):
 
     The reason this is named 'legacy' is that there are a large number
     of dependencies on the exact form of this URL. The combination of
-    zip_build.py, extract_build.py, slave_utils.py, and runtest.py
+    zip_build.py, extract_build.py, subordinate_utils.py, and runtest.py
     require that:
 
     * The platform name be exactly one of 'win32', 'mac', or 'linux'
@@ -410,7 +410,7 @@ class ArchiveApi(recipe_api.RecipeApi):
     return self._legacy_url(True, gs_bucket_name, extra_url_components)
 
   def archive_dependencies(
-      self, step_name, target, master, builder, build, **kwargs):
+      self, step_name, target, main, builder, build, **kwargs):
     """Returns a step invoking archive_dependencies.py to zip up and upload
        build dependency information for the build."""
     try:
@@ -420,11 +420,11 @@ class ArchiveApi(recipe_api.RecipeApi):
           '--show-path',
           'python',
           self.package_repo_resource(
-              'scripts', 'slave', 'archive_dependencies.py'),
+              'scripts', 'subordinate', 'archive_dependencies.py'),
       ]
       args.extend(['--src-dir', self.m.path['checkout']])
       args.extend(['--target', target])
-      args.extend(['--master', master])
+      args.extend(['--main', main])
       args.extend(['--builder', builder])
       args.extend(['--build', build])
       self.m.python(step_name, script, args, infra_step=True, **kwargs)

@@ -23,20 +23,20 @@ def RunSteps(api):
       force=True, no_shallow=True, with_branch_heads=True)
   api.step(
       'V8Releases',
-      [api.path['slave_build'].join(
+      [api.path['subordinate_build'].join(
            'v8', 'tools', 'release', 'releases.py'),
        '-c', api.path['checkout'],
-       '--json', api.path['slave_build'].join('v8-releases-update.json'),
+       '--json', api.path['subordinate_build'].join('v8-releases-update.json'),
        '--branch', 'recent',
-       '--work-dir', api.path['slave_build'].join('workdir')],
-      cwd=api.path['slave_build'].join('v8'),
+       '--work-dir', api.path['subordinate_build'].join('workdir')],
+      cwd=api.path['subordinate_build'].join('v8'),
     )
-  api.gsutil.upload(api.path['slave_build'].join('v8-releases-update.json'),
+  api.gsutil.upload(api.path['subordinate_build'].join('v8-releases-update.json'),
                     'chromium-v8-auto-roll',
                     api.path.join('v8rel', 'v8-releases-update.json'))
 
 
 def GenTests(api):
   yield api.test('standard') + api.properties.generic(
-      mastername='client.v8.fyi')
+      mainname='client.v8.fyi')
 

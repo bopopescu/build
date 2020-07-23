@@ -6,9 +6,9 @@
 
 import datetime
 
-from master import auth
-from master import deferred_resource
-from master.buildbucket import common
+from main import auth
+from main import deferred_resource
+from main.buildbucket import common
 
 BUILDBUCKET_HOSTNAME_PRODUCTION = 'cr-buildbucket.appspot.com'
 BUILDBUCKET_HOSTNAME_TESTING = 'cr-buildbucket-test.appspot.com'
@@ -19,23 +19,23 @@ def buildbucket_api_discovery_url(hostname=None):
       'https://%s/_ah/api/discovery/v1/apis/{api}/{apiVersion}/rest' % hostname)
 
 
-def get_default_buildbucket_hostname(master):
+def get_default_buildbucket_hostname(main):
   return (
-      BUILDBUCKET_HOSTNAME_PRODUCTION if master.is_production_host
+      BUILDBUCKET_HOSTNAME_PRODUCTION if main.is_production_host
       else BUILDBUCKET_HOSTNAME_TESTING)
 
 
 def create_buildbucket_service(
-    master, hostname=None, verbose=None):
+    main, hostname=None, verbose=None):
   """Asynchronously creates buildbucket API resource.
 
   Returns:
     A DeferredResource as Deferred.
   """
-  hostname = hostname or get_default_buildbucket_hostname(master)
+  hostname = hostname or get_default_buildbucket_hostname(main)
 
   cred_factory = deferred_resource.CredentialFactory(
-    lambda: auth.create_credentials_for_master(master),
+    lambda: auth.create_credentials_for_main(main),
     ttl=datetime.timedelta(minutes=5),
   )
 

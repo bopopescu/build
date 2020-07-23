@@ -24,8 +24,8 @@ import stat
 import sys
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 class StagingError(Exception): pass
 
@@ -55,8 +55,8 @@ def archive(options, args):
   build_dir = os.path.join(build_dir, options.target)
   src_dir = os.path.abspath(os.path.dirname(options.build_dir))
 
-  staging_dir = slave_utils.GetStagingDir(src_dir)
-  build_revision = slave_utils.SubversionRevision(src_dir)
+  staging_dir = subordinate_utils.GetStagingDir(src_dir)
+  build_revision = subordinate_utils.SubversionRevision(src_dir)
   chromium_utils.MakeParentDirectoriesWorldReadable(staging_dir)
 
   print 'Staging in %s' % build_dir
@@ -95,7 +95,7 @@ def archive(options, args):
 
   gs_bucket = options.factory_properties.get('gs_bucket', None)
   gs_acl = options.factory_properties.get('gs_acl', None)
-  status = slave_utils.GSUtilCopyFile(zip_file, gs_bucket, subdir=subdir,
+  status = subordinate_utils.GSUtilCopyFile(zip_file, gs_bucket, subdir=subdir,
                                       gs_acl=gs_acl)
   if status:
     raise StagingError('Failed to upload %s to %s. Error %d' % (zip_file,

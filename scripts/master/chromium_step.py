@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Subclasses of various slave command classes."""
+"""Subclasses of various subordinate command classes."""
 
 from datetime import datetime
 import copy
@@ -25,7 +25,7 @@ from buildbot.steps import source
 import sqlalchemy as sa
 
 from common import annotator
-from master import buildbucket
+from main import buildbucket
 from common import chromium_utils
 import config
 
@@ -275,7 +275,7 @@ class GClient(source.Source):
         description.append(webrtc_revision)
 
   def commandComplete(self, cmd):
-    """Handles status updates from buildbot slave when the step is done.
+    """Handles status updates from buildbot subordinate when the step is done.
 
     Update the relevant got_XX_revision build properties if available.
     """
@@ -534,7 +534,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
 
   @@@STEP_LOG_END_PERF@<label>@@@
   Same as STEP_LOG_END, but signifies that this is a perf log and should be
-  saved to the master.
+  saved to the main.
 
   @@@STEP_CLEAR@@@
   Reset the text description of the current step.
@@ -583,15 +583,15 @@ class AnnotationObserver(buildstep.LogLineObserver):
   """
 
   # Base URL for performance test results.
-  PERF_BASE_URL = config.Master.perf_base_url
-  PERF_REPORT_URL_SUFFIX = config.Master.perf_report_url_suffix
+  PERF_BASE_URL = config.Main.perf_base_url
+  PERF_REPORT_URL_SUFFIX = config.Main.perf_report_url_suffix
 
   # Directory in which to save perf output data files.
-  PERF_OUTPUT_DIR = config.Master.perf_output_dir
+  PERF_OUTPUT_DIR = config.Main.perf_output_dir
 
   # For the GraphingLogProcessor, the file into which it will save a list
   # of graph names for use by the JS doing the plotting.
-  GRAPH_LIST = config.Master.perf_graph_list
+  GRAPH_LIST = config.Main.perf_graph_list
 
   # Maximum number of individual log entries per step before we start
   # abbreviating.
@@ -650,7 +650,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
     },
   }
   def __init__(self, command=None, show_perf=False, perf_id=None,
-               perf_report_url_suffix=None, target=None, active_master=None,
+               perf_report_url_suffix=None, target=None, active_main=None,
                *args, **kwargs):
     buildstep.LogLineObserver.__init__(self, *args, **kwargs)
     self.command = command
@@ -664,7 +664,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
     self.perf_id = perf_id
     self.perf_report_url_suffix = perf_report_url_suffix
     self.target = target
-    self.active_master = active_master
+    self.active_main = active_main
     self.bb_triggering_service = None
 
   def initialSection(self):
@@ -808,7 +808,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
     if section['step'].isFinished():
       return
 
-    # Everything was fine on the slave side,
+    # Everything was fine on the subordinate side,
     # so the final result depends on async operations.
     async_ops = section['async_ops']
     if async_ops:
@@ -1080,7 +1080,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
   def STEP_LOG_END_PERF(self, log_label, perf_dashboard_name):
     # Support: @@@STEP_LOG_END_PERF@<label>@<line>@@@
     # (finalizes log to step, marks it as being a perf step
-    # requiring logs to be stored on the master)
+    # requiring logs to be stored on the main)
     current_logs = self.cursor['annotated_logs']
     log_text = '\n'.join(current_logs.get(log_label, [])) + '\n'
 
@@ -1091,7 +1091,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
           self.show_perf, self.perf_id, perf_dashboard_name,
           self.perf_report_url_suffix)
 
-    PERF_EXPECTATIONS_PATH = ('../../scripts/master/log_parser/'
+    PERF_EXPECTATIONS_PATH = ('../../scripts/main/log_parser/'
                               'perf_expectations/')
     perf_output_dir = None
     if output_dir:
@@ -1260,14 +1260,14 @@ class AnnotationObserver(buildstep.LogLineObserver):
     return props
 
   @defer.inlineCallbacks
-  def insertSourceStamp(self, master, changes_spec):
+  def insertSourceStamp(self, main, changes_spec):
     """Inserts a new SourceStamp.
 
     For each change in changes_spec, finds an existing or creates a new Change
     object. Then creates a SourceStamp with these changes.
 
     Args:
-      master: an instance of buildbot.master.BuildMaster.
+      main: an instance of buildbot.main.BuildMain.
       changes_spec (list of dict): a list of change dicts, where each contains
         keyword arguments for
         buildbot.db.changes.ChangesConnectorComponent.addChange() function,
@@ -1277,15 +1277,15 @@ class AnnotationObserver(buildstep.LogLineObserver):
     def find_changes_by_revision(revision):
       """Searches for Changes in db by |revision| and returns change ids."""
       def find(conn):
-        table = master.db.model.changes
+        table = main.db.model.changes
         q = sa.select([table.c.changeid]).where(table.c.revision == revision)
         return [c.changeid for c in conn.execute(q)]
-      return master.db.pool.do(find)
+      return main.db.pool.do(find)
 
     @defer.inlineCallbacks
     def get_change_by_id(change_id):
-      chdict = yield master.db.changes.getChange(change_id)
-      change = yield Change.fromChdict(master, chdict)
+      chdict = yield main.db.changes.getChange(change_id)
+      change = yield Change.fromChdict(main, chdict)
       defer.returnValue(change)
 
     def does_change_match(change, spec):
@@ -1324,7 +1324,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
       if isinstance(when_timestamp, int):
         add_args['when_timestamp'] = datetime.utcfromtimestamp(when_timestamp)
 
-      change_id = yield master.db.changes.addChange(**add_args)
+      change_id = yield main.db.changes.addChange(**add_args)
       change = yield get_change_by_id(change_id)
       defer.returnValue(change)
 
@@ -1333,7 +1333,7 @@ class AnnotationObserver(buildstep.LogLineObserver):
       change = yield getChangeForSpec(spec)
       changes.append(change)
     main_change = changes[0]
-    ssid = yield master.db.sourcestamps.addSourceStamp(
+    ssid = yield main.db.sourcestamps.addSourceStamp(
         branch=main_change.branch,
         revision=main_change.revision,
         repository=main_change.repository,
@@ -1346,15 +1346,15 @@ class AnnotationObserver(buildstep.LogLineObserver):
   def triggerBuildsViaBuildBucket(
       self, bucket_name, builder_names, properties, tags, changes_spec=None):
     """Schedules builds on buildbucket."""
-    if self.active_master is None:
+    if self.active_main is None:
       raise buildbucket.Error(
           'In order to trigger builds through buildbucket, '
-          'ActiveMaster must be passed to AnnotatorFactory')
+          'ActiveMain must be passed to AnnotatorFactory')
     build = self.command.build
     section = self.cursor
     if not self.bb_triggering_service:
       self.bb_triggering_service = yield (
-          buildbucket.trigger.get_triggering_service(self.active_master))
+          buildbucket.trigger.get_triggering_service(self.active_main))
 
     if changes_spec:
       changes = map(
@@ -1386,17 +1386,17 @@ class AnnotationObserver(buildstep.LogLineObserver):
       self, builder_names, properties, changes_spec=None):
     """Creates a new buildset."""
     build = self.command.build
-    master = build.builder.botmaster.parent
+    main = build.builder.botmain.parent
 
     if changes_spec:
       # Changes have been specified explicitly.
-      ssid = yield self.insertSourceStamp(master, changes_spec)
+      ssid = yield self.insertSourceStamp(main, changes_spec)
     else:
       # Use the same source stamp.
       source_stamp = getSourceStamp(build)
-      ssid = yield source_stamp.getSourceStampId(master)
+      ssid = yield source_stamp.getSourceStampId(main)
 
-    bsid, brids = yield master.addBuildset(
+    bsid, brids = yield main.addBuildset(
         ssid=ssid,
         reason='Triggered by %s' % build.builder.name,
         # Specify property source.
@@ -1452,8 +1452,8 @@ class AnnotationObserver(buildstep.LogLineObserver):
 class AnnotatedCommand(ProcessLogShellStep):
   """Buildbot command that knows how to display annotations."""
 
-  def __init__(self, target=None, active_master=None, *args, **kwargs):
-    self.active_master = active_master
+  def __init__(self, target=None, active_main=None, *args, **kwargs):
+    self.active_main = active_main
     clobber = ''
     perf_id = None
     perf_report_url_suffix = None
@@ -1479,10 +1479,10 @@ class AnnotatedCommand(ProcessLogShellStep):
         'BUILDBOT_BUILDNUMBER': WithProperties('%(buildnumber:-None)s'),
         'BUILDBOT_CLOBBER': clobber or WithProperties('%(clobber:+1)s'),
         'BUILDBOT_GOT_REVISION': WithProperties('%(got_revision:-None)s'),
-        'BUILDBOT_MASTERNAME': WithProperties('%(mastername:-None)s'),
+        'BUILDBOT_MASTERNAME': WithProperties('%(mainname:-None)s'),
         'BUILDBOT_REVISION': WithProperties('%(revision:-None)s'),
         'BUILDBOT_SCHEDULER': WithProperties('%(scheduler:-None)s'),
-        'BUILDBOT_SLAVENAME': WithProperties('%(slavename:-None)s'),
+        'BUILDBOT_SLAVENAME': WithProperties('%(subordinatename:-None)s'),
     }
     # Apply the passed in environment on top.
     old_env = kwargs.get('env') or {}
@@ -1494,7 +1494,7 @@ class AnnotatedCommand(ProcessLogShellStep):
     self.script_observer = AnnotationObserver(
         self, show_perf=show_perf, perf_id=perf_id,
         perf_report_url_suffix=perf_report_url_suffix, target=target,
-        active_master=active_master)
+        active_main=active_main)
     self.addLogObserver('stdio', self.script_observer)
 
   def describe(self, done=False):

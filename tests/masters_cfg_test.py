@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Tests all master.cfgs to make sure they load properly."""
+"""Tests all main.cfgs to make sure they load properly."""
 
 import collections
 import optparse
@@ -18,9 +18,9 @@ import common.env
 common.env.Install()
 
 from common import chromium_utils
-from common import master_cfg_utils
+from common import main_cfg_utils
 
-# Masters which do not currently load from the default configuration. These need
+# Mains which do not currently load from the default configuration. These need
 # to be fixed and removed from the list!
 BLACKLIST = set(['chromium.swarm',
                  ])
@@ -29,21 +29,21 @@ BLACKLIST = set(['chromium.swarm',
 Cmd = collections.namedtuple('Cmd', ['name', 'path', 'env'])
 
 
-def GetMasterCmds(masters, blacklist, pythonpaths):
-  assert blacklist <= set(m for m, _ in masters)
+def GetMainCmds(mains, blacklist, pythonpaths):
+  assert blacklist <= set(m for m, _ in mains)
   cmds = []
-  for name, path in masters:
+  for name, path in mains:
     if name in blacklist:
       continue
 
-    master_pythonpath = common.env.PythonPath.FromPaths(*(pythonpaths or []))
-    master_pythonpath += common.env.GetInfraPythonPath(master_dir=path)
+    main_pythonpath = common.env.PythonPath.FromPaths(*(pythonpaths or []))
+    main_pythonpath += common.env.GetInfraPythonPath(main_dir=path)
 
     env = os.environ.copy()
     env_pythonpath = env.get('PYTHONPATH')
     if env_pythonpath:
-      master_pythonpath += common.env.PythonPath.FromPathStr(env_pythonpath)
-    env['PYTHONPATH'] = master_pythonpath.pathstr
+      main_pythonpath += common.env.PythonPath.FromPathStr(env_pythonpath)
+    env['PYTHONPATH'] = main_pythonpath.pathstr
     cmds.append(Cmd(name, path, env))
   return cmds
 
@@ -56,28 +56,28 @@ def main(argv):
   if args:
     parser.error('Unknown arguments: %s' % args)
   num_skipped = len(BLACKLIST)
-  masters_list = GetMasterCmds(
-      masters=master_cfg_utils.GetMasters(include_internal=False),
+  mains_list = GetMainCmds(
+      mains=main_cfg_utils.GetMains(include_internal=False),
       blacklist=BLACKLIST,
       pythonpaths=None)
   build_internal = os.path.join(BASE_DIR, '..', 'build_internal')
   if os.path.exists(build_internal):
     internal_test_data = chromium_utils.ParsePythonCfg(
-        os.path.join(build_internal, 'tests', 'internal_masters_cfg.py'),
+        os.path.join(build_internal, 'tests', 'internal_mains_cfg.py'),
         fail_hard=True)
-    internal_cfg = internal_test_data['masters_cfg_test']
+    internal_cfg = internal_test_data['mains_cfg_test']
     num_skipped += len(internal_cfg['blacklist'])
-    masters_list.extend(GetMasterCmds(
-        masters=master_cfg_utils.GetMasters(include_public=False),
+    mains_list.extend(GetMainCmds(
+        mains=main_cfg_utils.GetMains(include_public=False),
         blacklist=internal_cfg['blacklist'],
         pythonpaths=[os.path.join(build_internal, p)
                      for p in internal_cfg['paths']]))
 
-  with master_cfg_utils.TemporaryMasterPasswords():
+  with main_cfg_utils.TemporaryMainPasswords():
     processes = [subprocess.Popen([
-      sys.executable, os.path.join(BASE_DIR, 'scripts', 'slave', 'runbuild.py'),
+      sys.executable, os.path.join(BASE_DIR, 'scripts', 'subordinate', 'runbuild.py'),
       cmd.name, '--test-config'], stdout=subprocess.PIPE,
-      stderr=subprocess.STDOUT, env=cmd.env) for cmd in masters_list]
+      stderr=subprocess.STDOUT, env=cmd.env) for cmd in mains_list]
     results = [(proc.communicate()[0], proc.returncode) for proc in processes]
 
   def GetCommandStr(cmd, cmd_output):
@@ -86,20 +86,20 @@ def main(argv):
     return '\n'.join(out + [''])
 
   if options.verbose:
-    for cmd, (out, code) in zip(masters_list, results):
+    for cmd, (out, code) in zip(mains_list, results):
       # Failures will be printed below
       if code == 0 and out:
         print GetCommandStr(cmd, out)
 
-  failures = [(cmd, out) for cmd, (out, r) in zip(masters_list, results) if r]
+  failures = [(cmd, out) for cmd, (out, r) in zip(mains_list, results) if r]
   if failures:
-    print '\nFAILURE  The following master.cfg files did not load:\n'
+    print '\nFAILURE  The following main.cfg files did not load:\n'
     for cmd, out in failures:
       print GetCommandStr(cmd, out)
 
   test_time = round(time.time() - start_time, 1)
-  print 'Parsed %d masters successfully, %d failed, %d skipped in %gs.' % (
-      len(masters_list), len(failures), num_skipped, test_time)
+  print 'Parsed %d mains successfully, %d failed, %d skipped in %gs.' % (
+      len(mains_list), len(failures), num_skipped, test_time)
   return bool(failures)
 
 

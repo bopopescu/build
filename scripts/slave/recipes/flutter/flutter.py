@@ -113,7 +113,7 @@ def BuildExamples(api, git_hash):
 
 
 def RunFindXcode(api, step_name, target_version=None):
-  """Runs the `build/scripts/slave/ios/find_xcode.py` utility.
+  """Runs the `build/scripts/subordinate/ios/find_xcode.py` utility.
 
      Retrieves information about xcode installations and to activate a specific
      version of Xcode.
@@ -123,7 +123,7 @@ def RunFindXcode(api, step_name, target_version=None):
   if target_version is not None:
     args.extend(['--version', target_version])
 
-  result = api.python(step_name, api.path['build'].join('scripts', 'slave',
+  result = api.python(step_name, api.path['build'].join('scripts', 'subordinate',
     'ios', 'find_xcode.py'), args)
 
   return result.json.output
@@ -146,7 +146,7 @@ def SetupXcode(api):
 def RunSteps(api):
   # buildbot sets 'clobber' to the empty string which is falsey, check with 'in'
   if 'clobber' in api.properties:
-    api.file.rmcontents('everything', api.path['slave_build'])
+    api.file.rmcontents('everything', api.path['subordinate_build'])
 
   git_hash = api.git.checkout(
       'https://chromium.googlesource.com/external/github.com/flutter/flutter',
@@ -161,11 +161,11 @@ def RunSteps(api):
   # TODO(eseidel): This is named exactly '.pub-cache' as a hack around
   # a regexp in flutter_tools analyze.dart which is in turn a hack around:
   # https://github.com/dart-lang/sdk/issues/25722
-  pub_cache = api.path['slave_build'].join('.pub-cache')
+  pub_cache = api.path['subordinate_build'].join('.pub-cache')
   env = {
     'PATH': api.path.pathsep.join((str(flutter_bin), str(dart_bin),
         '%(PATH)s')),
-    # Setup our own pub_cache to not affect other slaves on this machine.
+    # Setup our own pub_cache to not affect other subordinates on this machine.
     'PUB_CACHE': pub_cache,
     'ANDROID_HOME': checkout.join('infra', 'android_tools'),
   }

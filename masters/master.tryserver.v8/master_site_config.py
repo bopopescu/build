@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class V8TryServer(Master.Master4):
+class V8TryServer(Main.Main4):
   project_name = 'V8 Try Server'
-  master_port = 8074
-  slave_port = 8174
-  master_port_alt = 8274
+  main_port = 8074
+  subordinate_port = 8174
+  main_port_alt = 8274
   try_job_port = 8374
   buildbot_url = 'http://build.chromium.org/p/tryserver.v8/'
   from_address = 'v8-dev@googlegroups.com'
@@ -22,4 +22,4 @@ class V8TryServer(Master.Master4):
   last_good_url = None
   code_review_site = 'http://codereview.chromium.org'
   service_account_file = 'service-account-v8.json'
-  buildbucket_bucket = 'master.tryserver.v8'
+  buildbucket_bucket = 'main.tryserver.v8'

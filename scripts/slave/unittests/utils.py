@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""A collection of utils used by slave unittests."""
+"""A collection of utils used by subordinate unittests."""
 
 import test_env  # pylint: disable=W0403,W0611
 

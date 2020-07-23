@@ -78,7 +78,7 @@ class BuilderStatus(styles.Versioned):
         self.name = buildername
         self.category = category
 
-        self.slavenames = []
+        self.subordinatenames = []
         self.events = []
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
@@ -122,21 +122,21 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = SyncLRUCache(self.cacheMiss, self.buildCacheSize)
         self.currentBuilds = []
         self.watchers = []
-        self.slavenames = []
+        self.subordinatenames = []
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
 
-    def reconfigFromBuildmaster(self, buildmaster):
-        # Note that we do not hang onto the buildmaster, since this object
+    def reconfigFromBuildmain(self, buildmain):
+        # Note that we do not hang onto the buildmain, since this object
         # gets pickled and unpickled.
-        if buildmaster.buildCacheSize is not None:
-            self.buildCacheSize = buildmaster.buildCacheSize
-            self.buildCache.set_max_size(buildmaster.buildCacheSize)
+        if buildmain.buildCacheSize is not None:
+            self.buildCacheSize = buildmain.buildCacheSize
+            self.buildCache.set_max_size(buildmain.buildCacheSize)
 
     def upgradeToVersion1(self):
-        if hasattr(self, 'slavename'):
-            self.slavenames = [self.slavename]
-            del self.slavename
+        if hasattr(self, 'subordinatename'):
+            self.subordinatenames = [self.subordinatename]
+            del self.subordinatename
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber # determineNextBuildNumber chooses this
         self.wasUpgraded = True
@@ -296,11 +296,11 @@ class BuilderStatus(styles.Versioned):
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
-    def getSlaves(self):
-        return [self.status.getSlave(name) for name in self.slavenames]
+    def getSubordinates(self):
+        return [self.status.getSubordinate(name) for name in self.subordinatenames]
 
     def getPendingBuildRequestStatuses(self):
-        db = self.status.master.db
+        db = self.status.main.db
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)
         def make_statuses(brdicts):
@@ -467,7 +467,7 @@ class BuilderStatus(styles.Versioned):
     def subscribe(self, receiver):
         # will get builderChangedState, buildStarted, buildFinished,
         # requestSubmitted, requestCancelled. Note that a request which is
-        # resubmitted (due to a slave disconnect) will cause requestSubmitted
+        # resubmitted (due to a subordinate disconnect) will cause requestSubmitted
         # to be invoked multiple times.
         self.watchers.append(receiver)
         self.publishState(receiver)
@@ -480,8 +480,8 @@ class BuilderStatus(styles.Versioned):
 
     ## Builder interface (methods called by the Builder which feeds us)
 
-    def setSlavenames(self, names):
-        self.slavenames = names
+    def setSubordinatenames(self, names):
+        self.subordinatenames = names
 
     def addEvent(self, text=[]):
         # this adds a duration event. When it is done, the user should call
@@ -650,7 +650,7 @@ class BuilderStatus(styles.Versioned):
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
-        result['slaves'] = self.slavenames
+        result['subordinates'] = self.subordinatenames
         #result['url'] = self.parent.getURLForThing(self)
         # TODO(maruel): Add cache settings? Do we care?
 
@@ -684,6 +684,6 @@ class BuilderStatus(styles.Versioned):
         return d
 
     def getMetrics(self):
-        return self.botmaster.parent.metrics
+        return self.botmain.parent.metrics
 
 # vim: set ts=4 sts=4 sw=4 et:

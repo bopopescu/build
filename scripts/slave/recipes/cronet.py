@@ -168,7 +168,7 @@ def GenTests(api):
       buildername=bot_id,
       revision='4f4b02f6b7fa20a3a25682c457bbc8ad589c8a00',
       repository='https://chromium.googlesource.com/chromium/src',
-      branch='master',
+      branch='main',
       project='src',
     )
     yield api.test(_sanitize_nonalpha(bot_id)) + props

@@ -15,8 +15,8 @@ from buildbot.status.builder import FAILURE
 from buildbot.status import base
 from twisted.python import log
 
-from master import build_utils
-from master import get_password
+from main import build_utils
+from main import get_password
 
 
 class GoodRevisions(base.StatusReceiverMultiService):

@@ -80,7 +80,7 @@ class StatsStatusResource(HtmlResource):
 
     self.status = None
     self.control = None
-    self.changemaster = None
+    self.changemain = None
     self.allowForce = allowForce
     self.css = css
 

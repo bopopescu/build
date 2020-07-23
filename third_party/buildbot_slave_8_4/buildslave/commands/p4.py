@@ -17,9 +17,9 @@ import os, re
 
 from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave import runprocess
-from buildslave.util import Obfuscated
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate import runprocess
+from buildsubordinate.util import Obfuscated
 
 
 class P4Base(SourceBaseCommand):
@@ -212,8 +212,8 @@ class P4(P4Base):
 
 
 class P4Sync(P4Base):
-    """A partial P4 source-updater. Requires manual setup of a per-slave P4
-    environment. The only thing which comes from the master is P4PORT.
+    """A partial P4 source-updater. Requires manual setup of a per-subordinate P4
+    environment. The only thing which comes from the main is P4PORT.
     'mode' is required to be 'copy'.
 
     ['p4port'] (required): host:port for server to access

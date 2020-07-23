@@ -216,52 +216,52 @@ def main(argv):
   # see https://www.googleapis.com/discovery/v1/apis/androidbuildinternal/v2beta1/rest
   service = discovery.build('androidbuildinternal', 'v2beta1', http=http)
 
-  # Find the Android Build ID in master-skia that contains the request git revision
-  build = find_completed_build(service, 'git_master-skia', flags.target, flags.git_revision)
+  # Find the Android Build ID in main-skia that contains the request git revision
+  build = find_completed_build(service, 'git_main-skia', flags.target, flags.git_revision)
   if build['successful'] is True:
     print 'The build completed successfully!'
     sys.exit(0)
 
-  # If we have a failure we first look at the builds in master whose buildIDs
-  # are as close to  the buildID (without going over) from master-skia.
-  # If the selected master builds have completed successfully, then we have a
+  # If we have a failure we first look at the builds in main whose buildIDs
+  # are as close to  the buildID (without going over) from main-skia.
+  # If the selected main builds have completed successfully, then we have a
   # high confidence level that a Skia change is the result of the breakage,
   # otherwise we are in an undetermined state
   unknown_build_state = False
   completed_build_found = False
-  master_build_list = find_builds_with_status(service, 'git_master', 
+  main_build_list = find_builds_with_status(service, 'git_main', 
                                               flags.target, build['buildId'])
-  for master_build in master_build_list['builds']:
-    if master_build['buildAttemptStatus'] in ['complete', 'error']:
+  for main_build in main_build_list['builds']:
+    if main_build['buildAttemptStatus'] in ['complete', 'error']:
       completed_build_found = True
-      if not master_build['successful']:
+      if not main_build['successful']:
         unknown_build_state = True
         break
 
   # if we haven't found a completed build in that set then lets look for the
   # most recent build that has completed
   if unknown_build_state == False and completed_build_found == False:
-    print 'Checking the status of the last successful build in master...'
-    master_build = query_for_completed_build(service, 'git_master', flags.target)
-    if master_build and not master_build['successful']:
+    print 'Checking the status of the last successful build in main...'
+    main_build = query_for_completed_build(service, 'git_main', flags.target)
+    if main_build and not main_build['successful']:
         unknown_build_state = False
 
-  # Print links to both the master-skia build breakage and android build pages
+  # Print links to both the main-skia build breakage and android build pages
   print '********************************************************************************'
-  print 'Links to the broken master-skia build and corresponding master changes'
-  print (' master-skia: https://android-build-uber.corp.google.com/builds.html'
-         '?branch=git_master-skia&lower_limit={0}&upper_limit={0}').format(build['buildId'])
-  print (' master: https://android-build-uber.corp.google.com/builds.html'
-         '?branch=git_master&upper_limit={0}').format(build['buildId'])
+  print 'Links to the broken main-skia build and corresponding main changes'
+  print (' main-skia: https://android-build-uber.corp.google.com/builds.html'
+         '?branch=git_main-skia&lower_limit={0}&upper_limit={0}').format(build['buildId'])
+  print (' main: https://android-build-uber.corp.google.com/builds.html'
+         '?branch=git_main&upper_limit={0}').format(build['buildId'])
   print '********************************************************************************'
 
   if unknown_build_state:
-    print ('WARNING: The master build is in a broken/unknown state so there is'
+    print ('WARNING: The main build is in a broken/unknown state so there is'
            ' a high likelyhood that the Skia build is broken as a result')
     sys.exit(2)
   else:
     sys.exit('ERROR: The skia build is broken but it appears that the'
-             ' corresponding master builds are green')
+             ' corresponding main builds are green')
 
 
 if __name__ == '__main__':

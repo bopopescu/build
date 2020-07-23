@@ -3,12 +3,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Execute buildsteps on the slave.
+"""Execute buildsteps on the subordinate.
 
-This is the buildrunner, a script designed to run builds on the slave. It works
-by mocking out the structures of a Buildbot master, then running a slave under
-that 'fake' master. There are several benefits to this approach, the main one
-being that build code can be changed and reloaded without a master restart.
+This is the buildrunner, a script designed to run builds on the subordinate. It works
+by mocking out the structures of a Buildbot main, then running a subordinate under
+that 'fake' main. There are several benefits to this approach, the main one
+being that build code can be changed and reloaded without a main restart.
 
 Usage is detailed with -h.
 """
@@ -27,10 +27,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))
 import common.env
 common.env.Install()
 
-from common import master_cfg_utils
+from common import main_cfg_utils
 from common import chromium_utils
-from slave import builder_utils
-from slave import runbuild_utils
+from subordinate import builder_utils
+from subordinate import runbuild_utils
 
 REVISION_RE = re.compile(r'[0-9a-f]{5,40}|[1-9][0-9]{0,8}')
 
@@ -38,17 +38,17 @@ REVISION_RE = re.compile(r'[0-9a-f]{5,40}|[1-9][0-9]{0,8}')
 def get_args():
   """Process command-line arguments."""
 
-  prog_desc = 'Executes a Buildbot build locally, without a master.'
-  usage = '%prog [options] <master directory> [builder or slave hostname]'
+  prog_desc = 'Executes a Buildbot build locally, without a main.'
+  usage = '%prog [options] <main directory> [builder or subordinate hostname]'
   parser = optparse.OptionParser(usage=(usage + '\n\n' + prog_desc))
-  parser.add_option('--list-masters', action='store_true',
-                    help='list masters in search path')
-  parser.add_option('--master-dir', help='specify a master directory '
-                    'instead of a mastername')
+  parser.add_option('--list-mains', action='store_true',
+                    help='list mains in search path')
+  parser.add_option('--main-dir', help='specify a main directory '
+                    'instead of a mainname')
   parser.add_option('--list-builders', help='list all available builders for '
-                    'this master', action='store_true')
-  parser.add_option('-s', '--slavehost', metavar='slavehost',
-                    help='specify a slavehost to operate as')
+                    'this main', action='store_true')
+  parser.add_option('-s', '--subordinatehost', metavar='subordinatehost',
+                    help='specify a subordinatehost to operate as')
   parser.add_option('-b', '--builder', metavar='builder',
                     help='string specified is a builder name')
   parser.add_option('--list-steps', action='store_true',
@@ -69,12 +69,12 @@ def get_args():
                     'default: %default')
   parser.add_option('--hide-header', help='don\'t log environment information'
                     ' to logfile', action='store_true')
-  parser.add_option('--slave-dir', help='location of the slave dir',
+  parser.add_option('--subordinate-dir', help='location of the subordinate dir',
                     default=None)
   parser.add_option('--svn-rev', help='revision to check out, default: '
                     'LKGR')
-  parser.add_option('--master-cfg', default='master.cfg',
-                    help='filename of the master config. default: %default')
+  parser.add_option('--main-cfg', default='main.cfg',
+                    help='filename of the main config. default: %default')
   parser.add_option('--builderpath',
                     help='directory to build results in. default: safe '
                     'transformation of builder name')
@@ -110,24 +110,24 @@ def args_ok(inoptions, pos_args):
     for key in inoptions.factory_properties:
       setattr(inoptions, key, inoptions.factory_properties[key])
 
-  if inoptions.list_masters:
+  if inoptions.list_mains:
     return True
 
-  if inoptions.build_properties and not inoptions.master_dir:
-    if inoptions.build_properties['mastername']:
-      inoptions.mastername = inoptions.build_properties['mastername']
+  if inoptions.build_properties and not inoptions.main_dir:
+    if inoptions.build_properties['mainname']:
+      inoptions.mainname = inoptions.build_properties['mainname']
     else:
       print >>sys.stderr, 'Error: build properties did not specify a ',
-      print >>sys.stderr, 'mastername.'
+      print >>sys.stderr, 'mainname.'
       return False
   else:
-    if not (inoptions.master_dir or pos_args):
-      print >>sys.stderr, 'Error: you must provide a mastername or ',
+    if not (inoptions.main_dir or pos_args):
+      print >>sys.stderr, 'Error: you must provide a mainname or ',
       print >>sys.stderr, 'directory.'
       return False
     else:
-      if not inoptions.master_dir:
-        inoptions.mastername = pos_args.pop(0)
+      if not inoptions.main_dir:
+        inoptions.mainname = pos_args.pop(0)
 
   inoptions.step_regex = None
   inoptions.stepreject_regex = None
@@ -169,7 +169,7 @@ def args_ok(inoptions, pos_args):
     inoptions.build_properties['revision'] = 12345
     return True
 
-  if inoptions.build_properties and not (inoptions.slavehost or
+  if inoptions.build_properties and not (inoptions.subordinatehost or
                                          inoptions.builder):
     if inoptions.build_properties['buildername']:
       inoptions.builder = inoptions.build_properties['buildername']
@@ -178,8 +178,8 @@ def args_ok(inoptions, pos_args):
       print >>sys.stderr, 'buildername.'
       return False
   else:
-    if not (pos_args or inoptions.slavehost or inoptions.builder):
-      print >>sys.stderr, 'Error: you must provide a builder or slave hostname.'
+    if not (pos_args or inoptions.subordinatehost or inoptions.builder):
+      print >>sys.stderr, 'Error: you must provide a builder or subordinate hostname.'
       return False
 
   # buildbot expects a list here, not a comma-delimited string
@@ -190,8 +190,8 @@ def args_ok(inoptions, pos_args):
   inoptions.spec = {}
   if inoptions.builder:
     inoptions.spec['builder'] = inoptions.builder
-  elif inoptions.slavehost:
-    inoptions.spec['hostname'] = inoptions.slavehost
+  elif inoptions.subordinatehost:
+    inoptions.spec['hostname'] = inoptions.subordinatehost
   else:
     inoptions.spec['either'] = pos_args.pop(0)
 
@@ -252,51 +252,51 @@ def args_ok(inoptions, pos_args):
 
 
 def execute(options):
-  if options.list_masters:
-    masterpairs = master_cfg_utils.GetMasters()
-    master_cfg_utils.PrettyPrintMasters(masterpairs)
+  if options.list_mains:
+    mainpairs = main_cfg_utils.GetMains()
+    main_cfg_utils.PrettyPrintMains(mainpairs)
     return 0
 
-  if options.master_dir:
-    config = master_cfg_utils.LoadConfig(options.master_dir, options.master_cfg)
+  if options.main_dir:
+    config = main_cfg_utils.LoadConfig(options.main_dir, options.main_cfg)
   else:
-    path = master_cfg_utils.ChooseMaster(options.mastername)
+    path = main_cfg_utils.ChooseMain(options.mainname)
     if not path:
       return 2
 
-    config = master_cfg_utils.LoadConfig(path, config_file=options.master_cfg)
+    config = main_cfg_utils.LoadConfig(path, config_file=options.main_cfg)
 
   if not config:
     return 2
 
-  mastername = config['BuildmasterConfig']['properties']['mastername']
-  builders = config['BuildmasterConfig']['builders']
-  options.build_properties.update(config['BuildmasterConfig'].get(
+  mainname = config['BuildmainConfig']['properties']['mainname']
+  builders = config['BuildmainConfig']['builders']
+  options.build_properties.update(config['BuildmainConfig'].get(
       'properties', {}))
 
   if options.list_builders:
-    master_cfg_utils.PrettyPrintBuilders(builders, mastername)
+    main_cfg_utils.PrettyPrintBuilders(builders, mainname)
     return 0
 
   if options.test_config:
     for builder in builders:
-      # We need to provide a slavename, so just pick the first one
+      # We need to provide a subordinatename, so just pick the first one
       # the builder has.
-      builder['slavename'] = builder['slavenames'][0]
-      execute_builder(builder, mastername, options)
+      builder['subordinatename'] = builder['subordinatenames'][0]
+      execute_builder(builder, mainname, options)
     return 0
 
-  my_builder = master_cfg_utils.ChooseBuilder(builders, options.spec)
-  return execute_builder(my_builder, mastername, options)
+  my_builder = main_cfg_utils.ChooseBuilder(builders, options.spec)
+  return execute_builder(my_builder, mainname, options)
 
-def execute_builder(my_builder, mastername, options):
+def execute_builder(my_builder, mainname, options):
   if options.spec and 'hostname' in options.spec:
-    slavename = options.spec['hostname']
+    subordinatename = options.spec['hostname']
   elif (options.spec and 'either' in options.spec) and (
       options.spec['either'] != my_builder['name']):
-    slavename = options.spec['either']
+    subordinatename = options.spec['either']
   else:
-    slavename = my_builder['slavename']
+    subordinatename = my_builder['subordinatename']
 
   if not my_builder:
     return 2
@@ -307,10 +307,10 @@ def execute_builder(my_builder, mastername, options):
   if 'branch' not in buildsetup:
     buildsetup['branch'] = 'src'
 
-  steplist, build = builder_utils.MockBuild(my_builder, buildsetup, mastername,
-      slavename, basepath=options.builderpath,
+  steplist, build = builder_utils.MockBuild(my_builder, buildsetup, mainname,
+      subordinatename, basepath=options.builderpath,
       build_properties=options.build_properties,
-      slavedir=options.slave_dir)
+      subordinatedir=options.subordinate_dir)
 
   if options.output_build_properties:
     print
@@ -339,7 +339,7 @@ def execute_builder(my_builder, mastername, options):
 
   if options.list_steps:
     print
-    print 'listing steps in %s/%s:' % (mastername, my_builder['name'])
+    print 'listing steps in %s/%s:' % (mainname, my_builder['name'])
     print
     for skip, cmd in filtered_commands:
       if 'command' not in cmd:
@@ -360,7 +360,7 @@ def execute_builder(my_builder, mastername, options):
   filtered_commands = [(s, c) for s, c in filtered_commands if 'command' in c]
 
   if not options.annotate:
-    print >>sys.stderr, 'using %s builder \'%s\'' % (mastername,
+    print >>sys.stderr, 'using %s builder \'%s\'' % (mainname,
         my_builder['name'])
 
   start_time = time.clock()
@@ -392,7 +392,7 @@ def main():
   retcode = execute(opts)
 
   if retcode == 0:
-    if not (opts.annotate or opts.list_masters or opts.list_builders
+    if not (opts.annotate or opts.list_mains or opts.list_builders
             or opts.list_steps or opts.test_config):
       print >>sys.stderr, 'build completed successfully'
   else:

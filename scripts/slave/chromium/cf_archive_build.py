@@ -27,8 +27,8 @@ from common import chromium_utils
 from common.chromium_utils import GS_COMMIT_POSITION_NUMBER_KEY, \
                                   GS_COMMIT_POSITION_KEY, \
                                   GS_GIT_COMMIT_KEY
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 class StagingError(Exception):
   pass
@@ -113,7 +113,7 @@ def archive(options, args):
       primary_project)
   build_git_commit = GetGitCommit(options, primary_project)
 
-  staging_dir = slave_utils.GetStagingDir(src_dir)
+  staging_dir = subordinate_utils.GetStagingDir(src_dir)
   chromium_utils.MakeParentDirectoriesWorldReadable(staging_dir)
 
   print 'Full Staging in %s' % staging_dir
@@ -176,7 +176,7 @@ def archive(options, args):
   if build_git_commit:
     gs_metadata[GS_GIT_COMMIT_KEY] = build_git_commit
 
-  status = slave_utils.GSUtilCopyFile(zip_file, gs_bucket, subdir=subdir,
+  status = subordinate_utils.GSUtilCopyFile(zip_file, gs_bucket, subdir=subdir,
                                       gs_acl=gs_acl, metadata=gs_metadata)
   if status:
     raise StagingError('Failed to upload %s to %s. Error %d' % (zip_file,

@@ -16,7 +16,7 @@ import unittest
 import test_env  # pylint: disable=W0611,W0403
 
 from common import chromium_utils
-from master import chromium_step
+from main import chromium_step
 
 
 class ChromiumStepTest(unittest.TestCase):

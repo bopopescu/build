@@ -12,9 +12,9 @@ DEPS = [
 ]
 
 # To run, pass these options into properties:
-# slavename="multivm-windows-release",
+# subordinatename="multivm-windows-release",
 # buildername="multivm-windows-perf-be",
-# mastername="client.dart.fyi", buildnumber=75
+# mainname="client.dart.fyi", buildnumber=75
 
 
 def RunSteps(api):
@@ -61,9 +61,9 @@ def GenTests(api):
                       (platform, '_use_mirror'
                        if production else '')) + api.platform.name(platform) +
              api.properties(use_mirror=production,
-                            slavename='multivm-windows-release',
+                            subordinatename='multivm-windows-release',
                             buildername='multivm-windows-perf-be',
                             buildnumber=75,
-                            mastername='client.dart.fyi') +
+                            mainname='client.dart.fyi') +
              api.step_data('Post bisect results',
                            stdout=api.json.output(bisect_response)))

@@ -8,7 +8,7 @@
 # http://cvs-syncmail.cvs.sourceforge.net
 #
 # The script was re-written with the sole pupose of providing updates to
-# Buildbot master by Andy Howell
+# Buildbot main by Andy Howell
 #
 # Options handling done right by djmitche
 
@@ -138,7 +138,7 @@ def fork_and_send_mail(options):
 
 description="""
 This script is used to provide email notifications of changes to the CVS
-repository to a buildbot master.  It is invoked via a CVS loginfo file (see
+repository to a buildbot main.  It is invoked via a CVS loginfo file (see
 $CVSROOT/CVSROOT/loginfo).  See the Buildbot manual for more information.
 """
 usage="%prog [options] %{sVv}"
@@ -150,11 +150,11 @@ parser = optparse.OptionParser(description=description,
 parser.add_option("-C", "--category", dest='category', metavar="CAT",
             help=textwrap.dedent("""\
             Category for change. This becomes the Change.category attribute, which
-            can be used within the buildmaster to filter changes.
+            can be used within the buildmain to filter changes.
             """))
 parser.add_option("-c", "--cvsroot", dest='cvsroot', metavar="PATH",
             help=textwrap.dedent("""\
-            CVSROOT for use by buildbot slaves to checkout code.
+            CVSROOT for use by buildbot subordinates to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
             """))

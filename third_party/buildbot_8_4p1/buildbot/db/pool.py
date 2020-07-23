@@ -53,7 +53,7 @@ class DBThreadPool(threadpool.ThreadPool):
 
     # Some versions of SQLite incorrectly cache metadata about which tables are
     # and are not present on a per-connection basis.  This cache can be flushed
-    # by querying the sqlite_master table.  We currently assume all versions of
+    # by querying the sqlite_main table.  We currently assume all versions of
     # SQLite have this bug, although it has only been observed in 3.4.2.  A
     # dynamic check for this bug would be more appropriate.  This is documented
     # in bug #1810.
@@ -107,7 +107,7 @@ class DBThreadPool(threadpool.ThreadPool):
         def thd():
             conn = self.engine.contextual_connect()
             if self.__broken_sqlite: # see bug #1810
-                conn.execute("select * from sqlite_master")
+                conn.execute("select * from sqlite_main")
             try:
                 rv = callable(conn, *args, **kwargs)
                 assert not isinstance(rv, sa.engine.ResultProxy), \
@@ -121,12 +121,12 @@ class DBThreadPool(threadpool.ThreadPool):
     def do_with_engine(self, callable, *args, **kwargs):
         """
         Like L{do}, but with an SQLAlchemy Engine as the first argument.  This
-        is only used for schema manipulation, and is not used at master
+        is only used for schema manipulation, and is not used at main
         runtime.
         """
         def thd():
             if self.__broken_sqlite: # see bug #1810
-                self.engine.execute("select * from sqlite_master")
+                self.engine.execute("select * from sqlite_main")
             rv = callable(self.engine, *args, **kwargs)
             assert not isinstance(rv, sa.engine.ResultProxy), \
                     "do not return ResultProxy objects!"
@@ -145,7 +145,7 @@ class DBThreadPool(threadpool.ThreadPool):
             try:
                 conn = self.engine.contextual_connect()
                 if self.__broken_sqlite: # see bug #1810
-                    conn.execute("select * from sqlite_master")
+                    conn.execute("select * from sqlite_main")
                 try:
                     rv = callable(conn, *args, **kwargs)
                     assert not isinstance(rv, sa.engine.ResultProxy), \
@@ -165,7 +165,7 @@ class DBThreadPool(threadpool.ThreadPool):
             try:
                 conn = self.engine
                 if self.__broken_sqlite: # see bug #1810
-                    conn.execute("select * from sqlite_master")
+                    conn.execute("select * from sqlite_main")
                 rv = callable(conn, *args, **kwargs)
                 assert not isinstance(rv, sa.engine.ResultProxy), \
                         "do not return ResultProxy objects!"
@@ -188,7 +188,7 @@ class DBThreadPool(threadpool.ThreadPool):
             import sqlite3 as sqlite
 
         dbfile = "detect_bug1810.db"
-        def test(select_from_sqlite_master=False):
+        def test(select_from_sqlite_main=False):
             try:
                 conn1 = sqlite.connect(dbfile)
                 curs1 = conn1.cursor()
@@ -198,8 +198,8 @@ class DBThreadPool(threadpool.ThreadPool):
                 curs2 = conn2.cursor()
                 curs2.execute("CREATE TABLE foo ( a integer )")
 
-                if select_from_sqlite_master:
-                    curs1.execute("SELECT * from sqlite_master")
+                if select_from_sqlite_main:
+                    curs1.execute("SELECT * from sqlite_main")
                 curs1.execute("SELECT * from foo")
             finally:
                 conn1.close()
@@ -213,5 +213,5 @@ class DBThreadPool(threadpool.ThreadPool):
             return True
 
         # but this version should not fail..
-        test(select_from_sqlite_master=True)
+        test(select_from_sqlite_main=True)
         return False # not broken - no workaround required

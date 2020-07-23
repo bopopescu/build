@@ -11,8 +11,8 @@ import unittest
 
 import test_env  # pylint: disable=W0611
 
-from master.buildbucket import common, changestore
-from master.unittests.deferred_resource_test import run_deferred
+from main.buildbucket import common, changestore
+from main.unittests.deferred_resource_test import run_deferred
 from mock import Mock
 from twisted.internet import defer
 
@@ -24,7 +24,7 @@ class ChangeStoreTest(unittest.TestCase):
       'author': {'email': 'johndoe@chromium.org'},
       'message': 'hello world',
       'revision': 'deadbeef',
-      'branch': 'master',
+      'branch': 'main',
       'create_ts': 1419206400000000,  #  datetime.datetime(2014, 12, 22)
       'project': 'chromium',
       'repo_url': 'http://chromium.googlesource.com/chromium/src',

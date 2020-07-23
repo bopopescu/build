@@ -4,14 +4,14 @@
 
 """buildbucket module implements buildbucket-buildbot integration.
 
-The main entry point is buildbucket.setup() that accepts master configuration
-dict with other buildbucket parameters and configures master to run builds
+The main entry point is buildbucket.setup() that accepts main configuration
+dict with other buildbucket parameters and configures main to run builds
 scheduled on buildbucket service.
 
 Example:
   buildbucket.setup(
       c,  # Configuration object.
-      ActiveMaster,
+      ActiveMain,
       buckets=['qo'],
   )
 
@@ -33,16 +33,16 @@ NO_LEASE_LIMIT = sys.maxint
 
 
 def setup(
-    config, active_master, buckets, build_params_hook=None,
+    config, active_main, buckets, build_params_hook=None,
     poll_interval=10, buildbucket_hostname=None, max_lease_count=None,
     verbose=None, dry_run=None):
-  """Configures a master to lease, schedule and update builds on buildbucket.
+  """Configures a main to lease, schedule and update builds on buildbucket.
 
   Requires config to have 'mergeRequests' set to False.
 
   Args:
-    config (dict): master configuration dict.
-    active_master (config.Master.Base): master site config.
+    config (dict): main configuration dict.
+    active_main (config.Main.Base): main site config.
     buckets (list of str): a list of buckets to poll.
     build_params_hook: callable with arguments (params, build) that can modify
       parameters (and properties via parameters['properties']) before creating
@@ -57,7 +57,7 @@ def setup(
     buildbucket_hostname (str): if not None, override the default buildbucket
       service url.
     max_lease_count (int): maximum number of builds that can be leased at a
-      time. Defaults to the number of connected slaves.
+      time. Defaults to the number of connected subordinates.
     verbose (bool): log more than usual. Defaults to False.
     dry_run (bool): whether to run buildbucket in a dry-run mode.
 
@@ -65,8 +65,8 @@ def setup(
     buildbucket.Error if config['mergeRequests'] is not False.
   """
   assert isinstance(config, dict), 'config must be a dict'
-  assert active_master
-  assert active_master.service_account_path, 'Service account is not assigned'
+  assert active_main
+  assert active_main.service_account_path, 'Service account is not assigned'
   assert buckets, 'Buckets are not specified'
   assert isinstance(buckets, list), 'Buckets must be a list'
   assert all(isinstance(b, basestring) for b in buckets), (
@@ -80,7 +80,7 @@ def setup(
       max_lease_count=max_lease_count)
 
   buildbucket_service_factory = functools.partial(
-      client.create_buildbucket_service, active_master, buildbucket_hostname,
+      client.create_buildbucket_service, active_main, buildbucket_hostname,
       verbose)
 
   poller = BuildBucketPoller(

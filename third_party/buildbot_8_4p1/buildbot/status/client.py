@@ -93,8 +93,8 @@ class RemoteBuilder(pb.Referenceable):
                 None, # TODO: remove leftover ETA
                 [makeRemote(b) for b in builds])
 
-    def remote_getSlaves(self):
-        return [IRemote(s) for s in self.b.getSlaves()]
+    def remote_getSubordinates(self):
+        return [IRemote(s) for s in self.b.getSubordinates()]
 
     def remote_getLastFinishedBuild(self):
         return makeRemote(self.b.getLastFinishedBuild())
@@ -288,9 +288,9 @@ class RemoteBuildStep(pb.Referenceable):
 components.registerAdapter(RemoteBuildStep,
                            interfaces.IBuildStepStatus, IRemote)    
 
-class RemoteSlave:
-    def __init__(self, slave):
-        self.s = slave
+class RemoteSubordinate:
+    def __init__(self, subordinate):
+        self.s = subordinate
 
     def remote_getName(self):
         return self.s.getName()
@@ -301,8 +301,8 @@ class RemoteSlave:
     def remote_isConnected(self):
         return self.s.isConnected()
 
-components.registerAdapter(RemoteSlave,
-                           interfaces.ISlaveStatus, IRemote)
+components.registerAdapter(RemoteSubordinate,
+                           interfaces.ISubordinateStatus, IRemote)
 
 class RemoteEvent:
     def __init__(self, event):
@@ -440,8 +440,8 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         b = self.status.getBuilder(name)
         return IRemote(b)
 
-    def perspective_getSlave(self, name):
-        s = self.status.getSlave(name)
+    def perspective_getSubordinate(self, name):
+        s = self.status.getSubordinate(name)
         return IRemote(s)
 
     def perspective_ping(self):

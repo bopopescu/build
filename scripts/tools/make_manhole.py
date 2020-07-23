@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Generate a .manhole for all masters."""
+"""Generate a .manhole for all mains."""
 
 import getpass
 import os
@@ -24,15 +24,15 @@ def main():
   parser = optparse.OptionParser()
   parser.add_option('-u', '--user', default=getpass.getuser())
   parser.add_option('-p', '--port', type='int', help='Base port')
-  parser.add_option('-r', '--root', default=os.getcwd(), help='Path to masters')
+  parser.add_option('-r', '--root', default=os.getcwd(), help='Path to mains')
   options, args = parser.parse_args(None)
 
   if args:
     parser.error('Have you tried not using the wrong argument?')
   if not options.port:
     parser.error('Use --port to specify a base port')
-  if not os.path.basename(options.root) == 'masters':
-    parser.error('Use --root or cd into the masters directory')
+  if not os.path.basename(options.root) == 'mains':
+    parser.error('Use --root or cd into the mains directory')
 
   try:
     check_output(['apg', '-q', '-n', '1'])

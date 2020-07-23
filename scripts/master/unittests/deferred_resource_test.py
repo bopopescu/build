@@ -11,7 +11,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from master.deferred_resource import DeferredResource
+from main.deferred_resource import DeferredResource
 from mock import Mock, call
 from twisted.internet import reactor
 

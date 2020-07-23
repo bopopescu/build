@@ -2,15 +2,15 @@ from datetime import datetime
 from trac.util.datefmt import utc
 
 class Builder(object):
-	def __init__(self, name, builds, slaves):
+	def __init__(self, name, builds, subordinates):
 		self.name = name
 		self.current = builds[0]
 		self.recent = builds
-		self.slaves = slaves
+		self.subordinates = subordinates
 
 class Build(object):
 	def __init__(self, build_results):
-		for attr in ('builder_name', 'reason', 'slavename', 'results',
+		for attr in ('builder_name', 'reason', 'subordinatename', 'results',
 					'text', 'start', 'end', 'steps', 'branch', 'revision', 'number'):
 			setattr(self, attr, build_results.get(attr, 'UNDEFINED'))
 		try:
@@ -19,4 +19,4 @@ class Build(object):
 		except Exception, e:
 			pass
 	def __str__(self):
-		return 'Slave <%s>'%(self.slave)
+		return 'Subordinate <%s>'%(self.subordinate)

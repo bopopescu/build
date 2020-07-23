@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='webrtc_linux_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=30,
                             builderNames=[
           'Linux32 Debug',
@@ -31,30 +31,30 @@ def Update(c):
       ]),
   ])
 
-  # 'slavebuilddir' below is used to reduce the number of checkouts since some
-  # of the builders are pooled over multiple slave machines.
+  # 'subordinatebuilddir' below is used to reduce the number of checkouts since some
+  # of the builders are pooled over multiple subordinate machines.
   specs = [
-    {'name': 'Linux32 Debug', 'slavebuilddir': 'linux32'},
-    {'name': 'Linux32 Release', 'slavebuilddir': 'linux32'},
-    {'name': 'Linux64 Debug', 'slavebuilddir': 'linux64'},
-    {'name': 'Linux64 Release', 'slavebuilddir': 'linux64'},
-    {'name': 'Linux Asan', 'slavebuilddir': 'linux_asan'},
-    {'name': 'Linux MSan', 'slavebuilddir': 'linux_msan'},
-    {'name': 'Linux Memcheck', 'slavebuilddir': 'linux_memcheck_tsan'},
-    {'name': 'Linux Tsan v2', 'slavebuilddir': 'linux_tsan2'},
-    {'name': 'Linux UBSan', 'slavebuilddir': 'linux_ubsan'},
-    {'name': 'Linux UBSan vptr', 'slavebuilddir': 'linux_ubsan_vptr'},
+    {'name': 'Linux32 Debug', 'subordinatebuilddir': 'linux32'},
+    {'name': 'Linux32 Release', 'subordinatebuilddir': 'linux32'},
+    {'name': 'Linux64 Debug', 'subordinatebuilddir': 'linux64'},
+    {'name': 'Linux64 Release', 'subordinatebuilddir': 'linux64'},
+    {'name': 'Linux Asan', 'subordinatebuilddir': 'linux_asan'},
+    {'name': 'Linux MSan', 'subordinatebuilddir': 'linux_msan'},
+    {'name': 'Linux Memcheck', 'subordinatebuilddir': 'linux_memcheck_tsan'},
+    {'name': 'Linux Tsan v2', 'subordinatebuilddir': 'linux_tsan2'},
+    {'name': 'Linux UBSan', 'subordinatebuilddir': 'linux_ubsan'},
+    {'name': 'Linux UBSan vptr', 'subordinatebuilddir': 'linux_ubsan_vptr'},
     {
       'name': 'Linux64 Release [large tests]',
       'category': 'compile|baremetal',
-      'slavebuilddir': 'linux_baremetal',
+      'subordinatebuilddir': 'linux_baremetal',
     },
-    {'name': 'Linux64 Debug (GN)', 'slavebuilddir': 'linux64_gn'},
-    {'name': 'Linux64 Release (GN)', 'slavebuilddir': 'linux64_gn'},
+    {'name': 'Linux64 Debug (GN)', 'subordinatebuilddir': 'linux64_gn'},
+    {'name': 'Linux64 Release (GN)', 'subordinatebuilddir': 'linux64_gn'},
     {
       'name': 'Linux64 Release (Libfuzzer)',
       'recipe': 'webrtc/libfuzzer',
-      'slavebuilddir': 'linux64_libfuzzer',
+      'subordinatebuilddir': 'linux64_libfuzzer',
     },
   ]
 
@@ -65,6 +65,6 @@ def Update(c):
                                                     'webrtc/standalone')),
         'notify_on_missing': True,
         'category': spec.get('category', 'compile|testers'),
-        'slavebuilddir': spec['slavebuilddir'],
+        'subordinatebuilddir': spec['subordinatebuilddir'],
       } for spec in specs
   ])

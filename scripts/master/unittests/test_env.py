@@ -16,7 +16,7 @@ DATA_PATH = os.path.join(RUNTESTS_DIR, 'data')
 BASE_DIR = os.path.abspath(os.path.join(RUNTESTS_DIR, '..', '..', '..'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'third_party'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'third_party', 'buildbot_8_4p1'))
-sys.path.insert(0, os.path.join(BASE_DIR, 'third_party', 'buildbot_slave_8_4'))
+sys.path.insert(0, os.path.join(BASE_DIR, 'third_party', 'buildbot_subordinate_8_4'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'third_party', 'decorator_3_3_1'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'third_party',
                                 'google_api_python_client'))

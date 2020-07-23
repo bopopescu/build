@@ -17,7 +17,7 @@ import os
 import tempfile
 import unittest
 
-from slave.ios import test_runner
+from subordinate.ios import test_runner
 
 class TestRunnerTest(unittest.TestCase):
   """Unit tests for test_runner.TestRunner."""

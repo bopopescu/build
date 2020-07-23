@@ -23,7 +23,7 @@ def _run_presubmit(api, patch_root, bot_update_step):
   presubmit_cmd = [
     'python',  # env.py will replace with this its sys.executable.
     api.path['depot_tools'].join('presubmit_support.py'),
-    '--root', api.path['slave_build'].join(patch_root),
+    '--root', api.path['subordinate_build'].join(patch_root),
     '--commit',
     '--verbose', '--verbose',
     '--issue', api.properties['issue'],
@@ -45,7 +45,7 @@ def _commit_change(api, patch_root):
           '-c', 'user.name=The Commit Bot',
           'commit', '-a', '-m', 'Committed patch',
           name='commit git patch',
-          cwd=api.path['slave_build'].join(patch_root))
+          cwd=api.path['subordinate_build'].join(patch_root))
 
 
 def RunSteps(api):
@@ -91,14 +91,14 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='luci-go-linux64',
         buildnumber=123,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/external/github.com/luci/luci-go',
     )
   )
   yield (
     api.test('presubmit_try_job') +
     api.properties.tryserver(
-        mastername='tryserver.infra',
+        mainname='tryserver.infra',
         buildername='Luci-go Presubmit',
     ) + api.step_data('presubmit', api.json.output([[]]))
   )

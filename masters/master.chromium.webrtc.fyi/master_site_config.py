@@ -2,19 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumWebRTCFYI(Master.Master1):
+class ChromiumWebRTCFYI(Main.Main1):
   project_name = 'Chromium WebRTC FYI'
-  master_port = 8056
-  slave_port = 8156
-  master_port_alt = 8256
+  main_port = 8056
+  subordinate_port = 8156
+  main_port_alt = 8256
   server_url = 'http://webrtc.googlecode.com'
   project_url = 'http://webrtc.googlecode.com'
   from_address = 'chromium-webrtc-cb-fyi-watchlist@google.com'
-  master_domain = 'webrtc.org'
+  main_domain = 'webrtc.org'
   permitted_domains = ('google.com', 'chromium.org', 'webrtc.org')
   base_app_url = 'https://webrtc-status.appspot.com'
   tree_status_url = base_app_url + '/status'
@@ -22,4 +22,4 @@ class ChromiumWebRTCFYI(Master.Master1):
   last_good_url = base_app_url + '/lkgr'
   buildbot_url = 'http://build.chromium.org/p/chromium.webrtc.fyi/'
   service_account_file = 'service-account-webrtc.json'
-  buildbucket_bucket = 'master.chromium.webrtc.fyi'
+  buildbucket_bucket = 'main.chromium.webrtc.fyi'

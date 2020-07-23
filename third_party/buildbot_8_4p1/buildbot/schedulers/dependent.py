@@ -38,9 +38,9 @@ class Dependent(base.BaseScheduler):
 
     def startService(self):
         self._buildset_addition_subscr = \
-                self.master.subscribeToBuildsets(self._buildsetAdded)
+                self.main.subscribeToBuildsets(self._buildsetAdded)
         self._buildset_completion_subscr = \
-                self.master.subscribeToBuildsetCompletions(self._buildsetCompleted)
+                self.main.subscribeToBuildsetCompletions(self._buildsetCompleted)
         # check for any buildsets completed before we started
         d = self._checkCompletedBuildsets(None, None)
         d.addErrback(log.err, 'while checking for completed buildsets in start')
@@ -62,7 +62,7 @@ class Dependent(base.BaseScheduler):
 
         # record our interest in this buildset, both locally and in the
         # database
-        d = self.master.db.buildsets.subscribeToBuildset(
+        d = self.main.db.buildsets.subscribeToBuildset(
                                         self.schedulerid, bsid)
         d.addErrback(log.err, 'while subscribing to buildset %d' % bsid)
 
@@ -74,7 +74,7 @@ class Dependent(base.BaseScheduler):
     @defer.deferredGenerator
     def _checkCompletedBuildsets(self, bsid, result):
         wfd = defer.waitForDeferred(
-            self.master.db.buildsets.getSubscribedBuildsets(self.schedulerid))
+            self.main.db.buildsets.getSubscribedBuildsets(self.schedulerid))
         yield wfd
         subs = wfd.getResult()
 
@@ -94,7 +94,7 @@ class Dependent(base.BaseScheduler):
 
             # and regardless of status, remove the subscription
             wfd = defer.waitForDeferred(
-                self.master.db.buildsets.unsubscribeFromBuildset(
+                self.main.db.buildsets.unsubscribeFromBuildset(
                                           self.schedulerid, sub_bsid))
             yield wfd
             wfd.getResult()

@@ -26,7 +26,7 @@ from find_json import json
 import natsort
 
 # These values are buildbot constants used for Build and BuildStep.
-# This line was copied from master/buildbot/status/builder.py.
+# This line was copied from main/buildbot/status/builder.py.
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 
 
@@ -471,15 +471,15 @@ class SubViewNodeList(VirtualNodeList):  # pylint: disable=W0223
 ## Buildbot-specific code
 
 
-class Slave(AddressableDataNode):
+class Subordinate(AddressableDataNode):
   children = AddressableDataNode.children + [
       'name', 'key', 'connected', 'version']
 
   def __init__(self, parent, name, data):
-    super(Slave, self).__init__(parent, name, data)
+    super(Subordinate, self).__init__(parent, name, data)
     self.name = name
     self.key = self.name
-    # TODO(maruel): Add SlaveBuilders and a 'builders' property.
+    # TODO(maruel): Add SubordinateBuilders and a 'builders' property.
     # TODO(maruel): Add a 'running_builds' property.
 
   @property
@@ -491,12 +491,12 @@ class Slave(AddressableDataNode):
     return self.data['version']
 
 
-class Slaves(AddressableNodeList):
-  _child_cls = Slave
+class Subordinates(AddressableNodeList):
+  _child_cls = Subordinate
   children = AddressableNodeList.children + ['names']
 
   def __init__(self, parent):
-    super(Slaves, self).__init__(parent, 'slaves')
+    super(Subordinates, self).__init__(parent, 'subordinates')
     self.children.append('names')
 
   @property
@@ -504,14 +504,14 @@ class Slaves(AddressableNodeList):
     return self.keys
 
 
-class BuilderSlaves(SubViewNodeList):
-  """Similar to Slaves but only list slaves connected to a specific builder.
+class BuilderSubordinates(SubViewNodeList):
+  """Similar to Subordinates but only list subordinates connected to a specific builder.
   """
   children = SubViewNodeList.children + ['names']
 
   def __init__(self, parent):
-    super(BuilderSlaves, self).__init__(
-        parent, parent.parent.parent.slaves, 'slaves')
+    super(BuilderSubordinates, self).__init__(
+        parent, parent.parent.parent.subordinates, 'subordinates')
 
   @property
   def names(self):
@@ -597,7 +597,7 @@ class BuildSteps(NonAddressableNodeList):
 class Build(AddressableDataNode):
   children = AddressableDataNode.children + [
       'key', 'number', 'steps', 'blame', 'reason', 'revision', 'result',
-      'simplified_result', 'slave', 'properties']
+      'simplified_result', 'subordinate', 'properties']
 
   def __init__(self, parent, key, data):
     super(Build, self).__init__(parent, str(key), data)
@@ -656,12 +656,12 @@ class Build(AddressableDataNode):
     return None
 
   @property
-  def slave(self):
-    """Returns the Slave object.
+  def subordinate(self):
+    """Returns the Subordinate object.
 
-    Goes up the hierarchy to find the Buildbot.slaves[slave] instance.
+    Goes up the hierarchy to find the Buildbot.subordinates[subordinate] instance.
     """
-    return self.parent.parent.parent.parent.slaves[self.data['slave']]
+    return self.parent.parent.parent.parent.subordinates[self.data['subordinate']]
 
   def discard(self):
     """Completed Build isn't discarded."""
@@ -737,21 +737,21 @@ class Builds(AddressableNodeList):
 
 class Builder(AddressableDataNode):
   children = AddressableDataNode.children + [
-      'name', 'key', 'builds', 'slaves', 'pending_builds', 'current_builds']
+      'name', 'key', 'builds', 'subordinates', 'pending_builds', 'current_builds']
 
   def __init__(self, parent, name, data):
     super(Builder, self).__init__(parent, name, data)
     self.name = name
     self.key = name
     self.builds = Builds(self)
-    self.slaves = BuilderSlaves(self)
+    self.subordinates = BuilderSubordinates(self)
     self.current_builds = CurrentBuilds(self)
     self.pending_builds = PendingBuilds(self)
 
   def discard(self):
     super(Builder, self).discard()
     self.builds.discard()
-    self.slaves.discard()
+    self.subordinates.discard()
     self.current_builds.discard()
 
 
@@ -764,18 +764,18 @@ class Builders(AddressableNodeList):
 
 
 class Buildbot(AddressableBaseDataNode):
-  """If a master restart occurs, this object should be recreated as it caches
+  """If a main restart occurs, this object should be recreated as it caches
   data.
   """
   # Throttle fetches to not kill the server.
   auto_throttle = None
   children = AddressableDataNode.children + [
-      'slaves', 'builders', 'last_fetch']
+      'subordinates', 'builders', 'last_fetch']
 
   def __init__(self, url):
     super(Buildbot, self).__init__(None, url.rstrip('/') + '/json', None)
     self._builders = Builders(self)
-    self._slaves = Slaves(self)
+    self._subordinates = Subordinates(self)
     self.last_fetch = None
 
   @property
@@ -783,14 +783,14 @@ class Buildbot(AddressableBaseDataNode):
     return self._builders
 
   @property
-  def slaves(self):
-    return self._slaves
+  def subordinates(self):
+    return self._subordinates
 
   def discard(self):
-    """Discards information about Builders and Slaves."""
+    """Discards information about Builders and Subordinates."""
     super(Buildbot, self).discard()
     self._builders.discard()
-    self._slaves.discard()
+    self._subordinates.discard()
 
   def read(self, suburl):
     if self.auto_throttle:
@@ -930,23 +930,23 @@ def CMDinteractive(parser, args):
 
 @need_buildbot
 def CMDidle(parser, args):
-  """Lists idle slaves."""
-  return find_idle_busy_slaves(parser, args, True)
+  """Lists idle subordinates."""
+  return find_idle_busy_subordinates(parser, args, True)
 
 
 @need_buildbot
 def CMDbusy(parser, args):
-  """Lists idle slaves."""
-  return find_idle_busy_slaves(parser, args, False)
+  """Lists idle subordinates."""
+  return find_idle_busy_subordinates(parser, args, False)
 
 
-def find_idle_busy_slaves(parser, args, show_idle):
+def find_idle_busy_subordinates(parser, args, show_idle):
   parser.add_option(
     '-b', '--builder', dest='builders', action='append', default=[],
     help='Builders to filter on')
   parser.add_option(
-    '-s', '--slave', dest='slaves', action='append', default=[],
-    help='Slaves to filter on')
+    '-s', '--subordinate', dest='subordinates', action='append', default=[],
+    help='Subordinates to filter on')
   options, args, buildbot = parser.parse_args(args)
   if args:
     parser.error('Unrecognized parameters: %s' % ' '.join(args))
@@ -954,28 +954,28 @@ def find_idle_busy_slaves(parser, args, show_idle):
     options.builders = buildbot.builders.keys
   for builder in options.builders:
     builder = buildbot.builders[builder]
-    if options.slaves:
-      # Only the subset of slaves connected to the builder.
-      slaves = list(set(options.slaves).intersection(set(builder.slaves.names)))
-      if not slaves:
+    if options.subordinates:
+      # Only the subset of subordinates connected to the builder.
+      subordinates = list(set(options.subordinates).intersection(set(builder.subordinates.names)))
+      if not subordinates:
         continue
     else:
-      slaves = builder.slaves.names
-    busy_slaves = [build.slave.name for build in builder.current_builds]
+      subordinates = builder.subordinates.names
+    busy_subordinates = [build.subordinate.name for build in builder.current_builds]
     if show_idle:
-      slaves = natsort.natsorted(set(slaves) - set(busy_slaves))
+      subordinates = natsort.natsorted(set(subordinates) - set(busy_subordinates))
     else:
-      slaves = natsort.natsorted(set(slaves) & set(busy_slaves))
+      subordinates = natsort.natsorted(set(subordinates) & set(busy_subordinates))
     if options.quiet:
-      for slave in slaves:
-        print slave
+      for subordinate in subordinates:
+        print subordinate
     else:
-      if slaves:
-        print 'Builder %s: %s' % (builder.name, ', '.join(slaves))
+      if subordinates:
+        print 'Builder %s: %s' % (builder.name, ', '.join(subordinates))
   return 0
 
 
-def last_failure(buildbot, builders=None, slaves=None, steps=None,
+def last_failure(buildbot, builders=None, subordinates=None, steps=None,
     result=FAILURE, no_cache=False):
   """Generator returning Build object that were the last failure with the
   specific filters.
@@ -983,15 +983,15 @@ def last_failure(buildbot, builders=None, slaves=None, steps=None,
   builders = builders or buildbot.builders.keys
   for builder in builders:
     builder = buildbot.builders[builder]
-    if slaves:
-      # Only the subset of slaves connected to the builder.
-      builder_slaves = list(set(slaves).intersection(set(builder.slaves.names)))
-      if not builder_slaves:
+    if subordinates:
+      # Only the subset of subordinates connected to the builder.
+      builder_subordinates = list(set(subordinates).intersection(set(builder.subordinates.names)))
+      if not builder_subordinates:
         continue
     else:
-      builder_slaves = builder.slaves.names
+      builder_subordinates = builder.subordinates.names
 
-    if not no_cache and len(builder.slaves) > 2:
+    if not no_cache and len(builder.subordinates) > 2:
       # Unless you just want the last few builds, it's often faster to
       # fetch the whole thing at once, at the cost of a small hickup on
       # the buildbot.
@@ -1001,28 +1001,28 @@ def last_failure(buildbot, builders=None, slaves=None, steps=None,
 
     found = []
     for build in builder.builds:
-      if build.slave.name not in builder_slaves or  build.slave.name in found:
+      if build.subordinate.name not in builder_subordinates or  build.subordinate.name in found:
         continue
-      found.append(build.slave.name)
+      found.append(build.subordinate.name)
       if steps:
         if any(build.steps[step].result == result for step in steps):
           yield build
       elif result is None or build.result == result:
         yield build
-      if len(found) == len(slaves):
-        # Found all the slaves, quit.
+      if len(found) == len(subordinates):
+        # Found all the subordinates, quit.
         break
 
 
 @need_buildbot
 def CMDlast_failure(parser, args):
-  """Lists all slaves that failed on that step on their last build.
+  """Lists all subordinates that failed on that step on their last build.
 
-  Example: to find all slaves where their last build was a compile failure,
+  Example: to find all subordinates where their last build was a compile failure,
   run with --step compile"""
   parser.add_option(
     '-S', '--step', dest='steps', action='append', default=[],
-    help='List all slaves that failed on that step on their last build')
+    help='List all subordinates that failed on that step on their last build')
   parser.add_option(
     '-r', '--result', type='int', default=FAILURE,
     help='Build result to filter on')
@@ -1030,8 +1030,8 @@ def CMDlast_failure(parser, args):
     '-b', '--builder', dest='builders', action='append', default=[],
     help='Builders to filter on')
   parser.add_option(
-    '-s', '--slave', dest='slaves', action='append', default=[],
-    help='Slaves to filter on')
+    '-s', '--subordinate', dest='subordinates', action='append', default=[],
+    help='Subordinates to filter on')
   parser.add_option(
     '-n', '--no_cache', action='store_true',
     help='Don\'t load all builds at once')
@@ -1043,7 +1043,7 @@ def CMDlast_failure(parser, args):
   print_builders = not options.quiet and len(options.builders) != 1
   last_builder = None
   for build in last_failure(buildbot, builders=options.builders,
-      slaves=options.slaves, steps=options.steps, result=options.result,
+      subordinates=options.subordinates, steps=options.steps, result=options.result,
       no_cache=options.no_cache):
 
     if print_builders and last_builder != build.builder:
@@ -1051,13 +1051,13 @@ def CMDlast_failure(parser, args):
       last_builder = build.builder
 
     if options.quiet:
-      if options.slaves:
-        print '%s: %s' % (build.builder.name, build.slave.name)
+      if options.subordinates:
+        print '%s: %s' % (build.builder.name, build.subordinate.name)
       else:
-        print build.slave.name
+        print build.subordinate.name
     else:
       out = '%d on %s: result:%s blame:%s' % (
-        build.number, build.slave.name, build.result,
+        build.number, build.subordinate.name, build.result,
         ', '.join(build.blame))
       if print_builders:
         out = '  ' + out
@@ -1092,9 +1092,9 @@ def CMDcurrent(parser, args):
       print builder.name
     for build in builder.current_builds:
       if options.quiet:
-        print build.slave.name
+        print build.subordinate.name
       else:
-        out = '%d: slave=%s' % (build.number, build.slave.name)
+        out = '%d: subordinate=%s' % (build.number, build.subordinate.name)
         if build.eta:
           out += '  eta=%.0f' % build.eta
         if build.blame:

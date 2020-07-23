@@ -2,12 +2,12 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import master.chromium_step
-import master.log_parser.retcode_command
-import master.log_parser.webkit_test_command
-import master.factory.commands
-import master.factory.drmemory_factory
-import master.master_utils
+import main.chromium_step
+import main.log_parser.retcode_command
+import main.log_parser.webkit_test_command
+import main.factory.commands
+import main.factory.drmemory_factory
+import main.main_utils
 import buildbot.process.properties
 import buildbot.steps.transfer
 import buildbot.steps.shell
@@ -23,7 +23,7 @@ import datetime
 # Terrible hack; to enable converting triggers.
 _GLOBAL_BUILDMASTER_CONFIG = None
 
-_master_builder_map = {
+_main_builder_map = {
     'NativeClientSDK': ['windows-sdk-multi',
                         'mac-sdk-multi',
                         'linux-sdk-multi',
@@ -114,7 +114,7 @@ _master_builder_map = {
                     ]
 }
 
-_master_name_map = {
+_main_name_map = {
     'NativeClientSDK': 'client.nacl.sdk',
     'Chromium GPU': 'chromium.gpu',
     'Chromium ChromeDriver': 'chromium.chromedriver',
@@ -154,48 +154,48 @@ _step_signatures = {
                        'workdir': '../../..'
                      }
                     ),
-  'bot_update': (master.chromium_step.AnnotatedCommand,
+  'bot_update': (main.chromium_step.AnnotatedCommand,
                  {
                    'command': ['python', '-u',
-                               '../../../scripts/slave/bot_update.py'],
+                               '../../../scripts/subordinate/bot_update.py'],
                    'description': 'bot_update',
                    'name': 'bot_update',
                    'workdir': 'build',
                  }
                 ),
-  'win_bot_update': (master.chromium_step.AnnotatedCommand,
+  'win_bot_update': (main.chromium_step.AnnotatedCommand,
                  {
                    'command': ['python', '-u',
-                               '..\\..\\..\\scripts\\slave\\bot_update.py'],
+                               '..\\..\\..\\scripts\\subordinate\\bot_update.py'],
                    'description': 'bot_update',
                    'name': 'bot_update',
                    'workdir': 'build',
                  }
                 ),
-  'cleanup_temp': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'cleanup_temp': (main.log_parser.retcode_command.ReturnCodeCommand,
                    {
                      'command': ['python',
-                                 '../../../scripts/slave/cleanup_temp.py'],
+                                 '../../../scripts/subordinate/cleanup_temp.py'],
                      'description': 'cleanup_temp',
                      'name': 'cleanup_temp',
                    }
                   ),
-  'win_cleanup_temp': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'win_cleanup_temp': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
         'command': ['python',
-                    '..\\..\\..\\scripts\\slave\\cleanup_temp.py'],
+                    '..\\..\\..\\scripts\\subordinate\\cleanup_temp.py'],
         'description': 'cleanup_temp',
         'name': 'cleanup_temp',
       }
     ),
-  'gclient_update':      (master.chromium_step.GClient,
+  'gclient_update':      (main.chromium_step.GClient,
                           {
                             'mode': 'update',
                           }),
   'gclient_safe_revert': (buildbot.steps.shell.ShellCommand,
                           {
                             'command': ['python',
-                              '../../../scripts/slave/gclient_safe_revert.py',
+                              '../../../scripts/subordinate/gclient_safe_revert.py',
                               '.', 'gclient'],
                             'description': 'gclient_revert',
                             'name': 'gclient_revert',
@@ -204,74 +204,74 @@ _step_signatures = {
     ),
   'win_gclient_safe_revert': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\gclient_safe_revert.py',
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\gclient_safe_revert.py',
           '.', 'gclient.bat'],
         'description': 'gclient_revert',
         'name': 'gclient_revert',
         'workdir': 'build',
       }
     ),
-  'bb_run_bot':   (master.chromium_step.AnnotatedCommand,
+  'bb_run_bot':   (main.chromium_step.AnnotatedCommand,
                    {
                      'command': ['python',
                        'src/build/android/buildbot/bb_run_bot.py'],
-                     'name': 'slave_steps',
-                     'description': 'slave_steps',
+                     'name': 'subordinate_steps',
+                     'description': 'subordinate_steps',
                    }
                   ),
   'gclient_runhooks_wrapper': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python', '../../../scripts/slave/runhooks_wrapper.py'],
+        'command': ['python', '../../../scripts/subordinate/runhooks_wrapper.py'],
         'description': 'gclient hooks',
         'env': {},
         'name': 'runhooks'
         # NOTE: locking shouldn't be required, as only one recipe is ever run on
-        # a slave at a time; specifically, a SlaveLock of type slave_exclusive
+        # a subordinate at a time; specifically, a SubordinateLock of type subordinate_exclusive
         # *should be* redundant. Noted here in case it isn't. (aneeshm)
       }
     ),
   'win_gclient_runhooks_wrapper': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python_slave',
-                    '..\\..\\..\\scripts\\slave\\runhooks_wrapper.py'],
+        'command': ['python_subordinate',
+                    '..\\..\\..\\scripts\\subordinate\\runhooks_wrapper.py'],
         'description': 'gclient hooks',
         'env': {},
         'name': 'runhooks'
         # NOTE: locking shouldn't be required, as only one recipe is ever run on
-        # a slave at a time; specifically, a SlaveLock of type slave_exclusive
+        # a subordinate at a time; specifically, a SubordinateLock of type subordinate_exclusive
         # *should be* redundant. Noted here in case it isn't. (aneeshm)
       }
     ),
-  'chromedriver_buildbot_run': (master.chromium_step.AnnotatedCommand,
+  'chromedriver_buildbot_run': (main.chromium_step.AnnotatedCommand,
       {
         'name': 'annotated_steps',
         'description': 'annotated_steps',
         'command': ['python',
-          '../../../scripts/slave/chromium/chromedriver_buildbot_run.py'],
+          '../../../scripts/subordinate/chromium/chromedriver_buildbot_run.py'],
       }
     ),
-  'win_chromedriver_buildbot_run': (master.chromium_step.AnnotatedCommand,
+  'win_chromedriver_buildbot_run': (main.chromium_step.AnnotatedCommand,
       {
         'name': 'annotated_steps',
         'description': 'annotated_steps',
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\chromium\\chromedriver_buildbot_run.py'],
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\chromium\\chromedriver_buildbot_run.py'],
       }
     ),
   'compile_py':
-    (master.factory.commands.CompileWithRequiredSwarmTargets,
+    (main.factory.commands.CompileWithRequiredSwarmTargets,
       {
-        'command': ['python', '../../../scripts/slave/compile.py'],
+        'command': ['python', '../../../scripts/subordinate/compile.py'],
         'name': 'compile',
         'description': 'compiling',
         'descriptionDone': 'compile',
       }
     ),
   'win_compile_py':
-    (master.factory.commands.CompileWithRequiredSwarmTargets,
+    (main.factory.commands.CompileWithRequiredSwarmTargets,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\compile.py'],
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\compile.py'],
         'name': 'compile',
         'description': 'compiling',
         'descriptionDone': 'compile',
@@ -292,26 +292,26 @@ _step_signatures = {
         'name': 'update_scripts',
       }
     ),
-  'win_taskkill': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'win_taskkill': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
-        'command': ['python', '..\\..\\..\\scripts\\slave\\kill_processes.py'],
+        'command': ['python', '..\\..\\..\\scripts\\subordinate\\kill_processes.py'],
         'name': 'taskkill',
         'description': 'taskkill',
       }
     ),
-  'runtest': (master.chromium_step.AnnotatedCommand,
+  'runtest': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python', '../../../scripts/slave/runtest.py'],
+        'command': ['python', '../../../scripts/subordinate/runtest.py'],
       }
     ),
-  'runtest2': (master.log_parser.webkit_test_command.WebKitCommand,
+  'runtest2': (main.log_parser.webkit_test_command.WebKitCommand,
       {
-        'command': ['python', '../../../scripts/slave/runtest.py'],
+        'command': ['python', '../../../scripts/subordinate/runtest.py'],
       }
     ),
-  'win_runtest': (master.chromium_step.AnnotatedCommand,
+  'win_runtest': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\runtest.py'],
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\runtest.py'],
       }
     ),
   'clear_tools': (buildbot.steps.shell.ShellCommand,
@@ -323,7 +323,7 @@ _step_signatures = {
     ),
   'checkout_dynamorio': (buildbot.steps.source.Git,
       {
-        'branch': 'master',
+        'branch': 'main',
         'name': 'Checkout DynamoRIO',
         'workdir': 'dynamorio',
         'repourl': 'https://github.com/DynamoRIO/dynamorio.git',
@@ -331,7 +331,7 @@ _step_signatures = {
     ),
   'checkout_drmemory': (buildbot.steps.source.Git,
       {
-        'branch': 'master',
+        'branch': 'main',
         'name': 'Checkout Dr. Memory',
         'workdir': 'drmemory',
         'repourl': 'https://github.com/DynamoRIO/drmemory.git',
@@ -353,15 +353,15 @@ _step_signatures = {
         'workdir': 'tools/buildbot/bot_tools',
       }
     ),
-  'win_dynamorio_nightly_suite': (master.factory.drmemory_factory.CTest,
+  'win_dynamorio_nightly_suite': (main.factory.drmemory_factory.CTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '--timeout', '120', '-VV', '-S'],
         'name': 'nightly suite',
         'descriptionDone': 'nightly suite',
       }
     ),
-  'dynamorio_nightly_suite': (master.factory.drmemory_factory.CTest,
+  'dynamorio_nightly_suite': (main.factory.drmemory_factory.CTest,
       {
         'command': ['ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake,nightly;long;'+\
@@ -370,16 +370,16 @@ _step_signatures = {
         'name': 'nightly suite',
       }
     ),
-  'win_dynamorio_precommit':(master.factory.drmemory_factory.CTest,
+  'win_dynamorio_precommit':(main.factory.drmemory_factory.CTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake'],
         'descriptionDone': 'pre-commit suite',
         'name': 'pre-commit suite',
       }
     ),
-  'dynamorio_precommit': (master.factory.drmemory_factory.CTest,
+  'dynamorio_precommit': (main.factory.drmemory_factory.CTest,
       {
         'command': ['ctest', '--timeout', '120', '-VV', '-S',
           '../dynamorio/suite/runsuite.cmake'],
@@ -387,7 +387,7 @@ _step_signatures = {
         'descriptionDone': 'pre-commit suite',
       }
     ),
-  'drmemory_ctest': (master.factory.drmemory_factory.CTest,
+  'drmemory_ctest': (main.factory.drmemory_factory.CTest,
       {
         'command': ['ctest', '--timeout', '60', '-VV', '-S'],
         'name': 'Dr. Memory ctest',
@@ -397,8 +397,8 @@ _step_signatures = {
   'upload_dynamorio_docs': (buildbot.steps.transfer.DirectoryUpload,
       {
         'blocksize': 16384,
-        'masterdest': 'public_html/dr_docs',
-        'slavesrc': 'install/docs/html',
+        'maindest': 'public_html/dr_docs',
+        'subordinatesrc': 'install/docs/html',
         'workdir': 'build',
       }
     ),
@@ -443,13 +443,13 @@ _step_signatures = {
     ),
   'win_package_dynamorio': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '-VV', '-S'],
         'description': 'Package DynamoRIO',
         'name': 'Package DynamoRIO',
       }
     ),
-  'dartino': (master.chromium_step.AnnotatedCommand,
+  'dartino': (main.chromium_step.AnnotatedCommand,
       {
         'command': ['python', 'tools/bots/dartino.py'],
         'description': 'annotated_steps',
@@ -479,9 +479,9 @@ _step_signatures = {
         'workdir': 'build\\sdk',
       }
     ),
-  'win_dartino': (master.chromium_step.AnnotatedCommand,
+  'win_dartino': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', 'tools/bots/dartino.py'],
+        'command': ['python_subordinate', 'tools/bots/dartino.py'],
         'description': 'annotated_steps',
         'env': {'BUILDBOT_ANNOTATED_STEPS_RUN': '1'},
         'name': 'annotated_steps',
@@ -497,7 +497,7 @@ _step_signatures = {
     ),
   'drmemory_pack_results_win': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     '7z', 'a', '-xr!*.pdb', 'testlogs.7z'],
         'description': 'pack results',
         'name': 'Pack test results',
@@ -506,13 +506,13 @@ _step_signatures = {
   'upload_drmemory_test_logs': (buildbot.steps.transfer.FileUpload,
       {
         'blocksize': 16384,
-        'name': 'Upload test logs to the master',
-        'slavesrc': 'testlogs.7z',
+        'name': 'Upload test logs to the main',
+        'subordinatesrc': 'testlogs.7z',
       }
     ),
-  'win_drmemory_ctest': (master.factory.drmemory_factory.CTest,
+  'win_drmemory_ctest': (main.factory.drmemory_factory.CTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'ctest',
                     '--timeout',
                     '60',
@@ -566,7 +566,7 @@ _step_signatures = {
     ),
   'build_tsan_tests': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'make',
                     '-C',
                     '../tsan/unittest'
@@ -577,9 +577,9 @@ _step_signatures = {
         'name': 'Build TSan tests',
       }
     ),
-  'drmemory_tsan_test_dbg': (master.factory.drmemory_factory.DrMemoryTest,
+  'drmemory_tsan_test_dbg': (main.factory.drmemory_factory.DrMemoryTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'build_drmemory-dbg-32\\bin\\drmemory',
                     '-dr_ops',
                     '-msgbox_mask 0 -stderr_mask 15',
@@ -590,9 +590,9 @@ _step_signatures = {
                     '--']
       }
     ),
-  'drmemory_tsan_test_rel': (master.factory.drmemory_factory.DrMemoryTest,
+  'drmemory_tsan_test_rel': (main.factory.drmemory_factory.DrMemoryTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'build_drmemory-rel-32\\bin\\drmemory',
                     '-dr_ops',
                     '-msgbox_mask 0 -stderr_mask 15',
@@ -603,9 +603,9 @@ _step_signatures = {
                     '--']
       }
     ),
-  'drmemory_tsan_test_dbg_light': (master.factory.drmemory_factory.DrMemoryTest,
+  'drmemory_tsan_test_dbg_light': (main.factory.drmemory_factory.DrMemoryTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'build_drmemory-dbg-32\\bin\\drmemory',
                     '-dr_ops',
                     '-msgbox_mask 0 -stderr_mask 15',
@@ -617,9 +617,9 @@ _step_signatures = {
                     '--']
       }
     ),
-  'drmemory_tsan_test_rel_light': (master.factory.drmemory_factory.DrMemoryTest,
+  'drmemory_tsan_test_rel_light': (main.factory.drmemory_factory.DrMemoryTest,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
                     'build_drmemory-rel-32\\bin\\drmemory',
                     '-dr_ops',
                     '-msgbox_mask 0 -stderr_mask 15',
@@ -661,9 +661,9 @@ _step_signatures = {
   'drmemory_download_build': (buildbot.steps.transfer.FileDownload,
       {
         'blocksize': 16384,
-        'mastersrc': 'public_html/builds/drmemory-windows-latest-sfx.exe',
+        'mainsrc': 'public_html/builds/drmemory-windows-latest-sfx.exe',
         'name': 'Download the latest build',
-        'slavedest': 'drm-sfx.exe',
+        'subordinatedest': 'drm-sfx.exe',
       }
     ),
   'drmemory_prepare_pack_win': (buildbot.steps.shell.ShellCommand,
@@ -682,7 +682,7 @@ _step_signatures = {
     ),
   'package_drmemory_win': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           'ctest', '-VV', '-S'],
         'description': 'Package Dr. Memory',
         'name': 'Package Dr. Memory',
@@ -704,7 +704,7 @@ _step_signatures = {
     ),
   'drmemory_create_sfx_archive': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['E:\\b\\build\\scripts\\slave\\drmemory\\build_env.bat',
+        'command': ['E:\\b\\build\\scripts\\subordinate\\drmemory\\build_env.bat',
           '7z', 'a', '-sfx'],
         'description': 'create sfx archive',
         'name': 'create sfx archive',
@@ -713,69 +713,69 @@ _step_signatures = {
   'upload_drmemory_latest': (buildbot.steps.transfer.FileUpload,
       {
         'blocksize': 16384,
-        'masterdest': 'public_html/builds/drmemory-windows-latest-sfx.exe',
+        'maindest': 'public_html/builds/drmemory-windows-latest-sfx.exe',
         'name': 'upload latest build',
       }
     ),
   'start_crash_handler': (buildbot.steps.shell.ShellCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\chromium\\run_crash_handler.py',
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\chromium\\run_crash_handler.py',
           '--target'],
         'description': 'running start_crash_handler',
         'descriptionDone': 'start_crash_handler',
         'name': 'start_crash_handler',
       }
     ),
-  'process_dumps': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'process_dumps': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
-        'command': ['python_slave',
-                    '..\\..\\..\\scripts\\slave\\process_dumps.py',
+        'command': ['python_subordinate',
+                    '..\\..\\..\\scripts\\subordinate\\process_dumps.py',
                     '--target'],
         'description': 'running process_dumps',
         'descriptionDone': 'process_dumps',
         'name': 'process_dumps',
       }
     ),
-  'extract_build': (master.log_parser.retcode_command.ReturnCodeCommand,
+  'extract_build': (main.log_parser.retcode_command.ReturnCodeCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\extract_build.py',
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\extract_build.py',
           '--target'],
         'description': 'running extract_build',
         'descriptionDone': 'extract_build',
         'name': 'extract_build',
       }
     ),
-  'runbuild_win': (master.chromium_step.AnnotatedCommand,
+  'runbuild_win': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\runbuild.py',
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\runbuild.py',
           '--annotate'],
         'description': 'buildrunner_tests',
         'name': 'buildrunner_tests',
       }
     ),
-  'runbuild': (master.chromium_step.AnnotatedCommand,
+  'runbuild': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python', '../../../scripts/slave/runbuild.py',
+        'command': ['python', '../../../scripts/subordinate/runbuild.py',
           '--annotate'],
         'description': 'buildrunner_tests',
         'name': 'buildrunner_tests',
       }
     ),
-  'zip_build_win': (master.chromium_step.AnnotatedCommand,
+  'zip_build_win': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave', '..\\..\\..\\scripts\\slave\\zip_build.py',
+        'command': ['python_subordinate', '..\\..\\..\\scripts\\subordinate\\zip_build.py',
           '--target'],
         'description': 'packaging build',
         'descriptionDone': 'packaged build',
         'name': 'package_build',
       }
     ),
-  'test_mini_installer_win': (master.chromium_step.AnnotatedCommand,
+  'test_mini_installer_win': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\chromium' +\
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\chromium' +\
           '\\test_mini_installer_wrapper.py', '--target'],
         'description': 'running test_installer',
         'descriptionDone': 'test_installer',
@@ -791,9 +791,9 @@ _step_signatures = {
         'name': 'update_clang',
       }
     ),
-  'nacl_integration': (master.chromium_step.AnnotatedCommand,
+  'nacl_integration': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave',
+        'command': ['python_subordinate',
           'src\\chrome\\test\\nacl_test_injection\\' +\
               'buildbot_nacl_integration.py'],
         'description': 'running nacl_integration',
@@ -801,23 +801,23 @@ _step_signatures = {
         'name': 'nacl_integration',
       }
     ),
-  'nacl_sdk_buildbot_run': (master.chromium_step.AnnotatedCommand,
+  'nacl_sdk_buildbot_run': (main.chromium_step.AnnotatedCommand,
       {
         'command': ['python',
-          '../../../scripts/slave/chromium/nacl_sdk_buildbot_run.py'],
+          '../../../scripts/subordinate/chromium/nacl_sdk_buildbot_run.py'],
         'description': 'annotated_steps',
         'name': 'annotated_steps',
       }
     ),
-  'gclient_clobber': (master.chromium_step.GClient,
+  'gclient_clobber': (main.chromium_step.GClient,
       {
         'mode': 'clobber',
       }
     ),
-  'nacl_sdk_buildbot_run_win': (master.chromium_step.AnnotatedCommand,
+  'nacl_sdk_buildbot_run_win': (main.chromium_step.AnnotatedCommand,
       {
-        'command': ['python_slave',
-          '..\\..\\..\\scripts\\slave\\chromium\\nacl_sdk_buildbot_run.py'],
+        'command': ['python_subordinate',
+          '..\\..\\..\\scripts\\subordinate\\chromium\\nacl_sdk_buildbot_run.py'],
         'description': 'annotated_steps',
         'name': 'annotated_steps',
       }
@@ -833,8 +833,8 @@ def convert_arguments(args):
                          'api.properties["buildnumber"]'),
       '--builder-name': ("'%s', %s", '--builder-name',
                          'api.properties["buildername"]'),
-      '../../../scripts/slave/chromium/layout_test_wrapper.py': (
-        '%s', 'api.path["build"].join("scripts", "slave", "chromium", '+\
+      '../../../scripts/subordinate/chromium/layout_test_wrapper.py': (
+        '%s', 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
             '"layout_test_wrapper.py")'
         )
   }
@@ -890,7 +890,7 @@ def nacl_sdk_buildbot_run_converter(step):
   rc.deps.add('recipe_engine/path')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  nsdk_command = 'api.path["build"].join("scripts", "slave", "chromium", '+\
+  nsdk_command = 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"nacl_sdk_buildbot_run.py")'
   fmtstr = 'api.python("annotated_steps", %s, args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
@@ -905,7 +905,7 @@ def test_mini_installer_win_converter(step):
   rc.deps.add('recipe_engine/python')
   rc.steps.append('# test mini installer wrapper step')
   rc.steps.append('api.python("test installer", ' +\
-      'api.path["build"].join("scripts", "slave", "chromium", '+\
+      'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"test_mini_installer_wrapper.py"), args=[' +\
       '"--target", "%s"])' % step[1]['command'][3])
   return rc
@@ -920,7 +920,7 @@ def zip_build_win_converter(step):
       "api.json.dumps(build_properties, separators=(',', ':'))"
   rc.steps.append('# zip_build step')
   rc.steps.append('step_result = api.python("zip build", ' +\
-      'api.path["build"].join("scripts", "slave", "zip_build.py"), ' +\
+      'api.path["build"].join("scripts", "subordinate", "zip_build.py"), ' +\
       'args=["--json-urls", api.json.output(), '
       '"--target", "%s", ' % step[1]['command'][3] +\
       repr(step[1]['command'][4:6])[1:-1] +\
@@ -942,7 +942,7 @@ def runbuild_converter(step):
       "api.json.dumps(build_properties, separators=(',', ':'))"
   rc.steps.append('# runbuild step')
   rc.steps.append('api.python("runbuild", ' +\
-      'api.path["build"].join("scripts", "slave", "runbuild.py"), args=[' +\
+      'api.path["build"].join("scripts", "subordinate", "runbuild.py"), args=[' +\
       '"--annotate", ' +\
       '%s, ' % build_properties +\
       '\'%s\'])' % step[1]['command'][4])
@@ -958,7 +958,7 @@ def runbuild_win_converter(step):
       "api.json.dumps(build_properties, separators=(',', ':'))"
   rc.steps.append('# runbuild step')
   rc.steps.append('api.python("runbuild", ' +\
-      'api.path["build"].join("scripts", "slave", "runbuild.py"), ' +\
+      'api.path["build"].join("scripts", "subordinate", "runbuild.py"), ' +\
       'args=["--annotate", ' +\
       '%s, ' % build_properties +\
       '\'%s\'])' % step[1]['command'][4])
@@ -973,7 +973,7 @@ def extract_build_converter(step):
       "api.json.dumps(build_properties, separators=(',', ':'))"
   rc.steps.append('# extract build step')
   rc.steps.append('api.python("extract build", ' +\
-      'api.path["build"].join("scripts", "slave", "extract_build.py"), ' +\
+      'api.path["build"].join("scripts", "subordinate", "extract_build.py"), ' +\
       'args=["--target", "%s", ' % step[1]['command'][3] +\
       '"--build-archive-url", ' +\
       'build_properties["parent_build_archive_url"], ' +\
@@ -985,9 +985,9 @@ def dynamorio_unpack_tools_converter(step):
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
   fmtstr = 'api.step("%s", %s, env=%s, cwd=%s)'
-  cmdstr = 'api.path["slave_build"].join(' +\
+  cmdstr = 'api.path["subordinate_build"].join(' +\
       repr(step[1]['workdir'].split('/') + ['unpack.bat'])[1:-1] + ')'
-  cwd = 'api.path["slave_build"]'
+  cwd = 'api.path["subordinate_build"]'
   if step[1].get('workdir', ''):
     cwd += '.join(%s)' % repr(step[1]['workdir'].split('/'))[1:-1]
   env = "{}"
@@ -1005,7 +1005,7 @@ def process_dumps_converter(step):
   rc.deps.add('recipe_engine/python')
   rc.steps.append('# process dumps step')
   rc.steps.append('api.python("process dumps", '
-      'api.path["build"].join("scripts", "slave", "process_dumps.py"), '
+      'api.path["build"].join("scripts", "subordinate", "process_dumps.py"), '
       'args=["--target", "%s"])' % step[1]['command'][3])
   return rc
 
@@ -1016,7 +1016,7 @@ def start_crash_handler_converter(step):
   rc.deps.add('recipe_engine/python')
   rc.steps.append('# start crash handler step')
   rc.steps.append('api.python("start crash handler", '
-      'api.path["build"].join("scripts", "slave", "chromium", '
+      'api.path["build"].join("scripts", "subordinate", "chromium", '
       '"run_crash_handler.py"), '
       'args=["--target", "%s"])' % step[1]['command'][3])
   return rc
@@ -1031,9 +1031,9 @@ def upload_drmemory_latest_converter(step):
   bucket = 'chromium-drmemory-builds'
   remote_dir = '""'
   rc.steps.append('api.step("copy locally", ["copy", basename + "-sfx.exe",'
-      ' "drmemory-windows-latest-sfx.exe"], cwd=api.path["slave_build"])')
+      ' "drmemory-windows-latest-sfx.exe"], cwd=api.path["subordinate_build"])')
   rc.steps.append('api.gsutil.upload("%s", "%s", %s,'
-      ' cwd=api.path["slave_build"])' % (local_file, bucket,
+      ' cwd=api.path["subordinate_build"])' % (local_file, bucket,
     remote_dir))
   return rc
 
@@ -1042,15 +1042,15 @@ def drmemory_create_sfx_archive_converter(step):
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# Create sfx archive step')
-  build_env = 'api.path["build"].join("scripts", "slave", "drmemory",'+\
+  build_env = 'api.path["build"].join("scripts", "subordinate", "drmemory",'+\
       '"build_env.bat")'
-  env = ('{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '
+  env = ('{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '
       '"bot_tools")}')
   archive_name = 'basename + "-sfx.exe"'
   archive_source = ('"build_drmemory-debug-32\\\\_CPack_Packages\\\\Windows\\\\'
       'ZIP\\\\" + basename + "\\\\*"')
   rc.steps.append('api.step("create sfx archive", [%s, "7z", "a"' % build_env +\
-      ', "-sfx", %s, %s], cwd=api.path["slave_build"], env=%s)' % (archive_name,
+      ', "-sfx", %s, %s], cwd=api.path["subordinate_build"], env=%s)' % (archive_name,
         archive_source, env))
   return rc
 
@@ -1063,7 +1063,7 @@ def drmemory_find_package_basename_converter(step):
   rc.steps.append('step_result = api.step("Find package basename", ["dir",'
       ' "/B", '
       '"DrMemory-Windows-*0x" + build_properties["got_revision"][:7] + '
-      '".zip"], stdout=api.raw_io.output(), cwd=api.path["slave_build"])')
+      '".zip"], stdout=api.raw_io.output(), cwd=api.path["subordinate_build"])')
   rc.steps.append('basename = step_result.stdout[:-4]')
   return rc
 
@@ -1073,23 +1073,23 @@ def delete_prior_sfx_archive_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# Delete prior sfx archive step')
   rc.steps.append('api.step("Delete prior sfx archive", '
-      '["del", basename + "-sfx.exe"], cwd=api.path["slave_build"])')
+      '["del", basename + "-sfx.exe"], cwd=api.path["subordinate_build"])')
   return rc
 
 def package_drmemory_win_converter(step):
   rc = recipe_chunk()
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
-  build_env = 'api.path["build"].join("scripts", "slave", "drmemory",'+\
+  build_env = 'api.path["build"].join("scripts", "subordinate", "drmemory",'+\
       '"build_env.bat")'
-  env = ('{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '
+  env = ('{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '
       '"bot_tools")}')
   confstr = ('str(api.path["checkout"].join("package.cmake")) + ",build=0x"'
       ' + build_properties["got_revision"][:7] + ";drmem_only"')
   rc.steps.append('# Package dynamorio step')
   rc.steps.append('api.step("Package Dr. Memory", [%s, %s, %s],' % (build_env,
         repr(step[1]['command'][1:4])[1:-1], confstr) +\
-      'env=%s, cwd=api.path["slave_build"])' % env)
+      'env=%s, cwd=api.path["subordinate_build"])' % env)
   return rc
 
 def drmemory_get_revision_converter(step):
@@ -1110,21 +1110,21 @@ def drmemory_download_build_converter(step):
   rc.steps.append('# Download build step')
   rc.steps.append('api.gsutil.download("chromium-drmemory-builds", '
       '"drmemory-windows-latest-sfx.exe", "drm-sfx.exe", '
-      'cwd=api.path["slave_build"])')
+      'cwd=api.path["subordinate_build"])')
   return rc
 
 def drmemory_tsan_test_light_converter(step):
   rc = recipe_chunk()
   rc.steps.append('# Dr. Memory TSan test step')
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append('api.step("%s", [' % step[1]['name'] +\
-      'api.path["build"].join("scripts", "slave", "drmemory", ' +\
+      'api.path["build"].join("scripts", "subordinate", "drmemory", ' +\
       '"build_env.bat"), '+\
       repr(step[1]['command'][1:7])[1:-1] +\
       ', api.path["checkout"].join("tests", "app_suite", '+\
       '"default-suppressions.txt"), "-light", "--", ' +\
-      'api.path["slave_build"].join("tsan", '+\
+      'api.path["subordinate_build"].join("tsan", '+\
       '%s), ' % repr(step[1]['command'][10].split('\\')[2:])[1:-1] +\
       '%s], ' % repr(step[1]['command'][-2:])[1:-1] +\
       'env=%s)' % env)
@@ -1135,15 +1135,15 @@ def drmemory_tsan_test_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/step')
   rc.steps.append('# Dr. Memory TSan test step')
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append('api.step("%s", [' % step[1]['name'] +\
-      'api.path["build"].join("scripts", "slave", "drmemory", ' +\
+      'api.path["build"].join("scripts", "subordinate", "drmemory", ' +\
       '"build_env.bat"), '+\
       repr(step[1]['command'][1:7])[1:-1] +\
       ', api.path["checkout"].join("tests", "app_suite", '+\
       '"default-suppressions.txt"), "--", ' +\
-      'api.path["slave_build"].join("tsan", '+\
+      'api.path["subordinate_build"].join("tsan", '+\
       '%s), ' % repr(step[1]['command'][9].split('\\')[2:])[1:-1] +\
       '%s], ' % repr(step[1]['command'][-2:])[1:-1] +\
       'env=%s)' % env)
@@ -1153,12 +1153,12 @@ def build_tsan_tests_converter(step):
   rc = recipe_chunk()
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools"), "CYGWIN": "nodosfilewarning"}'
   rc.steps.append("# Build TSan tests step")
   rc.steps.append('api.step("Build TSan Tests", ' +\
       '[%s, ' % repr(step[1]['command'][:-1])[1:-1] +\
-      '%s], ' % 'api.path["slave_build"].join("tsan", "unittest")' +\
+      '%s], ' % 'api.path["subordinate_build"].join("tsan", "unittest")' +\
       "env=%s)" % env)
   return rc
 
@@ -1169,7 +1169,7 @@ def checkout_tsan_converter(step):
   rc.steps.append('# Checkout TSan tests step')
   rc.steps.append('api.step("Checkout TSan tests",' +\
       ' [%s, ' % repr(step[1]['command'][:-1])[1:-1] +\
-      'api.path["slave_build"].join("tsan")])')
+      'api.path["subordinate_build"].join("tsan")])')
   return rc
 
 def drmemory_tests_converter(step):
@@ -1190,9 +1190,9 @@ def config_release_dynamorio_converter(step):
   rc.deps.add('file')
   rc.deps.add('recipe_engine/path')
   rc.steps.append("# Make the build directory step")
-  rc.steps.append('api.file.makedirs("makedirs", api.path["slave_build"].'
+  rc.steps.append('api.file.makedirs("makedirs", api.path["subordinate_build"].'
       'join("dynamorio"))')
-  rc.steps.append('api.file.makedirs("makedirs", api.path["slave_build"].'
+  rc.steps.append('api.file.makedirs("makedirs", api.path["subordinate_build"].'
       'join("dynamorio", "build"))')
   rc = rc + generic_shellcommand_converter(step)
   return rc
@@ -1202,7 +1202,7 @@ def win_drmemory_ctest_converter(step):
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# windows Dr. Memory ctest step')
-  script = ('api.path["build"].join("scripts", "slave", "drmemory",'
+  script = ('api.path["build"].join("scripts", "subordinate", "drmemory",'
       ' "build_env.bat")')
   confstr = ('str(api.path["checkout"].join("tests", "runsuite.cmake")) + '
       '",drmemory_only;long;build=" + str(build_properties["buildnumber"])')
@@ -1226,9 +1226,9 @@ def drmemory_pack_results_win_converter(step):
   rc.deps.add('recipe_engine/step')
   rc.deps.add('recipe_engine/path')
   rc.steps.append("# Pack test results step")
-  build_env = 'api.path["build"].join("scripts", "slave", "drmemory",'+\
+  build_env = 'api.path["build"].join("scripts", "subordinate", "drmemory",'+\
       '"build_env.bat")'
-  env = ('{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '
+  env = ('{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '
       '"bot_tools")}')
   zipname = ('"testlogs_r" + build_properties["got_revision"] + "_b" +'
   ' str(build_properties["buildnumber"]) + ".7z"')
@@ -1391,11 +1391,11 @@ def win_package_dynamorio_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/properties')
   rc.steps.append('# Package DynamoRIO step')
-  build_env_bat = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+  build_env_bat = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   confstr = 'str(api.path["checkout"].join("make", "package.cmake")) + '+\
       '",build=0x" + str(api.properties["revision"])[:7]'
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append('api.step("Package DynamoRIO", '+\
       '[%s, "ctest", "-VV", "-S", %s], env=%s)' % (build_env_bat, confstr, env))
@@ -1450,7 +1450,7 @@ def upload_dynamorio_docs_converter(step):
   rc = recipe_chunk()
   rc.deps.add('gsutil')
   rc.deps.add('recipe_engine/path')
-  local_file = 'api.path["slave_build"].join("install", "docs", "html")'
+  local_file = 'api.path["subordinate_build"].join("install", "docs", "html")'
   bucket = '"chromium-dynamorio"'
   remote_dir = '"dr_docs/"'
   args = ['-r', '-m']
@@ -1466,7 +1466,7 @@ def dynamorio_precommit_converter(step):
   rc.steps.append('# pre-commit suite step')
   command = repr(step[1]['command'][:-1])[1:-1]
   cmake_file = 'api.path["checkout"].join("suite", "runsuite.cmake")'
-  cwd = 'api.path["slave_build"]'
+  cwd = 'api.path["subordinate_build"]'
   rc.steps.append('api.step("pre-commit suite", '+\
       '[%s, %s], cwd=%s, ok_ret="all")' % (command, cmake_file, cwd))
   return rc
@@ -1477,12 +1477,12 @@ def win_dynamorio_precommit_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# build_env step')
   fmtstr = 'api.step("pre-commit suite", [%s, %s, %s],  env=%s, '+\
-      'cwd=api.path["slave_build"])'
-  command = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+      'cwd=api.path["subordinate_build"])'
+  command = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   args = step[1]['command'][1:-1]
   runsuite = 'api.path["checkout"].join("suite", "runsuite.cmake")'
-  env = '{"BOTTOOLS": api.path["slave_build"].join("tools", "buildbot", '+\
+  env = '{"BOTTOOLS": api.path["subordinate_build"].join("tools", "buildbot", '+\
       '"bot_tools")}'
   rc.steps.append(fmtstr % (command, repr(args)[1:-1], runsuite, env))
   return rc
@@ -1491,10 +1491,10 @@ def win_dynamorio_nightly_suite_converter(step):
   rc = recipe_chunk()
   rc.deps.add('recipe_engine/step')
   rc.steps.append('# dynamorio win nightly suite step')
-  fmtstr = 'api.step("%s", [%s, %s], env=%s, cwd=api.path["slave_build"])'
+  fmtstr = 'api.step("%s", [%s, %s], env=%s, cwd=api.path["subordinate_build"])'
   env = '{"BOTTOOLS": '+\
-      'api.path["slave_build"].join("tools", "buildbot", "bot_tools")}'
-  command = 'api.path["build"].join("scripts", "slave", "drmemory", '+\
+      'api.path["subordinate_build"].join("tools", "buildbot", "bot_tools")}'
+  command = 'api.path["build"].join("scripts", "subordinate", "drmemory", '+\
       '"build_env.bat")'
   step[1]['command'][-1] = step[1]['command'][-1][3:]
   command_args = repr(step[1]['command'][1:])[1:-1]
@@ -1520,7 +1520,7 @@ def generic_shellcommand_converter(step):
   rc = recipe_chunk()
   rc.deps.add('recipe_engine/step')
   fmtstr = 'api.step("%s", %s, env=%s, cwd=%s)'
-  cwd = 'api.path["slave_build"]'
+  cwd = 'api.path["subordinate_build"]'
   if step[1].get('workdir', ''):
     cwd += '.join(%s)' % repr(step[1]['workdir'].split('/'))[1:-1]
   env = "{}"
@@ -1537,11 +1537,11 @@ def runtest_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/json')
   rc.steps.append('# runtest step')
-  if isinstance(step[1]['command'], master.optional_arguments.ListProperties):
+  if isinstance(step[1]['command'], main.optional_arguments.ListProperties):
     args = step[1]['command'].items[2:]
   else:
     args = step[1]['command'][2:]
-  fmtstr = 'api.python("%s", api.path["build"].join("scripts", "slave",'+\
+  fmtstr = 'api.python("%s", api.path["build"].join("scripts", "subordinate",'+\
       '"runtest.py"), args=[%s])'
   rc.steps.append(fmtstr % (step[1]['name'],
     convert_arguments(args)))
@@ -1557,7 +1557,7 @@ def win_runtest_converter(step):
   else:
     args = step[1]['command'][2:]
   fmtstr = 'api.python("%s", '+\
-      'api.path["build"].join("scripts", "slave", "runtest.py"), args=[%s])'
+      'api.path["build"].join("scripts", "subordinate", "runtest.py"), args=[%s])'
   rc.steps.append(fmtstr % (step[1]['name'],
     convert_arguments(args)))
   return rc
@@ -1568,7 +1568,7 @@ def win_taskkill_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.steps.append('# taskkill step')
   rc.steps.append('api.python("taskkill", api.path["build"].join("scripts", '+\
-      '"slave", "kill_processes.py"))')
+      '"subordinate", "kill_processes.py"))')
   return rc
 
 def win_svnkill_converter(step):
@@ -1647,12 +1647,12 @@ def bot_update_converter(step):
 
 def bb_run_bot_converter(step):
   rc = recipe_chunk()
-  rc.steps.append('# slave_steps step')
+  rc.steps.append('# subordinate_steps step')
   rc.deps.add('recipe_engine/python')
   rc.deps.add('recipe_engine/json')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  fmtstr = 'api.python("slave_steps", "%s", args=[%s, \'%s\'],' +\
+  fmtstr = 'api.python("subordinate_steps", "%s", args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
   rc.steps.append(fmtstr % (step[1]['command'][1], build_properties,
                             step[1]['command'][3]))
@@ -1665,7 +1665,7 @@ def gclient_runhooks_wrapper_converter(step):
   rc.steps.append('# gclient runhooks wrapper step')
   rc.steps.append('env = %s' % repr(step[1]['env']))
   rc.steps.append('api.python("gclient runhooks wrapper", ' +\
-      'api.path["build"].join("scripts", "slave", "runhooks_wrapper.py"), '+\
+      'api.path["build"].join("scripts", "subordinate", "runhooks_wrapper.py"), '+\
       'env=env)')
   return rc
 
@@ -1676,7 +1676,7 @@ def chromedriver_buildbot_run_converter(step):
   rc.deps.add('recipe_engine/json')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  cdbbrun_command = 'api.path["build"].join("scripts", "slave", "chromium", '+\
+  cdbbrun_command = 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"chromedriver_buildbot_run.py")'
   fmtstr = 'api.python("annotated_steps", %s, args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
@@ -1692,7 +1692,7 @@ def win_chromedriver_buildbot_run_converter(step):
   rc.deps.add('recipe_engine/path')
   build_properties = "'--build-properties=%s' % " +\
       "api.json.dumps(build_properties, separators=(',', ':'))"
-  cdbbrun_command = 'api.path["build"].join("scripts", "slave", "chromium", '+\
+  cdbbrun_command = 'api.path["build"].join("scripts", "subordinate", "chromium", '+\
       '"chromedriver_buildbot_run.py")'
   fmtstr = 'api.python("annotated_steps", %s, args=[%s, \'%s\'],' +\
       ' allow_subannotations=True)'
@@ -1707,7 +1707,7 @@ def compile_py_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/properties')
   fmtstr = 'api.python("compile", %s, args=args)'
-  compile_command = 'api.path["build"].join("scripts", "slave", "compile.py")'
+  compile_command = 'api.path["build"].join("scripts", "subordinate", "compile.py")'
   args = [x for x in step[1]['command'].items[2:] if isinstance(x, str)]
   rc.steps.append('args = %s' % repr(args))
   for x in step[1]['command'].items[2:]:
@@ -1725,7 +1725,7 @@ def win_compile_py_converter(step):
   rc.deps.add('recipe_engine/path')
   rc.deps.add('recipe_engine/properties')
   fmtstr = 'api.python("compile", %s, args=args)'
-  compile_command = 'api.path["build"].join("scripts", "slave", "compile.py")'
+  compile_command = 'api.path["build"].join("scripts", "subordinate", "compile.py")'
   args = [x for x in step[1]['command'].items[2:] if isinstance(x, str)]
   rc.steps.append('args = %s' % repr(args))
   for x in step[1]['command'].items[2:]:
@@ -1834,10 +1834,10 @@ def signature_match(step, signature):
                        'repourl',
                        'branch',
                        'blocksize',
-                       'masterdest',
-                       'slavedest',
-                       'mastersrc',
-                       'slavesrc',
+                       'maindest',
+                       'subordinatedest',
+                       'mainsrc',
+                       'subordinatesrc',
                        'strip'}
   subset_dictionary_attributes = {'env'}
   special_attributes = {'command'}
@@ -1857,7 +1857,7 @@ def signature_match(step, signature):
       return base_command == command_signature
     if isinstance(base_command, list):
       return list_startswith(base_command, command_signature)
-    if isinstance(base_command, master.optional_arguments.ListProperties):
+    if isinstance(base_command, main.optional_arguments.ListProperties):
       return list_startswith(base_command.items, command_signature)
     if isinstance(base_command, buildbot.process.properties.WithProperties):
       return base_command.fmtstring == command_signature
@@ -2006,11 +2006,11 @@ def report_builder(c, builder_name):
   return repr_report(report)
 
 
-def name_this_function(c, ActiveMaster, filename=None):
-  if ActiveMaster.project_name not in _master_builder_map:
+def name_this_function(c, ActiveMain, filename=None):
+  if ActiveMain.project_name not in _main_builder_map:
     pass # TODO
   with open(filename, 'w') if filename else sys.stdout as f:
-    for builder in _master_builder_map[ActiveMaster.project_name]:
+    for builder in _main_builder_map[ActiveMain.project_name]:
       f.write(report_builder(c, builder))
       print >> f, 'Match statistics: %s' % repr(builder_match_stats(c, builder))
       print >> f, 'Step statistics: %s' % repr(builder_steps_stats(c, builder))
@@ -2019,8 +2019,8 @@ def name_this_function(c, ActiveMaster, filename=None):
 
 
 class recipe_skeleton(object):
-  def __init__(self, master_name):
-    self.master_name = master_name
+  def __init__(self, main_name):
+    self.main_name = main_name
     self.deps = set()
     # Required to key by buildername.
     self.deps.add('recipe_engine/properties')
@@ -2091,12 +2091,12 @@ class recipe_skeleton(object):
     # Generate tests.
     report.append('def GenTests(api):')
     for builder_name in self.builder_names_to_steps:
-      test_properties = ["api.properties(mastername='%s') +" % self.master_name,
+      test_properties = ["api.properties(mainname='%s') +" % self.main_name,
                          "api.properties(buildername='%s') +" % builder_name,
                          "api.properties(revision='123456789abcdef') +",
                          "api.properties(got_revision='123456789abcdef') +",
                          "api.properties(buildnumber='42') +",
-                         "api.properties(slavename='%s')" % "TestSlave",]
+                         "api.properties(subordinatename='%s')" % "TestSubordinate",]
       test = ["yield (api.test('%s') +" % sbn(builder_name)] +\
              [test_properties] +\
              ['      )']
@@ -2104,9 +2104,9 @@ class recipe_skeleton(object):
     test = [
         "yield (api.test('builder_not_in_dispatch_directory') +",
         [
-         "api.properties(mastername='%s') +" % self.master_name,
+         "api.properties(mainname='%s') +" % self.main_name,
          "api.properties(buildername='nonexistent_builder') +",
-         "api.properties(slavename='TestSlave')"
+         "api.properties(subordinatename='TestSubordinate')"
         ],
         "      )",
         ]
@@ -2143,14 +2143,14 @@ def step_to_recipe_chunk(step):
         'step recognised as "%s", no converter found' % step_type)
   return _step_converters_map[step_type](step)
 
-def write_recipe(c, ActiveMaster, filename=None):
+def write_recipe(c, ActiveMain, filename=None):
   global _GLOBAL_BUILDMASTER_CONFIG
   _GLOBAL_BUILDMASTER_CONFIG = c
-  if ActiveMaster.project_name not in _master_builder_map:
+  if ActiveMain.project_name not in _main_builder_map:
     pass # TODO
-  rs = recipe_skeleton(_master_name_map[ActiveMaster.project_name])
-  rs.generate(c, _master_builder_map[ActiveMaster.project_name])
-  filename = filename or _master_name_map[ActiveMaster.project_name] +\
+  rs = recipe_skeleton(_main_name_map[ActiveMain.project_name])
+  rs.generate(c, _main_builder_map[ActiveMain.project_name])
+  filename = filename or _main_name_map[ActiveMain.project_name] +\
       '.recipe_autogen.py'
   with open(filename, 'w') as f:
     f.write(rs.report_recipe())

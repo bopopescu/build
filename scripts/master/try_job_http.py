@@ -7,7 +7,7 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web import http
 
-from master.try_job_base import TryJobBase
+from main.try_job_base import TryJobBase
 
 
 class TryJobHTTPRequest(http.Request):
@@ -64,7 +64,7 @@ class TryJobHTTP(TryJobBase):
     yield wfd
     wfd.getResult()
 
-    wfd = defer.waitForDeferred(self.master.addChange(
+    wfd = defer.waitForDeferred(self.main.addChange(
       author=','.join(parsed['email']),
       revision=parsed['revision'],
       comments=''))

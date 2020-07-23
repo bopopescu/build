@@ -8,7 +8,7 @@
 import argparse
 import sys
 
-from slave import goma_utils
+from subordinate import goma_utils
 
 
 def main():

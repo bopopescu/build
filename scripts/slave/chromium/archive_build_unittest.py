@@ -16,7 +16,7 @@ BASE_DIR = os.path.join(
 sys.path.append(os.path.join(BASE_DIR, 'scripts'))
 sys.path.append(os.path.join(BASE_DIR, 'site_config'))
 
-from slave.chromium import archive_build
+from subordinate.chromium import archive_build
 from common import archive_utils_unittest
 from common import chromium_utils
 

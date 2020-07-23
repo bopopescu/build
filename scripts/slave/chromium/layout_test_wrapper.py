@@ -22,8 +22,8 @@ import re
 import sys
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 
 def layout_test(options, args):
@@ -36,7 +36,7 @@ def layout_test(options, args):
 
   # Disable the page heap in case it got left enabled by some previous process.
   try:
-    slave_utils.SetPageHeap(build_dir, dumprendertree_exe, False)
+    subordinate_utils.SetPageHeap(build_dir, dumprendertree_exe, False)
   except chromium_utils.PathNotFound:
     # If we don't have gflags.exe, report it but don't worry about it.
     print 'Warning: Couldn\'t disable page heap, if it was already enabled.'
@@ -45,7 +45,7 @@ def layout_test(options, args):
     'third_party', 'WebKit', 'Tools', 'Scripts')
   run_blink_tests = os.path.join(blink_scripts_dir, 'run-webkit-tests')
 
-  slave_name = slave_utils.SlaveBuildName(build_dir)
+  subordinate_name = subordinate_utils.SubordinateBuildName(build_dir)
 
   command = [run_blink_tests,
              '--no-show-results',
@@ -58,8 +58,8 @@ def layout_test(options, args):
 
   # TODO(dpranke): we can switch to always using --debug-rwt-logging
   # after all the bots have WebKit r124789 or later.
-  capture_obj = slave_utils.RunCommandCaptureFilter()
-  slave_utils.RunPythonCommandInBuildDir(build_dir, options.target,
+  capture_obj = subordinate_utils.RunCommandCaptureFilter()
+  subordinate_utils.RunPythonCommandInBuildDir(build_dir, options.target,
                                          [run_blink_tests, '--help'],
                                          filter_obj=capture_obj)
   if '--debug-rwt-logging' in ''.join(capture_obj.lines):
@@ -103,8 +103,8 @@ def layout_test(options, args):
     command.extend(['--builder-name', options.builder_name])
   if options.build_number:
     command.extend(['--build-number', options.build_number])
-  command.extend(['--master-name', slave_utils.GetActiveMaster() or ''])
-  command.extend(['--build-name', slave_name])
+  command.extend(['--main-name', subordinate_utils.GetActiveMain() or ''])
+  command.extend(['--build-name', subordinate_name])
   if options.step_name:
     command.extend(['--step-name', options.step_name])
   # On Windows, look for the target in an exact location.
@@ -141,17 +141,17 @@ def layout_test(options, args):
 
   # Nuke anything that appears to be stale chrome items in the temporary
   # directory from previous test runs (i.e.- from crashes or unittest leaks).
-  slave_utils.RemoveChromeTemporaryFiles()
+  subordinate_utils.RemoveChromeTemporaryFiles()
 
   try:
     if options.enable_pageheap:
-      slave_utils.SetPageHeap(build_dir, dumprendertree_exe, True)
+      subordinate_utils.SetPageHeap(build_dir, dumprendertree_exe, True)
     # Run the the tests
-    return slave_utils.RunPythonCommandInBuildDir(build_dir, options.target,
+    return subordinate_utils.RunPythonCommandInBuildDir(build_dir, options.target,
                                                   command)
   finally:
     if options.enable_pageheap:
-      slave_utils.SetPageHeap(build_dir, dumprendertree_exe, False)
+      subordinate_utils.SetPageHeap(build_dir, dumprendertree_exe, False)
 
     if options.json_test_results:
       results_dir = options.results_directory

@@ -16,15 +16,15 @@ from . import common
 class TriggeringService(object):
   """Schedules new builds on buildbucket."""
 
-  def __init__(self, active_master, buildbucket_service):
-    self.active_master = active_master
+  def __init__(self, active_main, buildbucket_service):
+    self.active_main = active_main
     self.buildbucket_service = buildbucket_service
 
   @classmethod
   @defer.inlineCallbacks
-  def create(cls, active_master):
-    buildbucket_service = yield client.create_buildbucket_service(active_master)
-    defer.returnValue(cls(active_master, buildbucket_service))
+  def create(cls, active_main):
+    buildbucket_service = yield client.create_buildbucket_service(active_main)
+    defer.returnValue(cls(active_main, buildbucket_service))
 
   def start(self):
     self.buildbucket_service.start()
@@ -43,7 +43,7 @@ class TriggeringService(object):
 
   def get_build_url(self, build_id):
     return 'https://%s/b/%s' % (
-        client.get_default_buildbucket_hostname(self.active_master), build_id)
+        client.get_default_buildbucket_hostname(self.active_main), build_id)
 
   @defer.inlineCallbacks
   def trigger(
@@ -95,19 +95,19 @@ class TriggeringService(object):
     defer.returnValue(result)
 
 
-_master_triggering_service_map = {}
+_main_triggering_service_map = {}
 
 
-def get_triggering_service(active_master):
-  """Returns a TriggeringService instance for active_master as Deferred."""
-  d = _master_triggering_service_map.get(active_master)
+def get_triggering_service(active_main):
+  """Returns a TriggeringService instance for active_main as Deferred."""
+  d = _main_triggering_service_map.get(active_main)
   if not d:
-    d = TriggeringService.create(active_master)
+    d = TriggeringService.create(active_main)
     def start(service):
       service.start()
       return service
     d.addCallback(start)
-    _master_triggering_service_map[active_master] = d
+    _main_triggering_service_map[active_main] = d
 
   result = defer.Deferred()
   def udpate_result(service):
@@ -122,7 +122,7 @@ def change_from_change_spec(change):
   """Converts a change in change_spec format to buildbucket format.
 
   For more info on change_spec format, see
-  master.chromium_step.AnnotationObserver.insertSourceStamp.
+  main.chromium_step.AnnotationObserver.insertSourceStamp.
 
   Buildbucket change format is described in README.md.
   """

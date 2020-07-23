@@ -25,7 +25,7 @@ INFRA_GO = 'go.skia.org/infra'
 INFRA_GIT_URL = 'https://skia.googlesource.com/buildbot'
 
 REF_HEAD = 'HEAD'
-REF_ORIGIN_MASTER = 'origin/master'
+REF_ORIGIN_MASTER = 'origin/main'
 
 
 def git(api, *cmd, **kwargs):
@@ -62,7 +62,7 @@ def git_checkout(api, url, dest, ref=None):
 
 
 def RunSteps(api):
-  go_dir = api.path['slave_build'].join('go')
+  go_dir = api.path['subordinate_build'].join('go')
   go_src = go_dir.join('src')
   api.file.makedirs('makedirs go/src', go_src)
   infra_dir = go_src.join(INFRA_GO)
@@ -72,7 +72,7 @@ def RunSteps(api):
       api,
       INFRA_GIT_URL,
       dest=infra_dir,
-      ref=api.properties.get('revision', 'origin/master'))
+      ref=api.properties.get('revision', 'origin/main'))
 
   # Fetch Go dependencies.
   env = {'GOPATH': go_dir,
@@ -86,7 +86,7 @@ def RunSteps(api):
       api,
       INFRA_GIT_URL,
       dest=infra_dir,
-      ref=api.properties.get('revision', 'origin/master'))
+      ref=api.properties.get('revision', 'origin/main'))
 
   # Set got_revision.
   test_data = lambda: api.raw_io.test_api.stream_output('abc123')
@@ -113,8 +113,8 @@ def RunSteps(api):
       env=env)
 
   # Run tests.
-  buildslave = api.properties['slavename']
-  m = re.search('^[a-zA-Z-]*(\d+)$', buildslave)
+  buildsubordinate = api.properties['subordinatename']
+  m = re.search('^[a-zA-Z-]*(\d+)$', buildsubordinate)
   karma_port = '9876'
   if m and len(m.groups()) > 0:
     karma_port = '15%s' % m.groups()[0]
@@ -125,13 +125,13 @@ def RunSteps(api):
 def GenTests(api):
   yield (
       api.test('Infra-PerCommit') +
-      api.path.exists(api.path['slave_build'].join('go', 'src', INFRA_GO,
+      api.path.exists(api.path['subordinate_build'].join('go', 'src', INFRA_GO,
                                                    '.git')) +
-      api.properties(slavename='skiabot-linux-infra-001')
+      api.properties(subordinatename='skiabot-linux-infra-001')
   )
   yield (
       api.test('Infra-PerCommit_initialcheckout') +
-      api.properties(slavename='skiabot-linux-infra-001')
+      api.properties(subordinatename='skiabot-linux-infra-001')
   )
   yield (
       api.test('Infra-PerCommit_try') +
@@ -139,5 +139,5 @@ def GenTests(api):
                      issue=1234,
                      patchset=1,
                      revision=REF_HEAD,
-                     slavename='skiabot-linux-infra-001')
+                     subordinatename='skiabot-linux-infra-001')
   )

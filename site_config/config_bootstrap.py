@@ -3,7 +3,7 @@
 # found in the LICENSE file.
 
 """
-Site configuration information that is sufficient to configure a slave,
+Site configuration information that is sufficient to configure a subordinate,
 without loading any buildbot or twisted code.
 """
 
@@ -16,23 +16,23 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_MASTERS = []
 try:
   import config_private # pylint: disable=F0401
-  BASE_MASTERS += [config_private.Master, config_private.PublicMaster]
+  BASE_MASTERS += [config_private.Main, config_private.PublicMain]
 except ImportError:
   import config_default as config_private # pylint: disable=W0403
-  BASE_MASTERS += [config_private.Master,]
+  BASE_MASTERS += [config_private.Main,]
 
 
-class Master(config_private.Master):
-  """Buildbot master configuration options."""
+class Main(config_private.Main):
+  """Buildbot main configuration options."""
 
-  trunk_url = (config_private.Master.server_url +
-               config_private.Master.repo_root + '/trunk')
+  trunk_url = (config_private.Main.server_url +
+               config_private.Main.repo_root + '/trunk')
 
-  webkit_trunk_url = (config_private.Master.webkit_root_url + '/trunk')
+  webkit_trunk_url = (config_private.Main.webkit_root_url + '/trunk')
 
-  trunk_url_src = config_private.Master.git_server_url + '/chromium/src.git'
+  trunk_url_src = config_private.Main.git_server_url + '/chromium/src.git'
 
-  dart_url = config_private.Master.googlecode_url % 'dart'
+  dart_url = config_private.Main.googlecode_url % 'dart'
   dart_bleeding = dart_url + '/branches/bleeding_edge'
   dart_trunk = dart_url + '/trunk'
 
@@ -65,9 +65,9 @@ class Master(config_private.Master):
 
   @staticmethod
   def GetBotPassword():
-    """Returns the slave password retrieved from a local file, or None.
+    """Returns the subordinate password retrieved from a local file, or None.
 
-    The slave password is loaded from a local file next to this module file, if
+    The subordinate password is loaded from a local file next to this module file, if
     it exists.  This is a function rather than a variable so it's not called
     when it's not needed.
 
@@ -75,27 +75,27 @@ class Master(config_private.Master):
     <metaclass, which is overkill for this usage.
     """
     # Note: could be overriden by config_private.
-    if not getattr(Master, 'bot_password', None):
+    if not getattr(Main, 'bot_password', None):
       # If the bot_password has been requested, the file is required to exist
       # if not overriden in config_private.
       bot_password_path = os.path.join(BASE_DIR, '.bot_password')
-      Master.bot_password = open(bot_password_path).read().strip('\n\r')
-    return Master.bot_password
+      Main.bot_password = open(bot_password_path).read().strip('\n\r')
+    return Main.bot_password
 
   @staticmethod
-  def _extract_masters(master):
-    return [v for v in master.__dict__.itervalues()
+  def _extract_mains(main):
+    return [v for v in main.__dict__.itervalues()
             if (inspect.isclass(v) and
-                issubclass(v, config_private.Master.Base) and
-                v != config_private.Master.Base)]
+                issubclass(v, config_private.Main.Base) and
+                v != config_private.Main.Base)]
 
   @classmethod
-  def get_base_masters(cls):
-    masters = []
-    for base_master in BASE_MASTERS:
-      masters += cls._extract_masters(base_master)
-    return masters
+  def get_base_mains(cls):
+    mains = []
+    for base_main in BASE_MASTERS:
+      mains += cls._extract_mains(base_main)
+    return mains
 
   @classmethod
-  def get_all_masters(cls):
-    return cls._extract_masters(cls)
+  def get_all_mains(cls):
+    return cls._extract_mains(cls)

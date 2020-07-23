@@ -68,7 +68,7 @@ def RunSteps(api):
              name='upoad tarball',
              cwd=api.path['checkout'])
 
-  # Trigger slaves
+  # Trigger subordinates
   trigger_spec = [{
     'builder_name': 'target-arm-vm-linux-release-%s' % channel
   }]
@@ -79,12 +79,12 @@ def GenTests(api):
   yield (
     api.test('cross-arm-vm-linux-release-recipe') +
     api.platform('linux', 64) +
-    api.properties.generic(mastername='client.dart',
+    api.properties.generic(mainname='client.dart',
                            buildername='cross-arm-vm-linux-release-recipe-be',
                            revision='abcd1234efef5656'))
   yield (
     api.test('clobber-coverage') +
     api.platform('linux', 64) +
-    api.properties.generic(mastername='client.dart',
+    api.properties.generic(mainname='client.dart',
                            buildername='test-coverage-stable',
                            revision='abcd1234efef5656'))

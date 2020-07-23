@@ -62,14 +62,14 @@ class AndroidFlavorUtils(default_flavor.DefaultFlavorUtils):
   def __init__(self, skia_api):
     super(AndroidFlavorUtils, self).__init__(skia_api)
     self.device = self._skia_api.builder_spec['device_cfg']
-    slave_info = android_devices.SLAVE_INFO.get(
-        self._skia_api.slave_name,
+    subordinate_info = android_devices.SLAVE_INFO.get(
+        self._skia_api.subordinate_name,
         android_devices.SLAVE_INFO['default'])
-    self.android_bin = self._skia_api.m.path['slave_build'].join(
+    self.android_bin = self._skia_api.m.path['subordinate_build'].join(
         'skia', 'platform_tools', 'android', 'bin')
-    self._android_sdk_root = slave_info.android_sdk_root
-    self.serial = slave_info.serial
-    self.serial_args = ['-s', slave_info.serial]
+    self._android_sdk_root = subordinate_info.android_sdk_root
+    self.serial = subordinate_info.serial
+    self.serial_args = ['-s', subordinate_info.serial]
     if self._skia_api.running_in_swarming:
       self._android_sdk_root = android_devices.SWARMING_SDK_ROOT
       self.serial = None
@@ -80,7 +80,7 @@ class AndroidFlavorUtils(default_flavor.DefaultFlavorUtils):
                                    'platform-tools', 'adb'),
         self.serial_args,
         self)
-    self._has_root = slave_info.has_root
+    self._has_root = subordinate_info.has_root
     self._default_env = {'ANDROID_SDK_ROOT': self._android_sdk_root,
                          'ANDROID_HOME': self._android_sdk_root,
                          'SKIA_ANDROID_VERBOSE_SETUP': 1}

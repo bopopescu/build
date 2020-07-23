@@ -78,8 +78,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """ID of this scheduler; set just before the scheduler starts, and set
         to None after stopService is complete."""
 
-        self.master = None
-        """BuildMaster instance; set just before the scheduler starts, and set
+        self.main = None
+        """BuildMain instance; set just before the scheduler starts, and set
         to None after stopService is complete."""
 
         # internal variables
@@ -89,10 +89,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## service handling
 
-    def _setUpScheduler(self, schedulerid, master, manager):
+    def _setUpScheduler(self, schedulerid, main, manager):
         # this is called by SchedulerManager *before* startService
         self.schedulerid = schedulerid
-        self.master = master
+        self.main = main
 
     def startService(self):
         service.MultiService.startService(self)
@@ -105,7 +105,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
     def _shutDownScheduler(self):
         # called by SchedulerManager *after* stopService is complete
         self.schedulerid = None
-        self.master = None
+        self.main = None
 
     ## state management
 
@@ -117,7 +117,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         given and no value exists.  Scheduler must be started.  Returns the
         value via a deferred.
         """
-        d = self.master.db.schedulers.getState(self.schedulerid)
+        d = self.main.db.schedulers.getState(self.schedulerid)
         def get_value(state_dict):
             if key in state_dict:
                 return state_dict[key]
@@ -137,10 +137,10 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         Note that this method is safe if called simultaneously in the same
         process, although it is not safe between processes.
         """
-        d = self.master.db.schedulers.getState(self.schedulerid)
+        d = self.main.db.schedulers.getState(self.schedulerid)
         def set_value_and_store(state_dict):
             state_dict[key] = value
-            return self.master.db.schedulers.setState(self.schedulerid, state_dict)
+            return self.main.db.schedulers.setState(self.schedulerid, state_dict)
         d.addCallback(set_value_and_store)
 
     ## status queries
@@ -174,7 +174,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         """
         assert fileIsImportant is None or callable(fileIsImportant)
 
-        # register for changes with master
+        # register for changes with main
         assert not self._change_subscription
         def changeCallback(change):
             # ignore changes delivered while we're not running
@@ -201,7 +201,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
                 self._change_consumption_lock.release()
             d.addBoth(release)
             d.addErrback(log.err, 'while processing change')
-        self._change_subscription = self.master.subscribeToChanges(changeCallback)
+        self._change_subscription = self.main.subscribeToChanges(changeCallback)
 
         return defer.succeed(None)
 
@@ -245,7 +245,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         the buildset.
 
         This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
+        constructor to the buildset, and will call the main's addBuildset
         method with the appropriate parameters.
 
         @param reason: reason for this buildset
@@ -261,7 +261,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         @type properties: L{buildbot.process.properties.Properties}
         @returns: (buildset ID, buildrequest IDs) via Deferred
         """
-        d = self.master.db.sourcestamps.addSourceStamp(
+        d = self.main.db.sourcestamps.addSourceStamp(
                 branch=branch, revision=None, repository=repository,
                 project=project)
         d.addCallback(self.addBuildsetForSourceStamp, reason=reason,
@@ -278,7 +278,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         will reference all of the indicated changes.
 
         This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
+        constructor to the buildset, and will call the main's addBuildset
         method with the appropriate parameters.
 
         @param reason: reason for this buildset
@@ -296,14 +296,14 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # attributes for this sourcestamp will be based on the most recent
         # change, so fetch the change with the highest id
-        d = self.master.db.changes.getChange(max(changeids))
+        d = self.main.db.changes.getChange(max(changeids))
         def chdict2change(chdict):
             if not chdict:
                 return None
-            return changes.Change.fromChdict(self.master, chdict)
+            return changes.Change.fromChdict(self.main, chdict)
         d.addCallback(chdict2change)
         def create_sourcestamp(change):
-            return self.master.db.sourcestamps.addSourceStamp(
+            return self.main.db.sourcestamps.addSourceStamp(
                     branch=change.branch,
                     revision=change.revision,
                     repository=change.repository,
@@ -322,8 +322,8 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         Add a buildset for the given, already-existing sourcestamp.
 
         This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's
-        L{BuildMaster.addBuildset} method with the appropriate parameters, and
+        constructor to the buildset, and will call the main's
+        L{BuildMain.addBuildset} method with the appropriate parameters, and
         return the same result.
 
         @param reason: reason for this buildset
@@ -351,6 +351,6 @@ class BaseScheduler(service.MultiService, ComparableMixin):
         properties_dict = properties.asDict()
 
         # add the buildset
-        return self.master.addBuildset(
+        return self.main.addBuildset(
                 ssid=ssid, reason=reason, properties=properties_dict,
                 builderNames=builderNames, external_idstring=external_idstring)

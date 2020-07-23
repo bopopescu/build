@@ -42,7 +42,7 @@ def get_simple_split(branchfile):
 
 class P4Source(base.PollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
-    them to the change master."""
+    them to the change main."""
 
     compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
                      "p4bin", "pollInterval"]
@@ -172,7 +172,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                         branch_files[branch] = [file]
 
             for branch in branch_files:
-                d = self.master.addChange(
+                d = self.main.addChange(
                        author=who,
                        files=branch_files[branch],
                        comments=comments,

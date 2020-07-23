@@ -168,7 +168,7 @@ Date:   Wed Apr 2 14:00:14 2014 -0400
                                        cwd='.').AndReturn(revinfo)
 
   def _get_current_revision(self):
-    self._parse_origin_master(returnval=self.NEW_REV)
+    self._parse_origin_main(returnval=self.NEW_REV)
 
   def _upload_issue(self, custom_message=None):
     _do_fetches()
@@ -182,11 +182,11 @@ Date:   Wed Apr 2 14:00:14 2014 -0400
     auto_roll.subprocess2.call(['git', 'rebase', '--abort'], cwd='.')
     auto_roll.subprocess2.call(['git', 'branch', '-D', 'test_project_roll'],
                                cwd='.')
-    auto_roll.subprocess2.check_call(['git', 'checkout', 'origin/master', '-f'],
+    auto_roll.subprocess2.check_call(['git', 'checkout', 'origin/main', '-f'],
                                      cwd='.')
     auto_roll.subprocess2.check_call(['git', 'checkout',
                                       '-b', 'test_project_roll',
-                                      '-t', 'origin/master', '-f'], cwd='.')
+                                      '-t', 'origin/main', '-f'], cwd='.')
 
     issue = self._make_issue(self.OLD_REV, self.NEW_REV,
                              created_datetime=self.CURRENT_DATETIME_STR)
@@ -211,7 +211,7 @@ Date:   Wed Apr 2 14:00:14 2014 -0400
                                       '-f', '--use-commit-queue',
                                       '-m', message],
                                      cwd='.')
-    auto_roll.subprocess2.check_call(['git', 'checkout', 'origin/master', '-f'],
+    auto_roll.subprocess2.check_call(['git', 'checkout', 'origin/main', '-f'],
                                      cwd='.')
     auto_roll.subprocess2.check_call(['git', 'branch', '-D',
                                       'test_project_roll'], cwd='.')
@@ -310,7 +310,7 @@ Please email (dpranke@chromium.org) if the Rollbot is causing trouble.
     self._get_last_revision()
     auto_roll.subprocess2.check_output(
         ['git', '--git-dir', './third_party/test_project/.git', 'rev-parse',
-         'origin/master']).AndReturn(self.OLDER_REV)
+         'origin/main']).AndReturn(self.OLDER_REV)
     self._compare_revs(self.OLD_REV, self.OLDER_REV)
 
     self.mox.ReplayAll()
@@ -390,10 +390,10 @@ Please email (dpranke@chromium.org) if the Rollbot is causing trouble.
       return
 
   # pylint: disable=R0201
-  def _parse_origin_master(self, returnval):
+  def _parse_origin_main(self, returnval):
     auto_roll.subprocess2.check_output(
         ['git', '--git-dir', './third_party/test_project/.git', 'rev-parse',
-         'origin/master']).AndReturn(returnval)
+         'origin/main']).AndReturn(returnval)
 
 
 if __name__ == '__main__':

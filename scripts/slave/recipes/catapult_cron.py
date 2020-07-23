@@ -31,7 +31,7 @@ def RunSteps(api):
 def GenTests(api):
   yield (
     api.test('basic') +
-    api.properties(mastername='master.client.catapult',
+    api.properties(mainname='main.client.catapult',
                    buildername='linux',
-                   slavename='linux_slave')
+                   subordinatename='linux_subordinate')
   )

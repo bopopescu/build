@@ -74,23 +74,23 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     implements(interfaces.ISourceStamp)
 
     @classmethod
-    def fromSsdict(cls, master, ssdict):
+    def fromSsdict(cls, main, ssdict):
         """
         Class method to create a L{SourceStamp} from a dictionary as returned
         by L{SourceStampConnectorComponent.getSourceStamp}.
 
-        @param master: build master instance
+        @param main: build main instance
         @param ssdict: source stamp dictionary
 
         @returns: L{SourceStamp} via Deferred
         """
         # try to fetch from the cache, falling back to _make_ss if not
         # found
-        cache = master.caches.get_cache("SourceStamps", cls._make_ss)
-        return cache.get(ssdict['ssid'], ssdict=ssdict, master=master)
+        cache = main.caches.get_cache("SourceStamps", cls._make_ss)
+        return cache.get(ssdict['ssid'], ssdict=ssdict, main=main)
 
     @classmethod
-    def _make_ss(cls, ssid, ssdict, master):
+    def _make_ss(cls, ssid, ssdict, main):
         sourcestamp = cls(_fromSsdict=True)
         sourcestamp.ssid = ssid
         sourcestamp.branch = ssdict['branch']
@@ -107,9 +107,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             # sort the changeids in order, oldest to newest
             sorted_changeids = sorted(ssdict['changeids'])
             def gci(id):
-                d = master.db.changes.getChange(id)
+                d = main.db.changes.getChange(id)
                 d.addCallback(lambda chdict :
-                    Change.fromChdict(master, chdict))
+                    Change.fromChdict(main, chdict))
                 return d
             d = defer.gatherResults([ gci(id)
                                 for id in sorted_changeids ])
@@ -250,7 +250,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     @util.deferredLocked('_getSourceStampId_lock')
-    def getSourceStampId(self, master):
+    def getSourceStampId(self, main):
         "temporary; do not use widely!"
         if self.ssid:
             return defer.succeed(self.ssid)
@@ -263,7 +263,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             patch_body = self.patch[1]
             if len(self.patch) > 2:
                 patch_subdir = self.patch[2]
-        d = master.db.sourcestamps.addSourceStamp(
+        d = main.db.sourcestamps.addSourceStamp(
                 branch=self.branch, revision=self.revision,
                 repository=self.repository, project=self.project,
                 patch_body=patch_body, patch_level=patch_level,

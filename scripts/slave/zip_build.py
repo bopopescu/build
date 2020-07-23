@@ -20,8 +20,8 @@ import sys
 import tempfile
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 class StagingError(Exception): pass
 
@@ -211,7 +211,7 @@ def MakeVersionedArchive(zip_file, file_suffix, options):
 
 
 def UploadToGoogleStorage(versioned_file, revision_file, build_url, gs_acl):
-  if slave_utils.GSUtilCopyFile(versioned_file, build_url, gs_acl=gs_acl):
+  if subordinate_utils.GSUtilCopyFile(versioned_file, build_url, gs_acl=gs_acl):
     raise chromium_utils.ExternalError(
         'gsutil returned non-zero status when uploading %s to %s!' %
         (versioned_file, build_url))
@@ -221,7 +221,7 @@ def UploadToGoogleStorage(versioned_file, revision_file, build_url, gs_acl):
   # locally since that filename is used in the GS bucket as well.
   last_change_file = os.path.join(os.path.dirname(revision_file), 'LAST_CHANGE')
   shutil.copy(revision_file, last_change_file)
-  if slave_utils.GSUtilCopyFile(last_change_file, build_url, gs_acl=gs_acl):
+  if subordinate_utils.GSUtilCopyFile(last_change_file, build_url, gs_acl=gs_acl):
     raise chromium_utils.ExternalError(
         'gsutil returned non-zero status when uploading %s to %s!' %
         (last_change_file, build_url))
@@ -284,18 +284,18 @@ def Archive(options):
       options.src_dir, options.cros_board)
   build_dir = os.path.abspath(os.path.join(build_dir, options.target))
 
-  staging_dir = slave_utils.GetStagingDir(options.src_dir)
+  staging_dir = subordinate_utils.GetStagingDir(options.src_dir)
   chromium_utils.MakeParentDirectoriesWorldReadable(staging_dir)
 
   if not options.build_revision:
-    (build_revision, webkit_revision) = slave_utils.GetBuildRevisions(
+    (build_revision, webkit_revision) = subordinate_utils.GetBuildRevisions(
         options.src_dir, options.webkit_dir, options.revision_dir)
   else:
     build_revision = options.build_revision
     webkit_revision = options.webkit_revision
 
-  unversioned_base_name, version_suffix = slave_utils.GetZipFileNames(
-      options.master_name,
+  unversioned_base_name, version_suffix = subordinate_utils.GetZipFileNames(
+      options.main_name,
       options.build_number,
       options.parent_build_number,
       build_revision, webkit_revision,
@@ -375,7 +375,7 @@ def Archive(options):
   else:
     staging_path = (
         os.path.splitdrive(versioned_file)[1].replace(os.path.sep, '/'))
-    zip_url = 'http://' + options.slave_name + staging_path
+    zip_url = 'http://' + options.subordinate_name + staging_path
 
   urls['zip_url'] = zip_url
 
@@ -395,8 +395,8 @@ def main(argv):
   option_parser.add_option('--include-files', default='',
                            help='Comma separated list of files that should '
                                 'always be included in the zip.')
-  option_parser.add_option('--master-name', help='Name of the buildbot master.')
-  option_parser.add_option('--slave-name', help='Name of the buildbot slave.')
+  option_parser.add_option('--main-name', help='Name of the buildbot main.')
+  option_parser.add_option('--subordinate-name', help='Name of the buildbot subordinate.')
   option_parser.add_option('--build-number', type=int,
                            help='Buildbot build number.')
   option_parser.add_option('--parent-build-number', type=int,
@@ -435,10 +435,10 @@ def main(argv):
 
   options, args = option_parser.parse_args(argv)
 
-  if not options.master_name:
-    options.master_name = options.build_properties.get('mastername', '')
-  if not options.slave_name:
-    options.slave_name = options.build_properties.get('slavename')
+  if not options.main_name:
+    options.main_name = options.build_properties.get('mainname', '')
+  if not options.subordinate_name:
+    options.subordinate_name = options.build_properties.get('subordinatename')
   if not options.build_number:
     options.build_number = options.build_properties.get('buildnumber')
   if not options.parent_build_number:

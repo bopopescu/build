@@ -9,7 +9,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from master import try_job_base
+from main import try_job_base
 
 
 class PaseOptionsTest(unittest.TestCase):

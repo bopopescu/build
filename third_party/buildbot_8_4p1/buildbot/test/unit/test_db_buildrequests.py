@@ -37,7 +37,7 @@ class TestBuildsetsConnectorComponent(
     COMPLETE_AT_EPOCH = 329920275
     BSID = 567
     BSID2 = 5670
-    MASTER_NAME = "testmaster"
+    MASTER_NAME = "testmain"
     MASTER_INCARN = "pid123-boot456789"
 
     def setUp(self):
@@ -49,8 +49,8 @@ class TestBuildsetsConnectorComponent(
         def finish_setup(_):
             self.db.buildrequests = \
                     buildrequests.BuildRequestsConnectorComponent(self.db)
-            self.db.master.master_name = self.MASTER_NAME
-            self.db.master.master_incarnation = self.MASTER_INCARN
+            self.db.main.main_name = self.MASTER_NAME
+            self.db.main.main_incarnation = self.MASTER_INCARN
         d.addCallback(finish_setup)
 
         # set up a sourcestamp and buildset for use below
@@ -101,12 +101,12 @@ class TestBuildsetsConnectorComponent(
     def do_test_getBuildRequests_claim_args(self, **kwargs):
         expected = kwargs.pop('expected')
         d = self.insertTestData([
-            # 50: claimed by this master
+            # 50: claimed by this main
             fakedb.BuildRequest(id=50, buildsetid=self.BSID,
                 claimed_at=self.CLAIMED_AT_EPOCH,
                 claimed_by_name=self.MASTER_NAME,
                 claimed_by_incarnation=self.MASTER_INCARN),
-            # 51: claimed by another master
+            # 51: claimed by another main
             fakedb.BuildRequest(id=51, buildsetid=self.BSID,
                 claimed_at=self.CLAIMED_AT_EPOCH,
                 claimed_by_name="other",
@@ -455,7 +455,7 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(check)
         return d
 
-    def test_claimBuildRequests_other_master_claim(self):
+    def test_claimBuildRequests_other_main_claim(self):
         return self.do_test_claimBuildRequests([
                 fakedb.BuildRequest(id=44, buildsetid=self.BSID,
                     claimed_at=1300103810, claimed_by_name="OTHER",
@@ -463,7 +463,7 @@ class TestBuildsetsConnectorComponent(
             ], 1300305712, [ 44 ],
             expfailure=buildrequests.AlreadyClaimedError)
 
-    def test_claimBuildRequests_other_master_claim_stress(self):
+    def test_claimBuildRequests_other_main_claim_stress(self):
         d = self.do_test_claimBuildRequests([
                 fakedb.BuildRequest(id=id, buildsetid=self.BSID,
                     claimed_at=0, claimed_by_name=None,
@@ -546,7 +546,7 @@ class TestBuildsetsConnectorComponent(
                 claimed_by_incarnation=self.MASTER_INCARN),
             fakedb.BuildRequest(id=45, buildsetid=self.BSID,
                 claimed_at=1300103811, claimed_by_name="some other",
-                claimed_by_incarnation="master"),
+                claimed_by_incarnation="main"),
             fakedb.BuildRequest(id=46, buildsetid=self.BSID,
                 claimed_at=1300103812, claimed_by_name=self.MASTER_NAME,
                 claimed_by_incarnation=self.MASTER_INCARN),
@@ -563,7 +563,7 @@ class TestBuildsetsConnectorComponent(
                 claimed_by_incarnation=self.MASTER_INCARN),
             fakedb.BuildRequest(id=45, buildsetid=self.BSID,
                 claimed_at=1300103811, claimed_by_name="some other",
-                claimed_by_incarnation="master"),
+                claimed_by_incarnation="main"),
             fakedb.BuildRequest(id=46, buildsetid=self.BSID,
                 claimed_at=1300103812, claimed_by_name=self.MASTER_NAME,
                 claimed_by_incarnation=self.MASTER_INCARN),
@@ -617,12 +617,12 @@ class TestBuildsetsConnectorComponent(
                 claimed_at=self.CLAIMED_AT_EPOCH,
                 claimed_by_name=self.MASTER_NAME,
                 claimed_by_incarnation=self.MASTER_INCARN),
-            # 46: incomplete build belonging to another master
+            # 46: incomplete build belonging to another main
             fakedb.BuildRequest(id=46, buildsetid=self.BSID,
                 complete=0,
                 complete_at=0,
                 claimed_at=self.CLAIMED_AT_EPOCH,
-                claimed_by_name="other-master",
+                claimed_by_name="other-main",
                 claimed_by_incarnation="other-incarn"),
             # 47: unclaimed
             fakedb.BuildRequest(id=47, buildsetid=self.BSID,
@@ -638,12 +638,12 @@ class TestBuildsetsConnectorComponent(
                 claimed_at=self.CLAIMED_AT_EPOCH-50,
                 claimed_by_name=self.MASTER_NAME,
                 claimed_by_incarnation="other"),
-            # 49: incomplete old build belonging to another master
+            # 49: incomplete old build belonging to another main
             fakedb.BuildRequest(id=49, buildsetid=self.BSID,
                 complete=0,
                 complete_at=0,
                 claimed_at=self.CLAIMED_AT_EPOCH - 1000,
-                claimed_by_name="other-master",
+                claimed_by_name="other-main",
                 claimed_by_incarnation="other-incarn"),
         ])
         d.addCallback(lambda _ : method())
@@ -680,10 +680,10 @@ class TestBuildsetsConnectorComponent(
         to_unclaim = [
             44, # completed -> not unclaimed
             45, # incomplete -> unclaimed
-            46, # from another master -> not unclaimed
+            46, # from another main -> not unclaimed
             47, # unclaimed -> still unclaimed
             48, # previous incarnation -> not unclaimed
-            49, # another master -> not unclaimed
+            49, # another main -> not unclaimed
             50  # no such buildrequest -> no error
         ]
         return self.do_test_unclaimMethod(

@@ -4,7 +4,7 @@
 
 """This PollingChangeSource polls a Google Storage URL for change revisions.
 
-Each change is submitted to change master which triggers build steps.
+Each change is submitted to change main which triggers build steps.
 
 Notice that the gsutil configuration (.boto file) must be setup in either the
 default location (home dir) or by using the environment variables
@@ -12,7 +12,7 @@ AWS_CREDENTIAL_FILE and BOTO_CONFIG.
 
 Example:
 To poll a change in Chromium build snapshots, use -
-from master import gsurl_poller
+from main import gsurl_poller
 changeurl = 'gs://chromium-browser-snapshots/Linux/LAST_CHANGE'
 poller = gsurl_poller.GSURLPoller(changeurl=changeurl, pollInterval=10800)
 c['change_source'] = [poller]
@@ -36,7 +36,7 @@ BOTO_FILE = os.path.join(BASE_DIR, 'site_config', '.boto')
 
 
 class GSURLPoller(base.PollingChangeSource):
-  """Poll a Google Storage URL for change number and submit to change master."""
+  """Poll a Google Storage URL for change number and submit to change main."""
 
   compare_attrs = ['changeurl', 'pollInterval']
 
@@ -92,7 +92,7 @@ class GSURLPoller(base.PollingChangeSource):
     log.msg('GSURLPoller finished polling %s, got %s while last is %s'
             % (self.changeurl, parsed_revision, self.last_change))
     if self.last_change != parsed_revision:
-      self.master.addChange(who='gsurl_poller',
+      self.main.addChange(who='gsurl_poller',
                             files=[],
                             revision=parsed_revision,
                             comments='comment',

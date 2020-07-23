@@ -81,12 +81,12 @@ BUILDERS = freeze({
 
 from recipe_engine.recipe_api import Property
 
-PROPERTIES = {'mastername': Property(), 'buildername': Property(),}
+PROPERTIES = {'mainname': Property(), 'buildername': Property(),}
 
 
-def RunSteps(api, mastername, buildername):
-  master_dict = BUILDERS.get(mastername, {})
-  bot_config = master_dict.get('builders', {}).get(buildername)
+def RunSteps(api, mainname, buildername):
+  main_dict = BUILDERS.get(mainname, {})
+  bot_config = main_dict.get('builders', {}).get(buildername)
   # The following lines configures android bisect bot to to checkout codes,
   # executes runhooks, provisions devices and runs legacy bisect script.
   recipe_config = bot_config.get('recipe_config', 'perf')
@@ -107,8 +107,8 @@ def RunSteps(api, mastername, buildername):
   update_step = api.bot_update.ensure_checkout()
   api.chromium_android.clean_local_files()
 
-  bot_db = api.chromium_tests.create_bot_db_from_master_dict(mastername,
-                                                             master_dict)
+  bot_db = api.chromium_tests.create_bot_db_from_main_dict(mainname,
+                                                             main_dict)
 
   api.auto_bisect.start_try_job(api, update_step=update_step, bot_db=bot_db)
 
@@ -143,11 +143,11 @@ View online at http://storage.googleapis.com/chromium-telemetry/html-results/\
 results-without_patch
 """
 
-  for _, master_dict in BUILDERS.items():
-    for buildername in master_dict.get('builders', {}):
+  for _, main_dict in BUILDERS.items():
+    for buildername in main_dict.get('builders', {}):
       config_json = config_json_main.copy()
       yield (api.test('basic_' + buildername) + api.properties.tryserver(
-          mastername='tryserver.chromium.perf',
+          mainname='tryserver.chromium.perf',
           buildername=buildername) + api.override_step_data(
               'git diff to analyze patch',
               api.raw_io.stream_output('tools/auto_bisect/bisect.cfg')))
@@ -155,7 +155,7 @@ results-without_patch
       yield (
           api.test('basic_perf_tryjob_' + buildername) +
           api.properties.tryserver(
-              mastername='tryserver.chromium.perf',
+              mainname='tryserver.chromium.perf',
               buildername=buildername) + api.override_step_data(
                   'git diff to analyze patch',
                   api.raw_io.stream_output('tools/run-perf-test.cfg')) +
@@ -168,7 +168,7 @@ results-without_patch
 
       yield (api.test('basic_perf_tryjob_with_metric_' + buildername) +
              api.properties.tryserver(
-                 mastername='tryserver.chromium.perf',
+                 mainname='tryserver.chromium.perf',
                  buildername=buildername) + api.override_step_data(
                      'git diff to analyze patch',
                      api.raw_io.stream_output('tools/run-perf-test.cfg')) +
@@ -180,7 +180,7 @@ results-without_patch
 
       yield (api.test('perf_tryjob_failed_test_' + buildername) +
              api.properties.tryserver(
-                 mastername='tryserver.chromium.perf',
+                 mainname='tryserver.chromium.perf',
                  buildername=buildername) + api.override_step_data(
                      'git diff to analyze patch',
                      api.raw_io.stream_output('tools/run-perf-test.cfg')) +
@@ -194,7 +194,7 @@ results-without_patch
       yield (
           api.test('basic_perf_tryjob_with_revisions_' + buildername) +
           api.properties.tryserver(
-              mastername='tryserver.chromium.perf',
+              mainname='tryserver.chromium.perf',
               buildername=buildername) + api.override_step_data(
                   'git diff to analyze patch',
                   api.raw_io.stream_output('tools/run-perf-test.cfg')) +
@@ -222,7 +222,7 @@ results-without_patch
       yield (
           api.test('perf_tryjob_config_error_' + buildername) +
           api.properties.tryserver(
-              mastername='tryserver.chromium.perf',
+              mainname='tryserver.chromium.perf',
               buildername=buildername) + api.properties(
                   requester='abcdxyz@chromium.org') + api.override_step_data(
                       'git diff to analyze patch',
@@ -231,7 +231,7 @@ results-without_patch
 
       yield (
           api.test('perf_cq_run_benchmark_' + buildername) +
-          api.properties.tryserver(mastername='tryserver.chromium.perf',
+          api.properties.tryserver(mainname='tryserver.chromium.perf',
                                    buildername=buildername) + api.properties(
                                        requester='commit-bot@chromium.org') +
           api.override_step_data(
@@ -239,7 +239,7 @@ results-without_patch
               api.raw_io.stream_output('tools/perf/benchmarks/blink_perf.py')))
 
       yield (api.test('perf_cq_no_changes_' + buildername) +
-             api.properties.tryserver(mastername='tryserver.chromium.perf',
+             api.properties.tryserver(mainname='tryserver.chromium.perf',
                                       buildername=buildername) + api.properties(
                                           requester='commit-bot@chromium.org') +
              api.override_step_data(
@@ -248,7 +248,7 @@ results-without_patch
 
       yield (
           api.test('perf_cq_no_benchmark_to_run_' + buildername) +
-          api.properties.tryserver(mastername='tryserver.chromium.perf',
+          api.properties.tryserver(mainname='tryserver.chromium.perf',
                                    buildername=buildername) + api.properties(
                                        requester='commit-bot@chromium.org') +
           api.override_step_data(
@@ -265,11 +265,11 @@ results-without_patch
           'truncate_percent': '25',
           'bug_id': '425582',
           'gs_bucket': 'chrome-perf',
-          'builder_host': 'master4.golo.chromium.org',
+          'builder_host': 'main4.golo.chromium.org',
           'builder_port': '8341',
       }
       yield (api.test('basic_recipe_' + buildername) + api.properties.tryserver(
-          mastername='tryserver.chromium.perf',
+          mainname='tryserver.chromium.perf',
           buildername=buildername) + api.step_data(
               'saving url to temp file',
               stdout=api.raw_io.output('/tmp/dummy1')) + api.step_data(

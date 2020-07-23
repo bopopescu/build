@@ -21,7 +21,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_change, \
+    path_to_build, path_to_subordinate, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
     map_branches, path_to_authfail, ActionResource
 
@@ -73,8 +73,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['name'] = b.getName()
         req.setHeader('Cache-Control', 'no-cache')
-        slaves = b.getSlaves()
-        connected_slaves = [s for s in slaves if s.isConnected()]
+        subordinates = b.getSubordinates()
+        connected_subordinates = [s for s in subordinates if s.isConnected()]
 
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
 
@@ -117,23 +117,23 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
 
-        sl = cxt['slaves'] = []
-        connected_slaves = 0
-        for slave in slaves:
+        sl = cxt['subordinates'] = []
+        connected_subordinates = 0
+        for subordinate in subordinates:
             s = {}
             sl.append(s)
-            s['link'] = path_to_slave(req, slave)
-            s['name'] = slave.getName()
-            c = s['connected'] = slave.isConnected()
+            s['link'] = path_to_subordinate(req, subordinate)
+            s['name'] = subordinate.getName()
+            c = s['connected'] = subordinate.isConnected()
             if c:
-                s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
-                connected_slaves += 1
-        cxt['connected_slaves'] = connected_slaves
+                s['admin'] = unicode(subordinate.getAdmin() or '', 'utf-8')
+                connected_subordinates += 1
+        cxt['connected_subordinates'] = connected_subordinates
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
-        cxt['mastername'] = (
-            req.site.buildbot_service.master.properties['mastername'])
+        cxt['mainname'] = (
+            req.site.buildbot_service.main.properties['mainname'])
         template = req.site.buildbot_service.templates.get_template("builder.html")
         yield template.render(**cxt)
 
@@ -160,11 +160,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             log.msg("..but didn't include a username to blame")
             return Redirect(path_to_authfail(req))
 
-        master = self.getBuildmaster(req)
+        main = self.getBuildmain(req)
 
         # keep weird stuff out of the branch revision, and property strings.
-        branch_validate = master.config.validation['branch']
-        revision_validate = master.config.validation['revision']
+        branch_validate = main.config.validation['branch']
+        revision_validate = main.config.validation['revision']
         if not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect(path_to_builder(req, self.builder_status))
@@ -179,12 +179,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not revision:
             revision = None
 
-        d = master.db.sourcestamps.addSourceStamp(branch=branch,
+        d = main.db.sourcestamps.addSourceStamp(branch=branch,
                 revision=revision, project=project, repository=repository)
         def make_buildset(ssid):
             r = ("The web-page 'force build' button was pressed by '%s': %s\n"
                  % (html.escape(name), html.escape(reason)))
-            return master.addBuildset(
+            return main.addBuildset(
                     builderNames=[self.builder_status.getName()],
                     ssid=ssid, reason=r, properties=properties.asDict())
         d.addCallback(make_buildset)
@@ -197,7 +197,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status):
             log.msg("..but not authorized")
             return Redirect(path_to_authfail(req))
-        c = interfaces.IControl(self.getBuildmaster(req))
+        c = interfaces.IControl(self.getBuildmain(req))
         bc = c.getBuilder(self.builder_status.getName())
         bc.ping()
         # send the user back to the builder page
@@ -237,7 +237,7 @@ class CancelChangeResource(ActionResource):
 
         authz = self.getAuthz(req)
         if request_id:
-            c = interfaces.IControl(self.getBuildmaster(req))
+            c = interfaces.IControl(self.getBuildmain(req))
             builder_control = c.getBuilder(self.builder_status.getName())
 
             wfd = defer.waitForDeferred(
@@ -271,7 +271,7 @@ class StopChangeMixin(object):
 
         authz = self.getAuthz(req)
         if request_change:
-            c = interfaces.IControl(self.getBuildmaster(req))
+            c = interfaces.IControl(self.getBuildmain(req))
             builder_control = c.getBuilder(builder_status.getName())
 
             wfd = defer.waitForDeferred(

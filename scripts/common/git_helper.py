@@ -27,7 +27,7 @@ cleaning up after itself.
   repo = GitHelper('https://path.to/my/repo.git')
 
   # get the contents of a readme, ten revisions ago.
-  file = repo.show('docs/README.md', 'master~10')
+  file = repo.show('docs/README.md', 'main~10')
 
   # get the generation numbers of any number of commits
   commits = ['deadbeef', 'feedbead']

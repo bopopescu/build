@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import masters_util
+import mains_util
 
 
 def flatten(lol):
@@ -16,7 +16,7 @@ def flatten(lol):
 
 
 def test_assertions(subject, degree):
-  subs = masters_util.sublists(subject, degree)
+  subs = mains_util.sublists(subject, degree)
   assert flatten(subs) == subject
   for x in subs:
     assert len(x) <= degree

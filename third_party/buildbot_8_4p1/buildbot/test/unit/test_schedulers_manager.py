@@ -24,7 +24,7 @@ class SchedulerManager(unittest.TestCase):
         self.next_schedulerid = 13
         self.schedulerids = {}
 
-        self.master = mock.Mock()
+        self.main = mock.Mock()
         def getSchedulerId(sched_name, class_name):
             k = (sched_name, class_name)
             try:
@@ -33,9 +33,9 @@ class SchedulerManager(unittest.TestCase):
                 rv = self.schedulerids[k] = self.next_schedulerid
                 self.next_schedulerid += 1
             return defer.succeed(rv)
-        self.master.db.schedulers.getSchedulerId = getSchedulerId
+        self.main.db.schedulers.getSchedulerId = getSchedulerId
 
-        self.sm = manager.SchedulerManager(self.master)
+        self.sm = manager.SchedulerManager(self.main)
         self.sm.startService()
 
     def tearDown(self):
@@ -50,7 +50,7 @@ class SchedulerManager(unittest.TestCase):
 
         def startService(self):
             assert not self.already_started
-            assert self.master is not None
+            assert self.main is not None
             assert self.schedulerid is not None
             self.already_started = True
             base.BaseScheduler.startService(self)
@@ -58,13 +58,13 @@ class SchedulerManager(unittest.TestCase):
         def stopService(self):
             d = base.BaseScheduler.stopService(self)
             def still_set(_):
-                assert self.master is not None
+                assert self.main is not None
                 assert self.schedulerid is not None
             d.addCallback(still_set)
             return d
 
         def assertNotSet(self):
-            assert not self.master
+            assert not self.main
             assert self.schedulerid is None
 
     def makeSched(self, name, attr='alpha'):

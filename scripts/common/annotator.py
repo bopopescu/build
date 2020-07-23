@@ -61,8 +61,8 @@ DEPRECATED_ALIASES = {
 
 # A couple of the annotations have the format:
 #  @@@THING arg@@@
-# for reasons no one knows. We only need this case until all masters have been
-# restarted to pick up the new master-side parsing code.
+# for reasons no one knows. We only need this case until all mains have been
+# restarted to pick up the new main-side parsing code.
 OLD_STYLE_ANNOTATIONS = set((
   'SEED_STEP',
   'STEP_CURSOR',

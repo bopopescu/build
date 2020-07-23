@@ -12,10 +12,10 @@ import unittest
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 # Keep the presubmit check happy by adding scripts/ to sys.path instead of
-# scripts/slave/.
+# scripts/subordinate/.
 sys.path.insert(0, os.path.dirname(os.path.dirname(BASE_PATH)))
 
-from slave import runisolatedtest
+from subordinate import runisolatedtest
 
 
 class TestAll(unittest.TestCase):
@@ -64,8 +64,8 @@ class TestAll(unittest.TestCase):
       'build/src/out/Release/base_unittests',
       '--gtest_print_time',
       '--gtest_output=xml:build/gtest-results/base_unittests.xml',
-      '--total-slave', '1',
-      '--slave-index', '2',
+      '--total-subordinate', '1',
+      '--subordinate-index', '2',
       '--gtest_filter=Junk',
     ]
     expected = [

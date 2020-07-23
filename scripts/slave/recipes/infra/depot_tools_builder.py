@@ -29,8 +29,8 @@ PROPERTIES = {
 
 def RunSteps(api, revision):
   # prepare the output dir and zip paths
-  api.path['checkout'] = api.path['slave_build'].join('depot_tools')
-  zip_out = api.path['slave_build'].join('depot_tools.zip')
+  api.path['checkout'] = api.path['subordinate_build'].join('depot_tools')
+  zip_out = api.path['subordinate_build'].join('depot_tools.zip')
 
   with api.step.nest('clean workspace'):
     api.file.rmtree('rm depot_tools', api.path['checkout'])
@@ -44,7 +44,7 @@ def RunSteps(api, revision):
     api.git('config', 'core.autocrlf', 'false', name='set autocrlf')
     api.git('config', 'core.filemode', 'false', name='set filemode')
     api.git('config', 'core.symlinks', 'false', name='set symlinks')
-    api.git('checkout', 'origin/master')
+    api.git('checkout', 'origin/main')
     api.git('reset', '--hard',  revision)
     api.git('reflog', 'expire', '--all')
     api.git('gc', '--aggressive', '--prune=all')

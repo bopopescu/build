@@ -10,8 +10,8 @@ class GomaApi(recipe_api.RecipeApi):
   def update_goma_canary(self):
     """Returns a step for updating goma canary."""
     # deprecated? switch to use ensure_goma with canary=True.
-    # for git checkout, should use @refs/heads/master to use head.
-    head = 'refs/heads/master'
+    # for git checkout, should use @refs/heads/main to use head.
+    head = 'refs/heads/main'
     # TODO(phajdan.jr): Remove path['build'] usage, http://crbug.com/437264 .
     self.m.gclient('update goma canary',
                    ['sync', '--verbose', '--force',

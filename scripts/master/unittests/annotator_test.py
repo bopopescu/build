@@ -15,7 +15,7 @@ from buildbot.status import builder
 import mock
 from twisted.internet import defer
 
-from master import chromium_step
+from main import chromium_step
 
 # Mocks confuse pylint.
 # pylint: disable=E1101

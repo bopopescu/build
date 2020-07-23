@@ -572,7 +572,7 @@ class V8CheckInitializers(V8GenericSwarmingTest):
 
 class V8Fuzzer(BaseTest):		
   def run(self, **kwargs):		
-    archive = self.api.path['slave_build'].join(		
+    archive = self.api.path['subordinate_build'].join(		
         'fuzzresults%s.tar.bz2' % self.v8.revision)		
     try:		
       self.api.step(		

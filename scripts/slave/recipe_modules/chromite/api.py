@@ -55,7 +55,7 @@ class ChromiteApi(recipe_api.RecipeApi):
     v = self.m.path.c.dynamic_paths.get('chromite')
     if v:
       return v
-    return self.m.path['slave_build'].join(self._chromite_subpath)
+    return self.m.path['subordinate_build'].join(self._chromite_subpath)
 
   def _set_chromite_path(self, path):
     self.m.path.c.dynamic_paths['chromite'] = path
@@ -237,15 +237,15 @@ class ChromiteApi(recipe_api.RecipeApi):
       properties (Properties): The build properties object.
       config_map (dict): The configuration map to use.
     """
-    master = properties['mastername']
+    main = properties['mainname']
     variant = properties.get('cbb_variant')
 
-    # Set the master's base configuration.
-    config_map = config_map.get(master, {})
-    master_config = config_map.get('master_config')
-    assert master_config, (
-        "No 'master_config' configuration for '%s'" % (master,))
-    self.set_config(master_config)
+    # Set the main's base configuration.
+    config_map = config_map.get(main, {})
+    main_config = config_map.get('main_config')
+    assert main_config, (
+        "No 'main_config' configuration for '%s'" % (main,))
+    self.set_config(main_config)
 
     # Apply any variant configurations.
     if variant:
@@ -286,7 +286,7 @@ class ChromiteApi(recipe_api.RecipeApi):
   def run(self, args=[]):
     """Runs the configured 'cbuildbot' build.
 
-    This workflow uses the registered configuration dictionary to make master-
+    This workflow uses the registered configuration dictionary to make main-
     and builder-specific changes to the standard workflow.
 
     The specific workflow paths that are taken are also influenced by several
@@ -351,7 +351,7 @@ class ChromiteApi(recipe_api.RecipeApi):
 
     # Set the build ID, if specified.
     if self.c.cbb.build_id:
-      cbb_args.extend(['--master-build-id', self.c.cbb.build_id])
+      cbb_args.extend(['--main-build-id', self.c.cbb.build_id])
 
     # Add custom args, if there are any.
     cbb_args.extend(args)
@@ -360,4 +360,4 @@ class ChromiteApi(recipe_api.RecipeApi):
     return self.cbuildbot(str('cbuildbot [%s]' % (self.c.cbb.config,)),
                           self.c.cbb.config,
                           args=cbb_args,
-                          cwd=self.m.path['slave_build'])
+                          cwd=self.m.path['subordinate_build'])

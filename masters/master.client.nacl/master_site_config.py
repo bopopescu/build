@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class NativeClient(Master.NaClBase):
+class NativeClient(Main.NaClBase):
   project_name = 'NativeClient'
-  master_port = 8030
-  slave_port = 8130
-  master_port_alt = 8230
+  main_port = 8030
+  subordinate_port = 8130
+  main_port_alt = 8230
   buildbot_url = 'http://build.chromium.org/p/client.nacl/'

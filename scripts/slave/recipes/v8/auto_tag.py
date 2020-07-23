@@ -326,7 +326,7 @@ def GenTests(api):
            wait_count=0, commit_found_count=0, dry_run=False):
     test_data = (
         api.test(name) +
-        api.properties.generic(mastername='client.v8.fyi',
+        api.properties.generic(mainname='client.v8.fyi',
                                buildername='Auto-tag',
                                branch='3.4') +
         stdout(
@@ -420,6 +420,6 @@ def GenTests(api):
   # The bot was triggered without specifying a branch.
   yield (
       api.test('missing_branch') +
-      api.properties.generic(mastername='client.v8.fyi',
+      api.properties.generic(mainname='client.v8.fyi',
                              buildername='Auto-tag')
   )

@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Tests for scripts/tools/mastermap.py"""
+"""Tests for scripts/tools/mainmap.py"""
 
 
 import json
@@ -11,7 +11,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611
 
-from tools import mastermap
+from tools import mainmap
 
 
 class FakeOutput(object):
@@ -32,23 +32,23 @@ class FakeOpts(object):
 class HelperTest(unittest.TestCase):
 
   def test_getint_succeeds(self):
-    res = mastermap.getint('10')
+    res = mainmap.getint('10')
     self.assertEquals(res, 10)
 
   def test_getint_fails(self):
-    res = mastermap.getint('foo')
+    res = mainmap.getint('foo')
     self.assertEquals(res, 0)
 
   def test_format_host_name_chromium(self):
-    res = mastermap.format_host_name('master1.golo.chromium.org')
-    self.assertEquals(res, 'master1.golo')
+    res = mainmap.format_host_name('main1.golo.chromium.org')
+    self.assertEquals(res, 'main1.golo')
 
   def test_format_host_name_corp(self):
-    res = mastermap.format_host_name('master.chrome.corp.google.com')
-    self.assertEquals(res, 'master.chrome')
+    res = mainmap.format_host_name('main.chrome.corp.google.com')
+    self.assertEquals(res, 'main.chrome')
 
   def test_format_host_name_neither(self):
-    res = mastermap.format_host_name('mymachine.tld')
+    res = mainmap.format_host_name('mymachine.tld')
     self.assertEquals(res, 'mymachine.tld')
 
 
@@ -56,70 +56,70 @@ class MapTest(unittest.TestCase):
 
   def test_column_names(self):
     output = FakeOutput()
-    mastermap.master_map([], output, FakeOpts())
+    mainmap.main_map([], output, FakeOpts())
     self.assertEqual([ s[0] for s in output.spec ],
-        ['Master', 'Config Dir', 'Host', 'Web port', 'Slave port',
+        ['Main', 'Config Dir', 'Host', 'Web port', 'Subordinate port',
           'Alt port', 'URL'])
 
   def test_exact_output(self):
     output = FakeOutput()
-    master = {
+    main = {
       'name': 'Chromium',
-      'dirname': 'master.chromium',
-      'host': 'master1.golo',
-      'fullhost': 'master1.golo.chromium.org',
+      'dirname': 'main.chromium',
+      'host': 'main1.golo',
+      'fullhost': 'main1.golo.chromium.org',
       'port': 30101,
-      'slave_port': 40101,
+      'subordinate_port': 40101,
       'alt_port': 50101,
       'buildbot_url': 'https://build.chromium.org/p/chromium',
     }
-    mastermap.master_map([master], output, FakeOpts())
-    self.assertEqual(output.data, [ master ])
+    mainmap.main_map([main], output, FakeOpts())
+    self.assertEqual(output.data, [ main ])
 
 
 class FindPortTest(unittest.TestCase):
 
   @staticmethod
-  def _gen_masters(num):
+  def _gen_mains(num):
     return [{
-        'name': 'Master%d' % i,
-        'dirname': 'master.master%d' % i,
-        'host': 'master%d.golo' % i,
-        'fullhost': 'master%d.golo.chromium.org' % i,
+        'name': 'Main%d' % i,
+        'dirname': 'main.main%d' % i,
+        'host': 'main%d.golo' % i,
+        'fullhost': 'main%d.golo.chromium.org' % i,
         'port': 20100 + i,
-        'slave_port': 30100 + i,
+        'subordinate_port': 30100 + i,
         'alt_port': 40100 + i,
     } for i in xrange(num)]
 
-  def test_master_host(self):
-    masters = self._gen_masters(2)
+  def test_main_host(self):
+    mains = self._gen_mains(2)
     output = FakeOutput()
-    mastermap.find_port('Master1', masters, output, FakeOpts())
-    self.assertEquals(output.data[0]['master_base_class'], 'Master1')
+    mainmap.find_port('Main1', mains, output, FakeOpts())
+    self.assertEquals(output.data[0]['main_base_class'], 'Main1')
 
   def test_skip_used_ports(self):
-    masters = self._gen_masters(5)
-    master_class_name = 'Master1'
+    mains = self._gen_mains(5)
+    main_class_name = 'Main1'
     output = FakeOutput()
-    mastermap.find_port(master_class_name, masters, output, FakeOpts())
+    mainmap.find_port(main_class_name, mains, output, FakeOpts())
     self.assertEquals(output.data, [ {
-        u'master_base_class': u'Master1',
-        u'master_port': u'20105',
-        u'master_port_alt': u'25105',
-        u'slave_port': u'30105',
+        u'main_base_class': u'Main1',
+        u'main_port': u'20105',
+        u'main_port_alt': u'25105',
+        u'subordinate_port': u'30105',
     } ])
 
   def test_skip_blacklisted_ports(self):
-    masters = [{'name': 'Master1', 'fullhost': 'master1.golo.chromium.org'}]
-    master_class_name = 'Master1'
+    mains = [{'name': 'Main1', 'fullhost': 'main1.golo.chromium.org'}]
+    main_class_name = 'Main1'
     output = FakeOutput()
-    _real_blacklist = mastermap.PORT_BLACKLIST
+    _real_blacklist = mainmap.PORT_BLACKLIST
     try:
-      mastermap.PORT_BLACKLIST = set(xrange(25000, 30000))  # All alt_ports
-      self.assertRaises(RuntimeError, mastermap.find_port,
-                        master_class_name, masters, output, FakeOpts())
+      mainmap.PORT_BLACKLIST = set(xrange(25000, 30000))  # All alt_ports
+      self.assertRaises(RuntimeError, mainmap.find_port,
+                        main_class_name, mains, output, FakeOpts())
     finally:
-      mastermap.PORT_BLACKLIST = _real_blacklist
+      mainmap.PORT_BLACKLIST = _real_blacklist
 
 
 class AuditTest(unittest.TestCase):

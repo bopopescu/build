@@ -23,11 +23,11 @@ from zope.interface import implements
 from twisted.internet import reactor, defer
 from twisted.python import log, failure, runtime
 
-from buildslave.interfaces import ISlaveCommand
-from buildslave import runprocess
-from buildslave.exceptions import AbandonChain
-from buildslave.commands import utils
-from buildslave import util
+from buildsubordinate.interfaces import ISubordinateCommand
+from buildsubordinate import runprocess
+from buildsubordinate.exceptions import AbandonChain
+from buildsubordinate.commands import utils
+from buildsubordinate import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -42,7 +42,7 @@ command_version = "2.13"
 #          Darcs accepts 'revision' (now all do but Git) (well, and P4Sync)
 #          Arch/Baz should accept 'build-config'
 #  >=1.51: (release 0.7.3)
-#  >= 2.1: SlaveShellCommand now accepts 'initial_stdin', 'keep_stdin_open',
+#  >= 2.1: SubordinateShellCommand now accepts 'initial_stdin', 'keep_stdin_open',
 #          and 'logfiles'. It now sends 'log' messages in addition to
 #          stdout/stdin/header/rc. It acquired writeStdin/closeStdin methods,
 #          but these are not remotely callable yet.
@@ -55,33 +55,33 @@ command_version = "2.13"
 #  >= 2.4: Git understands 'revision' and branches
 #  >= 2.5: workaround added for remote 'hg clone --rev REV' when hg<0.9.2
 #  >= 2.6: added uploadDirectory
-#  >= 2.7: added usePTY option to SlaveShellCommand
+#  >= 2.7: added usePTY option to SubordinateShellCommand
 #  >= 2.8: added username and password args to SVN class
 #  >= 2.9: add depth arg to SVN class
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
 #  >= 2.11: Arch, Bazaar, and Monotone removed
-#  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
-#  >= 2.13: SlaveFileUploadCommand supports option 'keepstamp'
+#  >= 2.12: SubordinateShellCommand no longer accepts 'keep_stdin_open'
+#  >= 2.13: SubordinateFileUploadCommand supports option 'keepstamp'
 
 class Command:
-    implements(ISlaveCommand)
+    implements(ISubordinateCommand)
 
-    """This class defines one command that can be invoked by the build master.
-    The command is executed on the slave side, and always sends back a
+    """This class defines one command that can be invoked by the build main.
+    The command is executed on the subordinate side, and always sends back a
     completion message when it finishes. It may also send intermediate status
     as it runs (by calling builder.sendStatus). Some commands can be
-    interrupted (either by the build master or a local timeout), in which
+    interrupted (either by the build main or a local timeout), in which
     case the step is expected to complete normally with a status message that
     indicates an error occurred.
 
-    These commands are used by BuildSteps on the master side. Each kind of
-    BuildStep uses a single Command. The slave must implement all the
+    These commands are used by BuildSteps on the main side. Each kind of
+    BuildStep uses a single Command. The subordinate must implement all the
     Commands required by the set of BuildSteps used for any given build:
     this is checked at startup time.
 
     All Commands are constructed with the same signature:
      c = CommandClass(builder, stepid, args)
-    where 'builder' is the parent SlaveBuilder object, and 'args' is a
+    where 'builder' is the parent SubordinateBuilder object, and 'args' is a
     dict that is interpreted per-command.
 
     The setup(args) method is available for setup, and is run from __init__.
@@ -92,8 +92,8 @@ class Command:
     interrupted, it should fire the Deferred anyway.
 
     While the command runs. it may send status messages back to the
-    buildmaster by calling self.sendStatus(statusdict). The statusdict is
-    interpreted by the master-side BuildStep however it likes.
+    buildmain by calling self.sendStatus(statusdict). The statusdict is
+    interpreted by the main-side BuildStep however it likes.
 
     A separate completion message is sent when the deferred fires, which
     indicates that the Command has finished, but does not carry any status
@@ -111,7 +111,7 @@ class Command:
     sending multiple error status messages.
 
     If .running is False, the bot is shutting down (or has otherwise lost the
-    connection to the master), and should not send any status messages. This
+    connection to the main), and should not send any status messages. This
     is checked in Command.sendStatus .
 
     """
@@ -158,7 +158,7 @@ class Command:
         raise NotImplementedError, "You must implement this in a subclass"
 
     def sendStatus(self, status):
-        """Send a status update to the master."""
+        """Send a status update to the main."""
         if self.debug:
             log.msg("sendStatus", status)
         if not self.running:
@@ -176,7 +176,7 @@ class Command:
         this matters."""
         pass
 
-    # utility methods, mostly used by SlaveShellCommand and the like
+    # utility methods, mostly used by SubordinateShellCommand and the like
 
     def _abandonOnFailure(self, rc):
         if type(rc) is not int:
@@ -200,7 +200,7 @@ class Command:
 class SourceBaseCommand(Command):
     """Abstract base class for Version Control System operations (checkout
     and update). This class extracts the following arguments from the
-    dictionary received from the master:
+    dictionary received from the main:
 
         - ['workdir']:  (required) the subdirectory where the buildable sources
                         should be placed
@@ -231,7 +231,7 @@ class SourceBaseCommand(Command):
         - ['retry']:    If not None, this is a tuple of (delay, repeats)
                         which means that any failed VC updates should be
                         reattempted, up to REPEATS times, after a delay of
-                        DELAY seconds. This is intended to deal with slaves
+                        DELAY seconds. This is intended to deal with subordinates
                         that experience transient network failures.
     """
 
@@ -239,7 +239,7 @@ class SourceBaseCommand(Command):
 
     def setup(self, args):
         # if we need to parse the output, use this environment. Otherwise
-        # command output will be in whatever the buildslave's native language
+        # command output will be in whatever the buildsubordinate's native language
         # has been set to.
         self.env = os.environ.copy()
         self.env['LC_MESSAGES'] = "C"
@@ -296,7 +296,7 @@ class SourceBaseCommand(Command):
         self.maybeClobber(d)
         if not (self.sourcedirIsUpdateable() and self.sourcedataMatches()):
             # the directory cannot be updated, so we have to clobber it.
-            # Perhaps the master just changed modes from 'export' to
+            # Perhaps the main just changed modes from 'export' to
             # 'update'.
             d.addCallback(self.doClobber, self.srcdir)
 
@@ -504,7 +504,7 @@ class SourceBaseCommand(Command):
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
-        # master, but not the rc=0 when it finishes. That job is left to
+        # main, but not the rc=0 when it finishes. That job is left to
         # _sendRC
         d = c.start()
         # The rm -rf may fail if there is a left-over subdir with chmod 000

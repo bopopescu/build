@@ -42,13 +42,13 @@ class Gatekeeper(recipe_api.RecipeApi):
       if tree_args.get('status-user'):
         args.extend(['--status-user', tree_args['status-user']])
 
-      if tree_args.get('masters'):
-        args.extend(tree_args['masters'])
+      if tree_args.get('mains'):
+        args.extend(tree_args['mains'])
 
       try:
         self.m.python(
           'gatekeeper: %s' % str(tree_name),
-          self.package_repo_resource('scripts', 'slave', 'gatekeeper_ng.py'),
+          self.package_repo_resource('scripts', 'subordinate', 'gatekeeper_ng.py'),
           args,
         )
       except self.m.step.StepFailure:

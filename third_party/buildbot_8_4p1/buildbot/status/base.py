@@ -77,10 +77,10 @@ class StatusReceiver:
     def builderRemoved(self, builderName):
         pass
 
-    def slaveConnected(self, slaveName):
+    def subordinateConnected(self, subordinateName):
         pass
 
-    def slaveDisconnected(self, slaveName):
+    def subordinateDisconnected(self, subordinateName):
         pass
 
 class StatusReceiverMultiService(StatusReceiver, service.MultiService,

@@ -35,7 +35,7 @@ from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusRes
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
-from buildbot.status.web.slaves import BuildSlavesResource
+from buildbot.status.web.subordinates import BuildSubordinatesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
@@ -51,7 +51,7 @@ class WebStatus(service.MultiService):
     # TODO: IStatusReceiver is really about things which subscribe to hear
     # about buildbot events. We need a different interface (perhaps a parent
     # of IStatusReceiver) for status targets that don't subscribe, like the
-    # WebStatus class. buildbot.master.BuildMaster.loadConfig:737 asserts
+    # WebStatus class. buildbot.main.BuildMain.loadConfig:737 asserts
     # that everything in c['status'] provides IStatusReceiver, but really it
     # should check that they provide IStatusTarget instead.
 
@@ -76,7 +76,7 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME: a page summarizing the builder. This includes
                             references to the Schedulers that feed it,
                             any builds currently in the queue, which
-                            buildslaves are designated or attached, and a
+                            buildsubordinates are designated or attached, and a
                             summary of the build process it uses.
      /builders/BUILDERNAME/builds/NUM: a page describing a single Build
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME: describes a single step
@@ -85,11 +85,11 @@ class WebStatus(service.MultiService):
      /buildstatus?builder=...&number=...: an embedded iframe for the console
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
-     /buildslaves : list all BuildSlaves
-     /buildslaves/SLAVENAME : describe a single BuildSlave
+     /buildsubordinates : list all BuildSubordinates
+     /buildsubordinates/SLAVENAME : describe a single BuildSubordinate
      /one_line_per_build : summarize the last few builds, one line each
      /one_line_per_build/BUILDERNAME : same, but only for a single builder
-     /about : describe this buildmaster (Buildbot and support library versions)
+     /about : describe this buildmain (Buildbot and support library versions)
      /change_hook[/DIALECT] : accepts changes from external sources, optionally
                               choosing the dialect that will be permitted
                               (i.e. github format, etc..)
@@ -105,7 +105,7 @@ class WebStatus(service.MultiService):
     This webserver uses the jinja2 template system to generate the web pages
     (see http://jinja.pocoo.org/2/) and by default loads pages from the
     buildbot.status.web.templates package. Any file here can be overridden by placing
-    a corresponding file in the master's 'templates' directory.
+    a corresponding file in the main's 'templates' directory.
 
     The main customization points are layout.html which loads style sheet
     (css) and provides header and footer content, and root.html, which
@@ -241,12 +241,12 @@ class WebStatus(service.MultiService):
         @type logRotateLength: None or int
         @param logRotateLength: file size at which the http.log is rotated/reset.
             If not set, the value set in the buildbot.tac will be used, 
-             falling back to the BuildMaster's default value (1 Mb).
+             falling back to the BuildMain's default value (1 Mb).
         
         @type maxRotatedFiles: None or int
         @param maxRotatedFiles: number of old http.log files to keep during log rotation.
             If not set, the value set in the buildbot.tac will be used, 
-             falling back to the BuildMaster's default value (10 files).       
+             falling back to the BuildMain's default value (10 files).       
         
         @type  change_hook_dialects: None or dict
         @param change_hook_dialects: If empty, disables change_hook support, otherwise      
@@ -349,7 +349,7 @@ class WebStatus(service.MultiService):
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
-        self.putChild("buildslaves", BuildSlavesResource())
+        self.putChild("buildsubordinates", BuildSubordinatesResource())
         self.putChild("buildstatus", BuildStatusStatusResource())
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
@@ -370,11 +370,11 @@ class WebStatus(service.MultiService):
     def setServiceParent(self, parent):
         service.MultiService.setServiceParent(self, parent)
 
-        # this class keeps a *separate* link to the buildmaster, rather than
+        # this class keeps a *separate* link to the buildmain, rather than
         # just using self.parent, so that when we are "disowned" (and thus
         # parent=None), any remaining HTTP clients of this WebStatus will still
         # be able to get reasonable results.
-        self.master = parent
+        self.main = parent
         
         def either(a,b): # a if a else b for py2.4
             if a:
@@ -382,8 +382,8 @@ class WebStatus(service.MultiService):
             else:
                 return b
         
-        rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
-        maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
+        rotateLength = either(self.logRotateLength, self.main.log_rotation.rotateLength)
+        maxRotatedFiles = either(self.maxRotatedFiles, self.main.log_rotation.maxRotatedFiles)
 
         if not self.site:
             
@@ -406,7 +406,7 @@ class WebStatus(service.MultiService):
             # this will be replaced once we've been attached to a parent (and
             # thus have a basedir and can reference BASEDIR)
             root = static.Data("placeholder", "text/plain")
-            httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
+            httplog = os.path.abspath(os.path.join(self.main.basedir, "http.log"))
             self.site = RotateLogSite(root, logPath=httplog)
 
         # the following items are accessed by HtmlResource when it renders
@@ -426,13 +426,13 @@ class WebStatus(service.MultiService):
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
         # at __init__ time because we need to reference the parent's basedir.
-        htmldir = os.path.abspath(os.path.join(self.master.basedir, self.public_html))
+        htmldir = os.path.abspath(os.path.join(self.main.basedir, self.public_html))
         if os.path.isdir(htmldir):
             log.msg("WebStatus using (%s)" % htmldir)
         else:
             log.msg("WebStatus: warning: %s is missing. Do you need to run"
-                    " 'buildbot upgrade-master' on this buildmaster?" % htmldir)
-            # all static pages will get a 404 until upgrade-master is used to
+                    " 'buildbot upgrade-main' on this buildmain?" % htmldir)
+            # all static pages will get a 404 until upgrade-main is used to
             # populate this directory. Create the directory, though, since
             # otherwise we get internal server errors instead of 404s.
             os.mkdir(htmldir)
@@ -474,10 +474,10 @@ class WebStatus(service.MultiService):
         return service.MultiService.stopService(self)
 
     def getStatus(self):
-        return self.master.getStatus()
+        return self.main.getStatus()
 
     def getChangeSvc(self):
-        return self.master.change_svc
+        return self.main.change_svc
 
     def getPortnum(self):
         # this is for the benefit of unit tests
@@ -488,7 +488,7 @@ class WebStatus(service.MultiService):
     #
     # instead of passing control objects all over the place in the web
     # code, at the few places where a control instance is required we
-    # find the requisite object manually, starting at the buildmaster.
+    # find the requisite object manually, starting at the buildmain.
     # This is in preparation for removal of the IControl hierarchy
     # entirely.
 

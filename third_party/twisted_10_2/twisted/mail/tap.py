@@ -87,11 +87,11 @@ class Options(usage.Options):
             raise usage.UsageError("Specify a domain before specifying users")
     opt_u = opt_user
 
-    def opt_bounce_to_postmaster(self):
-        """undelivered mails are sent to the postmaster
+    def opt_bounce_to_postmain(self):
+        """undelivered mails are sent to the postmain
         """
-        self.last_domain.postmaster = 1
-    opt_b = opt_bounce_to_postmaster
+        self.last_domain.postmain = 1
+    opt_b = opt_bounce_to_postmain
 
     def opt_aliases(self, filename):
         """Specify an aliases(5) file to use for this domain"""

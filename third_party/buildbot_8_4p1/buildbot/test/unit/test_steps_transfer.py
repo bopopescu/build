@@ -33,13 +33,13 @@ class TestFileUpload(unittest.TestCase):
         os.unlink(self.destfile)
 
     def testBasic(self):
-        s = FileUpload(slavesrc=__file__, masterdest=self.destfile)
+        s = FileUpload(subordinatesrc=__file__, maindest=self.destfile)
         s.build = Mock()
         s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getSubordinateCommandVersion.return_value = 1
 
         s.step_status = Mock()
-        s.buildslave = Mock()
+        s.buildsubordinate = Mock()
         s.remote = Mock()
 
         s.start()
@@ -49,7 +49,7 @@ class TestFileUpload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'uploadFile':
-                self.assertEquals(kwargs['slavesrc'], __file__)
+                self.assertEquals(kwargs['subordinatesrc'], __file__)
                 writer = kwargs['writer']
                 writer.remote_write(open(__file__, "rb").read())
                 self.assert_(not os.path.exists(self.destfile))
@@ -62,13 +62,13 @@ class TestFileUpload(unittest.TestCase):
                 open(__file__, "rb").read())
 
     def testTimestamp(self):
-        s = FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True)
+        s = FileUpload(subordinatesrc=__file__, maindest=self.destfile, keepstamp=True)
         s.build = Mock()
         s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = "2.13"
+        s.build.getSubordinateCommandVersion.return_value = "2.13"
 
         s.step_status = Mock()
-        s.buildslave = Mock()
+        s.buildsubordinate = Mock()
         s.remote = Mock()
         s.start()
         timestamp = ( os.path.getatime(__file__),
@@ -79,7 +79,7 @@ class TestFileUpload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'uploadFile':
-                self.assertEquals(kwargs['slavesrc'], __file__)
+                self.assertEquals(kwargs['subordinatesrc'], __file__)
                 writer = kwargs['writer']
                 writer.remote_write(open(__file__, "rb").read())
                 self.assert_(not os.path.exists(self.destfile))
@@ -99,10 +99,10 @@ class TestStringDownload(unittest.TestCase):
         s = StringDownload("Hello World", "hello.txt")
         s.build = Mock()
         s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getSubordinateCommandVersion.return_value = 1
 
         s.step_status = Mock()
-        s.buildslave = Mock()
+        s.buildsubordinate = Mock()
         s.remote = Mock()
 
         s.start()
@@ -112,7 +112,7 @@ class TestStringDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'hello.txt')
+                self.assertEquals(kwargs['subordinatedest'], 'hello.txt')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
                 self.assertEquals(data, "Hello World")
@@ -126,10 +126,10 @@ class TestJSONStringDownload(unittest.TestCase):
         s = JSONStringDownload(msg, "hello.json")
         s.build = Mock()
         s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getSubordinateCommandVersion.return_value = 1
 
         s.step_status = Mock()
-        s.buildslave = Mock()
+        s.buildsubordinate = Mock()
         s.remote = Mock()
 
         s.start()
@@ -139,7 +139,7 @@ class TestJSONStringDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'hello.json')
+                self.assertEquals(kwargs['subordinatedest'], 'hello.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
                 self.assertEquals(data, json.dumps(msg))
@@ -154,13 +154,13 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         props = Properties()
         props.setProperty('key1', 'value1', 'test')
         s.build.getProperties.return_value = props
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getSubordinateCommandVersion.return_value = 1
         ss = Mock()
         ss.asDict.return_value = dict(revision="12345")
         s.build.getSourceStamp.return_value = ss
 
         s.step_status = Mock()
-        s.buildslave = Mock()
+        s.buildsubordinate = Mock()
         s.remote = Mock()
 
         s.start()
@@ -170,7 +170,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'props.json')
+                self.assertEquals(kwargs['subordinatedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
                 self.assertEquals(data, json.dumps(dict(sourcestamp=ss.asDict(), properties={'key1': 'value1'})))

@@ -9,8 +9,8 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from slave.chromium_commands import GClient
-from slave.chromium_commands import untangle
+from subordinate.chromium_commands import GClient
+from subordinate.chromium_commands import untangle
 
 
 class TestableGClient(GClient):

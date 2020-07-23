@@ -5,7 +5,7 @@
 """Inherits buildbot.process.base.Build to enforce revision = None on source
 stamps."""
 
-from master.factory import build
+from main.factory import build
 
 
 class Build(build.Build):

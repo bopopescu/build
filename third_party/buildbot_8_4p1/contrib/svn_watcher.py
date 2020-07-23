@@ -2,14 +2,14 @@
 
 # This is a program which will poll a (remote) SVN repository, looking for
 # new revisions. It then uses the 'buildbot sendchange' command to deliver
-# information about the Change to a (remote) buildmaster. It can be run from
+# information about the Change to a (remote) buildmain. It can be run from
 # a cron job on a periodic basis, or can be told (with the 'watch' option) to
 # automatically repeat its check every 10 minutes.  
 
 # This script does not store any state information, so to avoid spurious
 # changes you must use the 'watch' option and let it run forever.
 
-# You will need to provide it with the location of the buildmaster's
+# You will need to provide it with the location of the buildmain's
 # PBChangeSource port (in the form hostname:portnum), and the svnurl of the
 # repository to watch.
 
@@ -38,11 +38,11 @@ def getoutput(cmd):
     return p.stdout.read()
 
 
-def sendchange_cmd(master, revisionData):
+def sendchange_cmd(main, revisionData):
     cmd = [
         "buildbot", 
         "sendchange",
-        "--master=%s" % master,
+        "--main=%s" % main,
         "--revision=%s" % revisionData['revision'],
         "--username=%s" % revisionData['author'],
         "--comments=%s" % revisionData['comments'],
@@ -107,7 +107,7 @@ def parseChangeXML(raw_xml):
     return data
 
 
-def checkChanges(repo, master, oldRevision=-1):
+def checkChanges(repo, main, oldRevision=-1):
     cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
            "--limit=1", repo]
     
@@ -132,7 +132,7 @@ def checkChanges(repo, master, oldRevision=-1):
 
     if  revisionData['revision'] != oldRevision:
         
-        cmd = sendchange_cmd(master, revisionData)
+        cmd = sendchange_cmd(main, revisionData)
 
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
@@ -150,7 +150,7 @@ def checkChanges(repo, master, oldRevision=-1):
     return revisionData['revision']
 
 def build_parser():
-    usagestr = "%prog [options] <repo url> <buildbot master:port>"
+    usagestr = "%prog [options] <repo url> <buildbot main:port>"
     parser = OptionParser(usage=usagestr)
     
     parser.add_option(
@@ -203,15 +203,15 @@ if __name__ == '__main__':
 
     # grab what we need
     repo_url = args[0]
-    bbmaster = args[1]
+    bbmain = args[1]
 
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
         oldRevision = -1
-        print "Watching for changes in repo %s for master %s." % (repo_url, bbmaster)
+        print "Watching for changes in repo %s for main %s." % (repo_url, bbmain)
         while 1:
             try:
-                oldRevision = checkChanges(repo_url, bbmaster, oldRevision)
+                oldRevision = checkChanges(repo_url, bbmain, oldRevision)
             except ExpatError:
                 # had an empty changeset.  Trapping the exception and moving on.
                 pass
@@ -227,4 +227,4 @@ if __name__ == '__main__':
                 sys.exit(0)
 
     # default action if watch isn't specified 
-    checkChanges(repo_url, bbmaster)
+    checkChanges(repo_url, bbmain)

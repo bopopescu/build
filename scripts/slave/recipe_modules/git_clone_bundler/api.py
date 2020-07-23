@@ -19,7 +19,7 @@ class GitCloneBundlerApi(recipe_api.RecipeApi):
 
   @property
   def base_path(self):
-    return self.m.path['slave_build'].join('git_clone_bundler')
+    return self.m.path['subordinate_build'].join('git_clone_bundler')
 
   @property
   def bundle_dir(self):

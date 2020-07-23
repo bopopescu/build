@@ -345,9 +345,9 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
                 self.SCHEDULERID)
 
-        # Try will return a remote version of master.status, so give it
+        # Try will return a remote version of main.status, so give it
         # something to return
-        sched.master.status = mock.Mock()
+        sched.main.status = mock.Mock()
 
         return sched
 
@@ -439,13 +439,13 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
         # the registration is correct and to get a copy of the factory
         registration = mock.Mock()
         registration.unregister = lambda : defer.succeed(None)
-        sched.master.pbmanager = mock.Mock()
+        sched.main.pbmanager = mock.Mock()
         def register(portstr, user, passwd, factory):
             self.assertEqual([portstr, user, passwd],
                              ['tcp:9999', 'fred', 'derf'])
             self.got_factory = factory
             return registration
-        sched.master.pbmanager.register = register
+        sched.main.pbmanager.register = register
 
         # start it
         sched.startService()

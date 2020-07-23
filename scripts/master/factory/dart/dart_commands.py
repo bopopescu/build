@@ -11,8 +11,8 @@ Contains the Dart specific commands. Based on commands.py
 from buildbot.steps import shell
 from buildbot.process.properties import WithProperties
 
-from master import chromium_step
-from master.factory import commands
+from main import chromium_step
+from main.factory import commands
 
 class DartCommands(commands.FactoryCommands):
   """Encapsulates methods to add dart commands to a buildbot factory."""
@@ -38,16 +38,16 @@ class DartCommands(commands.FactoryCommands):
     self._script_dir = self.PathJoin('..', self._script_dir)
     self._tools_dir = self.PathJoin('tools')
 
-    # Where the chromium slave scripts are.
+    # Where the chromium subordinate scripts are.
     self._chromium_script_dir = self.PathJoin(self._script_dir, 'chromium')
     self._private_script_dir = self.PathJoin(self._script_dir, '..', 'private')
 
-    self._slave_dir = self.PathJoin(self._script_dir,
+    self._subordinate_dir = self.PathJoin(self._script_dir,
                                             '..', '..', '..',
                                             'build', 'scripts',
-                                            'slave', 'dart')
+                                            'subordinate', 'dart')
 
-    self._dart_util = self.PathJoin(self._slave_dir, 'dart_util.py')
+    self._dart_util = self.PathJoin(self._subordinate_dir, 'dart_util.py')
 
     self._dart_build_dir = self.PathJoin('build', 'sdk')
     if build_dir:

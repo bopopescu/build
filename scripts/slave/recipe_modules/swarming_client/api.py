@@ -38,7 +38,7 @@ class SwarmingClientApi(recipe_api.RecipeApi):
     # need to pass in some recent legal revision for this property.
     if revision is None:
       revision = self.m.properties['parent_got_swarming_client_revision']
-    self._client_path = self.m.path['slave_build'].join('swarming.client')
+    self._client_path = self.m.path['subordinate_build'].join('swarming.client')
     self.m.git.checkout(
         url='https://chromium.googlesource.com/external/swarming.client.git',
         ref=revision,

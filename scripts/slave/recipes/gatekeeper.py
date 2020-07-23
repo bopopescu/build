@@ -13,8 +13,8 @@ DEPS = [
 
 def RunSteps(api):
   api.gatekeeper(
-    api.path['build'].join('scripts', 'slave', 'gatekeeper.json'),
-    api.path['build'].join('scripts', 'slave', 'gatekeeper_trees.json'),
+    api.path['build'].join('scripts', 'subordinate', 'gatekeeper.json'),
+    api.path['build'].join('scripts', 'subordinate', 'gatekeeper_trees.json'),
   )
 
 

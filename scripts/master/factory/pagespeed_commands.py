@@ -6,7 +6,7 @@
 
 This is based on commands.py and adds pagespeed-specific commands."""
 
-from master.factory import commands
+from main.factory import commands
 
 class PageSpeedCommands(commands.FactoryCommands):
   """Encapsulates methods to add chromium commands to a buildbot factory."""

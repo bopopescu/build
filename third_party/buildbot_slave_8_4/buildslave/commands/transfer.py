@@ -18,7 +18,7 @@ import os, tarfile, tempfile
 from twisted.python import log
 from twisted.internet import defer
 
-from buildslave.commands.base import Command
+from buildsubordinate.commands.base import Command
 
 class TransferCommand(Command):
 
@@ -45,13 +45,13 @@ class TransferCommand(Command):
         # when it sees self.interrupted set.
 
 
-class SlaveFileUploadCommand(TransferCommand):
+class SubordinateFileUploadCommand(TransferCommand):
     """
-    Upload a file from slave to build master
+    Upload a file from subordinate to build main
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavesrc']:  name of the slave-side file to read from
+        - ['subordinatesrc']:  name of the subordinate-side file to read from
         - ['writer']:    RemoteReference to a transfer._FileWriter object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -61,7 +61,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.filename = args['slavesrc']
+        self.filename = args['subordinatesrc']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -71,7 +71,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileUploadCommand started')
+            log.msg('SubordinateFileUploadCommand started')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -137,7 +137,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileUploadCommand._writeBlock(): end')
+                log.msg('SubordinateFileUploadCommand._writeBlock(): end')
             return True
 
         length = self.blocksize
@@ -154,7 +154,7 @@ class SlaveFileUploadCommand(TransferCommand):
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('SlaveFileUploadCommand._writeBlock(): '+
+            log.msg('SubordinateFileUploadCommand._writeBlock(): '+
                     'allowed=%d readlen=%d' % (length, len(data)))
         if len(data) == 0:
             log.msg("EOF: callRemote(close)")
@@ -168,13 +168,13 @@ class SlaveFileUploadCommand(TransferCommand):
         return d
 
 
-class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
+class SubordinateDirectoryUploadCommand(SubordinateFileUploadCommand):
     """
-    Upload a directory from slave to build master
+    Upload a directory from subordinate to build main
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavesrc']:  name of the slave-side directory to read from
+        - ['subordinatesrc']:  name of the subordinate-side directory to read from
         - ['writer']:    RemoteReference to a transfer._DirectoryWriter object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -184,7 +184,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.dirname = args['slavesrc']
+        self.dirname = args['subordinatesrc']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -194,7 +194,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveDirectoryUploadCommand started')
+            log.msg('SubordinateDirectoryUploadCommand started')
 
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
@@ -239,13 +239,13 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         return TransferCommand.finished(self, res)
 
 
-class SlaveFileDownloadCommand(TransferCommand):
+class SubordinateFileDownloadCommand(TransferCommand):
     """
-    Download a file from master to slave
+    Download a file from main to subordinate
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavedest']: name of the slave-side file to be created
+        - ['subordinatedest']: name of the subordinate-side file to be created
         - ['reader']:    RemoteReference to a transfer._FileReader object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -255,7 +255,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.filename = args['slavedest']
+        self.filename = args['subordinatedest']
         self.reader = args['reader']
         self.bytes_remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -265,7 +265,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand starting')
+            log.msg('SubordinateFileDownloadCommand starting')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -282,9 +282,9 @@ class SlaveFileDownloadCommand(TransferCommand):
                 log.msg("Opened '%s' for download" % self.path)
             if self.mode is not None:
                 # note: there is a brief window during which the new file
-                # will have the buildslave's default (umask) mode before we
+                # will have the buildsubordinate's default (umask) mode before we
                 # set the new one. Don't use this mode= feature to keep files
-                # private: use the buildslave's umask for that instead. (it
+                # private: use the buildsubordinate's umask for that instead. (it
                 # is possible to call os.umask() before and after the open()
                 # call, but cleaning up from exceptions properly is more of a
                 # nuisance that way).
@@ -326,7 +326,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileDownloadCommand._readBlock(): end')
+                log.msg('SubordinateFileDownloadCommand._readBlock(): end')
             return True
 
         length = self.blocksize
@@ -346,7 +346,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand._readBlock(): readlen=%d' %
+            log.msg('SubordinateFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
         if len(data) == 0:
             return True

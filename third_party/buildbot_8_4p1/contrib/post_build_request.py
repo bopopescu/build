@@ -81,7 +81,7 @@ description=""
 
 usage="""%prog [options]
 
-This script is used to submit a change to the buildbot master using the
+This script is used to submit a change to the buildbot main using the
 /change_hook web interface. Options are url encoded and submitted
 using a HTTP POST. The repository and project must be specified.
 
@@ -143,7 +143,7 @@ parser.add_option("-b", "--branch", dest='branch', metavar="BRANCH",
 parser.add_option("-C", "--category", dest='category', metavar="CAT",
             help=textwrap.dedent("""\
             Category for change. This becomes the Change.category attribute, which
-            can be used within the buildmaster to filter changes.
+            can be used within the buildmain to filter changes.
             """))
 parser.add_option("--revlink", dest='revlink', metavar="REVLINK",
             help=textwrap.dedent("""\
@@ -160,7 +160,7 @@ parser.add_option("-p", "--property", dest='properties', action="callback", call
             """))
 parser.add_option("-r", "--repository", dest='repository', metavar="PATH",
             help=textwrap.dedent("""\
-            Repository for use by buildbot slaves to checkout code.
+            Repository for use by buildbot subordinates to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
             """))

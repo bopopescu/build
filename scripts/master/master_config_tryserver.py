@@ -1,11 +1,11 @@
 # Copyright (c) 2011 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
-"""Shared configuration for the tryserver masters."""
+"""Shared configuration for the tryserver mains."""
 
 # These modules come from scripts, which must be in the PYTHONPATH.
-from master.factory import annotator_factory
-from master.factory import chromium_factory
+from main.factory import annotator_factory
+from main.factory import chromium_factory
 
 
 ## BUILDER FACTORIES
@@ -88,7 +88,7 @@ win_sharded_tests.remove('sync_integration_tests')
 
 def CreateBuilder(platform, builder_name, target,
                   options, tests,
-                  slavebuilddir=None,
+                  subordinatebuilddir=None,
                   factory_properties=None,
                   annotation_script=None,
                   ninja=True,
@@ -97,9 +97,9 @@ def CreateBuilder(platform, builder_name, target,
                   clobber=False,
                   run_default_swarm_tests=None,
                   maxTime=8*60*60,
-                  slave_type='Trybot',
+                  subordinate_type='Trybot',
                   build_url=None):
-  """Generates and register a builder along with its slave(s)."""
+  """Generates and register a builder along with its subordinate(s)."""
   if platform not in ('win32', 'win64', 'linux', 'mac', 'android'):
     raise Exception(platform + ' is not a known os type')
   assert tests is not None or annotation_script, (
@@ -138,7 +138,7 @@ def CreateBuilder(platform, builder_name, target,
     else:
       factory = m_chromium_win
 
-  elif platform == 'linux' and slave_type == 'TrybotTester':
+  elif platform == 'linux' and subordinate_type == 'TrybotTester':
     factory = m_chromium_linux_nohooks
   elif platform == 'linux':
     factory = m_chromium_linux
@@ -165,11 +165,11 @@ def CreateBuilder(platform, builder_name, target,
 
   compile_timeout = 3600
   if annotation_script:
-    # Note new slave type AnnotatedTrybot; we don't want a compile step added
+    # Note new subordinate type AnnotatedTrybot; we don't want a compile step added
     # in gclient_factory.py.
     # TODO(maruel): Support enable_swarm_tests
     builder_factory = factory.ChromiumAnnotationFactory(
-        slave_type='AnnotatedTrybot', target=target, tests=tests,
+        subordinate_type='AnnotatedTrybot', target=target, tests=tests,
         clobber=clobber,
         options=options,
         compile_timeout=compile_timeout,
@@ -177,7 +177,7 @@ def CreateBuilder(platform, builder_name, target,
         annotation_script=annotation_script, maxTime=maxTime)
   else:
     builder_factory = factory.ChromiumFactory(
-        slave_type=slave_type, target=target, tests=tests, options=options,
+        subordinate_type=subordinate_type, target=target, tests=tests, options=options,
         clobber=clobber,
         compile_timeout=compile_timeout,
         factory_properties=factory_properties,
@@ -188,8 +188,8 @@ def CreateBuilder(platform, builder_name, target,
     'name': builder_name,
     'factory': builder_factory,
   }
-  if slavebuilddir:
-    builder_info['slavebuilddir'] = slavebuilddir
+  if subordinatebuilddir:
+    builder_info['subordinatebuilddir'] = subordinatebuilddir
   return builder_info
 
 

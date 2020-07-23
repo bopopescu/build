@@ -207,7 +207,7 @@ class GerritPoller(base.PollingChangeSource):
       chdict.update(additional_chdict)
     chdict['properties'] = properties
 
-    d = self.master.addChange(**chdict)
+    d = self.main.addChange(**chdict)
     d.addErrback(log.err, 'GerritPoller: Could not add buildbot change for '
                  'gerrit change %s.' % revision_details['_number'])
     return d

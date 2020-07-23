@@ -17,7 +17,7 @@ def RunSteps(api):
   got_revision = result.presentation.properties['got_waterfall_revision']
 
   env = {
-      'BUILDBOT_MASTERNAME': api.properties['mastername'],
+      'BUILDBOT_MASTERNAME': api.properties['mainname'],
       'BUILDBOT_BUILDERNAME': api.properties['buildername'],
       'BUILDBOT_REVISION': api.properties['revision'],
       'BUILDBOT_GOT_WATERFALL_REVISION': got_revision,
@@ -33,8 +33,8 @@ def GenTests(api):
   yield (
     api.test('linux') +
     api.properties(
-      mastername = 'client.wasm.llvm',
+      mainname = 'client.wasm.llvm',
       buildername = 'linux',
-      slavename = 'TestSlavename',
+      subordinatename = 'TestSubordinatename',
       revision = 'abcd',
     ))

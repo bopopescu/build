@@ -165,7 +165,7 @@ def main(argv):
   parser.add_argument(
       'prefix',
       help='Prefix for the name of the disk and instance name. Needs '
-           'to be unique per slave'
+           'to be unique per subordinate'
   )
   parser.add_argument('path_to_adb', type=str, help='Path to adb binary.')
   parser.add_argument(

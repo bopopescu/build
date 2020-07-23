@@ -10,7 +10,7 @@
 # python2.1 is right out
 
 # If you run this program as part of your SVN post-commit hooks, it will
-# deliver Change notices to a buildmaster that is running a PBChangeSource
+# deliver Change notices to a buildmain that is running a PBChangeSource
 # instance.
 
 # edit your svn-repository/hooks/post-commit file, and add lines that look
@@ -147,7 +147,7 @@ class ChangeSender:
 
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent
-        to the buildmaster's PBChangeSource."""
+        to the buildmain's PBChangeSource."""
 
         # first we extract information about the files that were changed
         repo = opts['repository']

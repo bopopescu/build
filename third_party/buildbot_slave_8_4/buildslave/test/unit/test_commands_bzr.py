@@ -17,9 +17,9 @@ import textwrap
 
 from twisted.trial import unittest
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import bzr
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.sourcecommand import SourceCommandTestMixin
+from buildsubordinate.commands import bzr
 
 class TestBzr(SourceCommandTestMixin, unittest.TestCase):
 

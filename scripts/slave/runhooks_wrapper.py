@@ -5,7 +5,7 @@
 
 """Wrapper script for `gclient runhooks`.
 
-This is useful to set slave-dependent gyp defines.
+This is useful to set subordinate-dependent gyp defines.
 """
 
 import optparse
@@ -16,11 +16,11 @@ import sys
 from common import chromium_utils
 
 
-# Path of the scripts/slave/ checkout on the slave, found by looking at the
+# Path of the scripts/subordinate/ checkout on the subordinate, found by looking at the
 # current runhooks_wrapper.py script's path's dirname().
 SLAVE_SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-# Path of the build/ checkout on the slave, found relative to the
-# scripts/slave/ directory.
+# Path of the build/ checkout on the subordinate, found relative to the
+# scripts/subordinate/ directory.
 BUILD_DIR = os.path.dirname(os.path.dirname(SLAVE_SCRIPTS_DIR))
 
 
@@ -34,8 +34,8 @@ def main():
   assert not args
 
   if options.use_goma:
-    # Add goma-related GYP_DEFINES if requested. This is done in a slave script
-    # because goma_dir is a slave-relative path and is not known to the master.
+    # Add goma-related GYP_DEFINES if requested. This is done in a subordinate script
+    # because goma_dir is a subordinate-relative path and is not known to the main.
     gyp_defines = os.environ.get('GYP_DEFINES', '')
     # pipes.quote() is necessary on Windows: http://crbug.com/340918#c7 - 11.
     gyp_defines += ' use_goma=1 gomadir=' + pipes.quote(options.goma_dir)

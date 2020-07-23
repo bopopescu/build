@@ -268,8 +268,8 @@ class PollerWatcher(object):
         self.metrics = metrics
 
     def run(self):
-        # Check if 'BuildMaster.pollDatabaseChanges()' and
-        # 'BuildMaster.pollDatabaseBuildRequests()' are running fast enough
+        # Check if 'BuildMain.pollDatabaseChanges()' and
+        # 'BuildMain.pollDatabaseBuildRequests()' are running fast enough
         h = self.metrics.getHandler(MetricTimeEvent)
         if not h:
             log.msg("Couldn't get MetricTimeEvent handler")
@@ -278,8 +278,8 @@ class PollerWatcher(object):
                     level=ALARM_WARN)
             return
 
-        for method in ('BuildMaster.pollDatabaseChanges()',
-                'BuildMaster.pollDatabaseBuildRequests()'):
+        for method in ('BuildMain.pollDatabaseChanges()',
+                'BuildMain.pollDatabaseBuildRequests()'):
             t = h.get(method)
             db_poll_interval = self.metrics.parent.db_poll_interval
 
@@ -291,32 +291,32 @@ class PollerWatcher(object):
                 level = ALARM_CRIT
             MetricAlarmEvent.log(method, level=level)
 
-class AttachedSlavesWatcher(object):
+class AttachedSubordinatesWatcher(object):
     def __init__(self, metrics):
         self.metrics = metrics
 
     def run(self):
-        # Check if 'BotMaster.attached_slaves' equals
-        # 'AbstractBuildSlave.attached_slaves'
+        # Check if 'BotMain.attached_subordinates' equals
+        # 'AbstractBuildSubordinate.attached_subordinates'
         h = self.metrics.getHandler(MetricCountEvent)
         if not h:
             log.msg("Couldn't get MetricCountEvent handler")
-            MetricAlarmEvent.log('AttachedSlavesWatcher',
+            MetricAlarmEvent.log('AttachedSubordinatesWatcher',
                     msg="Coudln't get MetricCountEvent handler",
                     level=ALARM_WARN)
             return
-        botmaster_count = h.get('BotMaster.attached_slaves')
-        buildslave_count = h.get('AbstractBuildSlave.attached_slaves')
+        botmain_count = h.get('BotMain.attached_subordinates')
+        buildsubordinate_count = h.get('AbstractBuildSubordinate.attached_subordinates')
 
         # We let these be off by one since they're counted at slightly
         # different times
-        if abs(botmaster_count - buildslave_count) > 1:
+        if abs(botmain_count - buildsubordinate_count) > 1:
             level = ALARM_WARN
         else:
             level = ALARM_OK
 
-        MetricAlarmEvent.log('attached_slaves',
-                msg='%s %s' % (botmaster_count, buildslave_count),
+        MetricAlarmEvent.log('attached_subordinates',
+                msg='%s %s' % (botmain_count, buildsubordinate_count),
                 level=level)
 
 def _get_rss():
@@ -380,7 +380,7 @@ class MetricLogObserver(service.MultiService):
         # Make sure our changes poller is behaving
         self.getHandler(MetricTimeEvent).addWatcher(PollerWatcher(self))
         self.getHandler(MetricCountEvent).addWatcher(
-                AttachedSlavesWatcher(self))
+                AttachedSubordinatesWatcher(self))
 
     def reloadConfig(self, config):
         self.config = config

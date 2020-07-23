@@ -16,8 +16,8 @@
 import os
 import time
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave import runprocess
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate import runprocess
 
 class CVS(SourceBaseCommand):
     """CVS-specific VC operation. In addition to the arguments handled by

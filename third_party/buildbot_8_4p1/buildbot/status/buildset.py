@@ -24,7 +24,7 @@ class BuildSetStatus:
         self.id = bsdict['bsid']
         self.bsdict = bsdict
         self.status = status
-        self.master = status.master
+        self.main = status.main
 
     # methods for our clients
 
@@ -43,7 +43,7 @@ class BuildSetStatus:
     def getBuilderNamesAndBuildRequests(self):
         # returns a Deferred; undocumented method that may be removed
         # without warning
-        d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+        d = self.main.db.buildrequests.getBuildRequests(bsid=self.id)
         def get_objects(brdicts):
             return dict([
                 (brd['buildername'], BuildRequestStatus(brd['buildername'],
@@ -53,7 +53,7 @@ class BuildSetStatus:
         return d
 
     def getBuilderNames(self):
-        d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+        d = self.main.db.buildrequests.getBuildRequests(bsid=self.id)
         def get_names(brdicts):
             return sorted([ brd['buildername'] for brd in brdicts ])
         d.addCallback(get_names)

@@ -15,16 +15,16 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.status import master
+from buildbot.status import main
 from buildbot.test.fake import fakedb
 
 class TestStatus(unittest.TestCase):
 
     def makeStatus(self):
-        m = mock.Mock(name='master')
+        m = mock.Mock(name='main')
         self.db = m.db = fakedb.FakeDBConnector(self)
         m.basedir = r'C:\BASEDIR'
-        s = master.Status(m)
+        s = main.Status(m)
         return s
 
     def test_getBuildSets(self):

@@ -13,8 +13,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from slave import recipe_loader
-from slave import recipe_util
+from subordinate import recipe_loader
+from subordinate import recipe_util
 
 
 USAGE = """

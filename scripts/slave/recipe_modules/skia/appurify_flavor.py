@@ -16,17 +16,17 @@ class AppurifyFlavorUtils(default_flavor.DefaultFlavorUtils):
     super(AppurifyFlavorUtils, self).__init__(skia_api)
     self.build_cfg = self._skia_api.builder_spec['device_cfg']
     self.device = self._skia_api.builder_spec['builder_cfg']['model']
-    slave_info = android_devices.SLAVE_INFO.get(
-        self._skia_api.slave_name,
+    subordinate_info = android_devices.SLAVE_INFO.get(
+        self._skia_api.subordinate_name,
         android_devices.SLAVE_INFO['default'])
-    self.android_tools = self._skia_api.m.path['slave_build'].join(
+    self.android_tools = self._skia_api.m.path['subordinate_build'].join(
         'skia', 'platform_tools', 'android')
     self.android_bin = self.android_tools.join('bin')
     self.apk_dir = self.android_tools.join('apps', 'visualbench', 'build',
                                            'outputs', 'apk')
     self.assets_dir = self.android_tools.join('apps', 'visualbench', 'src',
                                               'main', 'assets')
-    self._android_sdk_root = slave_info.android_sdk_root
+    self._android_sdk_root = subordinate_info.android_sdk_root
     self._default_env = {'ANDROID_SDK_ROOT': self._android_sdk_root,
                          'ANDROID_HOME': self._android_sdk_root,
                          'SKIA_ANDROID_VERBOSE_SETUP': 1}

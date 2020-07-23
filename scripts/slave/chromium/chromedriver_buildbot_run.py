@@ -22,7 +22,7 @@ def main():
 
   return chromium_utils.RunCommand(
       [sys.executable,
-       '../../../scripts/slave/runtest.py',
+       '../../../scripts/subordinate/runtest.py',
        '--run-python-script',
        'src/chrome/test/chromedriver/run_buildbot_steps.py',
        '--revision',

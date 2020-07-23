@@ -29,12 +29,12 @@ def win_xp_dr_nightly_steps(api):
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # dynamorio win nightly suite step
   api.step("nightly suite",
-      [api.path["build"].join("scripts", "slave", "drmemory", "build_env.bat"),
+      [api.path["build"].join("scripts", "subordinate", "drmemory", "build_env.bat"),
         'ctest', '--timeout', '120', '-VV', '-S',
         'dynamorio/suite/runsuite.cmake,nightly;long;'+\
             'site=X64.WindowsXp.VS2010.BuildBot'],
       env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-        "bot_tools")}, cwd=api.path["slave_build"])
+        "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def linux_dr_steps(api):
@@ -50,9 +50,9 @@ def linux_dr_steps(api):
   # pre-commit suite step
   api.step("pre-commit suite", ['ctest', '--timeout', '120', '-VV', '-S',
     api.path["checkout"].join("suite", "runsuite.cmake")],
-    cwd=api.path["slave_build"], ok_ret="all")
+    cwd=api.path["subordinate_build"], ok_ret="all")
   # upload dynamorio docs step
-  api.gsutil.upload(api.path["slave_build"].join("install", "docs", "html"),
+  api.gsutil.upload(api.path["subordinate_build"].join("install", "docs", "html"),
       "chromium-dynamorio", "dr_docs/", ["-r"], multithreaded=True)
 
 
@@ -73,11 +73,11 @@ def win_7_dr_steps(api):
     'bot_tools', 'unpack.bat')], env={},
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # build_env step
-  api.step("pre-commit suite", [api.path["build"].join("scripts", "slave",
+  api.step("pre-commit suite", [api.path["build"].join("scripts", "subordinate",
     "drmemory", "build_env.bat"), 'ctest', '--timeout', '120', '-VV', '-S',
     api.path["checkout"].join("suite", "runsuite.cmake")],
     env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-      "bot_tools")}, cwd=api.path["slave_build"])
+      "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def linux_dr_package_steps(api):
@@ -120,11 +120,11 @@ def win_8_dr_steps(api):
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # build_env step
   api.step("pre-commit suite",
-      [api.path["build"].join("scripts", "slave", "drmemory", "build_env.bat"),
+      [api.path["build"].join("scripts", "subordinate", "drmemory", "build_env.bat"),
         'ctest', '--timeout', '120', '-VV', '-S',
         api.path["checkout"].join("suite", "runsuite.cmake")],
       env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-        "bot_tools")}, cwd=api.path["slave_build"])
+        "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def win_xp_dr_steps(api):
@@ -144,11 +144,11 @@ def win_xp_dr_steps(api):
     'bot_tools', 'unpack.bat')], env={},
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # build_env step
-  api.step("pre-commit suite", [api.path["build"].join("scripts", "slave",
+  api.step("pre-commit suite", [api.path["build"].join("scripts", "subordinate",
     "drmemory", "build_env.bat"), 'ctest', '--timeout', '120', '-VV', '-S',
     api.path["checkout"].join("suite", "runsuite.cmake")],
     env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-      "bot_tools")}, cwd=api.path["slave_build"])
+      "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def win_7_dr_nightly_steps(api):
@@ -168,12 +168,12 @@ def win_7_dr_nightly_steps(api):
     'bot_tools', 'unpack.bat')], env={},
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # dynamorio win nightly suite step
-  api.step("nightly suite", [api.path["build"].join("scripts", "slave",
+  api.step("nightly suite", [api.path["build"].join("scripts", "subordinate",
     "drmemory", "build_env.bat"), 'ctest', '--timeout', '120', '-VV', '-S',
     'dynamorio/suite/runsuite.cmake,nightly;long;'+\
         'site=X64.Windows7.VS2010.BuildBot'],
     env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-      "bot_tools")}, cwd=api.path["slave_build"])
+      "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def win_8_dr_nightly_steps(api):
@@ -193,12 +193,12 @@ def win_8_dr_nightly_steps(api):
     'bot_tools', 'unpack.bat')], env={},
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # dynamorio win nightly suite step
-  api.step("nightly suite", [api.path["build"].join("scripts", "slave",
+  api.step("nightly suite", [api.path["build"].join("scripts", "subordinate",
     "drmemory", "build_env.bat"), 'ctest', '--timeout', '120', '-VV', '-S',
     'dynamorio/suite/runsuite.cmake,nightly;long;'+\
         'site=X64.Windows8.VS2010.BuildBot'],
     env={"BOTTOOLS": api.path["checkout"].join("tools", "buildbot",
-      "bot_tools")}, cwd=api.path["slave_build"])
+      "bot_tools")}, cwd=api.path["subordinate_build"])
 
 
 def win_dr_package_steps(api):
@@ -219,7 +219,7 @@ def win_dr_package_steps(api):
       cwd=api.path["checkout"].join('tools', 'buildbot', 'bot_tools'))
   # get buildnumber step; no longer needed
   # Package DynamoRIO step
-  api.step("Package DynamoRIO", [api.path["build"].join("scripts", "slave",
+  api.step("Package DynamoRIO", [api.path["build"].join("scripts", "subordinate",
     "drmemory", "build_env.bat"), "ctest", "-VV", "-S",
     str(api.path["checkout"].join("make", "package.cmake")) + ",build=0x" +
     build_properties["got_revision"][:7]],
@@ -270,70 +270,70 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('win_xp_dr_nightly') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-xp-dr-nightly') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('linux_dr') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='linux-dr') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_7_dr') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-7-dr') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('linux_dr_package') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='linux-dr-package') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_8_dr') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-8-dr') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_xp_dr') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-xp-dr') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_7_dr_nightly') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-7-dr-nightly') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_8_dr_nightly') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-8-dr-nightly') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('win_dr_package') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='win-dr-package') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('linux_dr_nightly') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='linux-dr-nightly') +
     api.properties(revision='123456789abcdef') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('builder_not_in_dispatch_directory') +
-    api.properties(mastername='client.dynamorio') +
+    api.properties(mainname='client.dynamorio') +
     api.properties(buildername='nonexistent_builder') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )

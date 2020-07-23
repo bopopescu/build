@@ -4,16 +4,16 @@
 
 from buildbot.scheduler import AnyBranchScheduler
 
-from master import gitiles_poller
+from main import gitiles_poller
 
 
-def Update(config, _active_master, c):
-  # Polls config.Master.trunk_url for changes
+def Update(config, _active_main, c):
+  # Polls config.Main.trunk_url for changes
   cr_poller = gitiles_poller.GitilesPoller(
       'https://chromium.googlesource.com/chromium/src',
       pollInterval=30, project='chromium')
   c['change_source'].append(cr_poller)
 
   c['schedulers'].append(AnyBranchScheduler(
-      name='global_scheduler', branches=['trunk', 'master'], treeStableTimer=60,
+      name='global_scheduler', branches=['trunk', 'main'], treeStableTimer=60,
       builderNames=[]))

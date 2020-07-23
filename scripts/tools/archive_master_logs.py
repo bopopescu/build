@@ -39,11 +39,11 @@ def main():
   returncode |= GSUtilCopy(lkgr_base + 'build_data.json',
                            'lkgr_build_data.json', True)
   for logpath in glob.glob(
-      os.path.join(BUILD_DIR, 'masters', '*', 'actions.log')):
-    master = logpath.split(os.sep)[-2]
-    if master.startswith('master.'):
-      master = master[7:]
-    returncode |= GSUtilCopy(logpath, '%s-actions.log' % master, False)
+      os.path.join(BUILD_DIR, 'mains', '*', 'actions.log')):
+    main = logpath.split(os.sep)[-2]
+    if main.startswith('main.'):
+      main = main[7:]
+    returncode |= GSUtilCopy(logpath, '%s-actions.log' % main, False)
   return returncode
 
 

@@ -15,36 +15,36 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 MAIN_WATERFALL_MASTERS = [
-    'master.chromium',
-    'master.chromium.chrome',
-    'master.chromium.chromiumos',
-    'master.chromium.gpu',
-    'master.chromium.linux',
-    'master.chromium.mac',
-    'master.chromium.memory',
-    'master.chromium.win',
+    'main.chromium',
+    'main.chromium.chrome',
+    'main.chromium.chromiumos',
+    'main.chromium.gpu',
+    'main.chromium.linux',
+    'main.chromium.mac',
+    'main.chromium.memory',
+    'main.chromium.win',
 ]
 
 
 TRYSERVER_MASTERS = [
-    'master.tryserver.chromium.android',
-    'master.tryserver.chromium.linux',
-    'master.tryserver.chromium.mac',
-    'master.tryserver.chromium.win',
+    'main.tryserver.chromium.android',
+    'main.tryserver.chromium.linux',
+    'main.tryserver.chromium.mac',
+    'main.tryserver.chromium.win',
 ]
 
 
 SUPPRESSIONS = {
-    'master.chromium.chrome': [
+    'main.chromium.chrome': [
         'Google Chrome ChromeOS',
         'Google Chrome Linux x64',
         'Google Chrome Mac',
         'Google Chrome Win',
     ],
-    'master.chromium.chromiumos': [
+    'main.chromium.chromiumos': [
         'Linux ChromiumOS Full',
     ],
-    'master.chromium.gpu': [
+    'main.chromium.gpu': [
         'Android Debug (Nexus 5)',
         'Android Debug (Nexus 6)',
         'Android Debug (Nexus 9)',
@@ -58,7 +58,7 @@ SUPPRESSIONS = {
         'Mac 10.10 Retina Release (AMD)',
         'Win7 Debug (NVIDIA)',
     ],
-    'master.chromium.mac': [
+    'main.chromium.mac': [
         'Mac10.11 Tests',
         'iOS_Device',
         'iOS_Device_GN',
@@ -66,10 +66,10 @@ SUPPRESSIONS = {
         'iOS_Simulator_GN_(dbg)',
         'iOS_Simulator_(dbg)',
     ],
-    'master.chromium.memory': [
+    'main.chromium.memory': [
         'Linux ASan Tests (sandboxed)',
     ],
-    'master.chromium.win': [
+    'main.chromium.win': [
         'Win7 (32) Tests',
         'Win x64 Builder (dbg)',
     ],
@@ -88,7 +88,7 @@ def getBuilders(recipe_name, deps_path):
   os.close(fh)
   try:
     subprocess.check_call([
-        os.path.join(BASE_DIR, 'scripts', 'slave', 'recipes.py'),
+        os.path.join(BASE_DIR, 'scripts', 'subordinate', 'recipes.py'),
         '--deps-path', deps_path,
         'run', recipe_name, 'dump_builders=%s' % builders_file])
     with open(builders_file) as fh:
@@ -103,21 +103,21 @@ def getCQBuilders(cq_config):
   return json.loads(output)
 
 
-def getMasterConfig(master):
+def getMainConfig(main):
   with tempfile.NamedTemporaryFile() as f:
     subprocess.check_call([
         os.path.join(BASE_DIR, 'scripts', 'tools', 'runit.py'),
-        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_master_cfg.py'),
-        os.path.join(BASE_DIR, 'masters/%s' % master),
+        os.path.join(BASE_DIR, 'scripts', 'tools', 'dump_main_cfg.py'),
+        os.path.join(BASE_DIR, 'mains/%s' % main),
         f.name])
     return json.load(f)
 
 
-def getBuildersAndRecipes(master):
+def getBuildersAndRecipes(main):
   return {
       builder['name'] : builder['factory']['properties'].get(
           'recipe', [None])[0]
-      for builder in getMasterConfig(master)['builders']
+      for builder in getMainConfig(main)['builders']
   }
 
 
@@ -147,48 +147,48 @@ def main(argv):
 
   cq_builders = getCQBuilders(args.cq_config) if args.cq_config else None
 
-  for master in MAIN_WATERFALL_MASTERS:
-    builders = getBuildersAndRecipes(master)
-    all_builders.update((master, b) for b in builders)
+  for main in MAIN_WATERFALL_MASTERS:
+    builders = getBuildersAndRecipes(main)
+    all_builders.update((main, b) for b in builders)
 
     # We only have a standardized way to mirror builders using the chromium
     # recipe on the tryserver.
-    chromium_recipe_builders[master] = [b for b in builders
+    chromium_recipe_builders[main] = [b for b in builders
                                         if builders[b] == 'chromium']
 
     recipe_side_builders = chromium_BUILDERS.get(
-        master.replace('master.', ''), {}).get('builders')
+        main.replace('main.', ''), {}).get('builders')
     if recipe_side_builders is not None:
       bogus_builders = set(recipe_side_builders.keys()).difference(
           set(builders.keys()))
       if bogus_builders:
         exit_code = 1
         print 'The following builders from chromium recipe'
-        print 'do not exist in master config for %s:' % master
+        print 'do not exist in main config for %s:' % main
         print '\n'.join('\t%s' % b for b in sorted(bogus_builders))
 
       other_recipe_builders = set(recipe_side_builders.keys()).difference(
-          set(chromium_recipe_builders[master]))
+          set(chromium_recipe_builders[main]))
       if other_recipe_builders:
         exit_code = 1
         print 'The following builders from chromium recipe'
-        print 'are configured to run a different recipe on the master'
-        print '(%s):' % master
+        print 'are configured to run a different recipe on the main'
+        print '(%s):' % main
         print '\n'.join('\t%s' % b for b in sorted(other_recipe_builders))
 
 
-  for master in TRYSERVER_MASTERS:
-    short_master = master.replace('master.', '')
-    builders = getBuildersAndRecipes(master)
+  for main in TRYSERVER_MASTERS:
+    short_main = main.replace('main.', '')
+    builders = getBuildersAndRecipes(main)
     recipe_side_builders = chromium_trybot_BUILDERS[
-        short_master]['builders']
+        short_main]['builders']
 
     bogus_builders = set(recipe_side_builders.keys()).difference(
         set(builders.keys()))
     if bogus_builders:
       exit_code = 1
       print 'The following builders from chromium_trybot recipe'
-      print 'do not exist in master config for %s:' % master
+      print 'do not exist in main config for %s:' % main
       print '\n'.join('\t%s' % b for b in sorted(bogus_builders))
 
     for builder, recipe in builders.iteritems():
@@ -201,20 +201,20 @@ def main(argv):
       if not bot_config:
         continue
 
-      if args.cq_config and builder not in cq_builders.get(short_master, {}):
+      if args.cq_config and builder not in cq_builders.get(short_main, {}):
         continue
 
       # TODO(phajdan.jr): Make it an error if any builders referenced here
       # are not using chromium recipe.
       for bot_id in bot_config['bot_ids']:
-        main_waterfall_master = 'master.' + bot_id['mastername']
+        main_waterfall_main = 'main.' + bot_id['mainname']
         bots = [bot_id['buildername']]
         if bot_id.get('tester'):
           bots.append(bot_id['tester'])
         for mw_builder in bots:
           if mw_builder in chromium_recipe_builders.get(
-              main_waterfall_master, []):
-            covered_builders.add((main_waterfall_master, mw_builder))
+              main_waterfall_main, []):
+            covered_builders.add((main_waterfall_main, mw_builder))
 
   # TODO(phajdan.jr): Add a way to only count trybots launched by CQ by default.
   print 'Main waterfall ng-trybot coverage: %.2f' % (
@@ -222,8 +222,8 @@ def main(argv):
 
   not_covered_builders = all_builders.difference(covered_builders)
   suppressed_builders = set()
-  for master, builders in SUPPRESSIONS.iteritems():
-    suppressed_builders.update((master, b) for b in builders)
+  for main, builders in SUPPRESSIONS.iteritems():
+    suppressed_builders.update((main, b) for b in builders)
 
   regressed_builders = not_covered_builders.difference(suppressed_builders)
   if regressed_builders:

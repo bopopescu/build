@@ -3,12 +3,12 @@
 # found in the LICENSE file.
 
 
-"""Notifier classes for Skia build masters."""
+"""Notifier classes for Skia build mains."""
 
 
 from buildbot.status.mail import MailNotifier
 from common.skia import builder_name_schema
-from master.try_mail_notifier import TryMailNotifier
+from main.try_mail_notifier import TryMailNotifier
 
 
 class SkiaMailNotifier(MailNotifier):

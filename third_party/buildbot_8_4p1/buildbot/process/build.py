@@ -30,7 +30,7 @@ from buildbot.process import metrics
 
 
 class Build:
-    """I represent a single build by a single slave. Specialized Builders can
+    """I represent a single build by a single subordinate. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
 
@@ -75,7 +75,7 @@ class Build:
 
         self.progress = None
         self.currentStep = None
-        self.slaveEnvironment = {}
+        self.subordinateEnvironment = {}
 
         self.terminate = False
 
@@ -92,8 +92,8 @@ class Build:
     def setLocks(self, locks):
         self.locks = locks
 
-    def setSlaveEnvironment(self, env):
-        self.slaveEnvironment = env
+    def setSubordinateEnvironment(self, env):
+        self.subordinateEnvironment = env
 
     def getSourceStamp(self):
         return self.source
@@ -159,17 +159,17 @@ class Build:
 
     useProgress = True
 
-    def getSlaveCommandVersion(self, command, oldversion=None):
-        return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
-    def getSlaveName(self):
-        return self.slavebuilder.slave.slavename
+    def getSubordinateCommandVersion(self, command, oldversion=None):
+        return self.subordinatebuilder.getSubordinateCommandVersion(command, oldversion)
+    def getSubordinateName(self):
+        return self.subordinatebuilder.subordinate.subordinatename
 
     def setupProperties(self):
         props = self.getProperties()
 
         # start with global properties from the configuration
-        buildmaster = self.builder.botmaster.parent
-        props.updateFromProperties(buildmaster.properties)
+        buildmain = self.builder.botmain.parent
+        props.updateFromProperties(buildmain.properties)
 
         # from the SourceStamp, which has properties via Change
         for change in self.source.changes:
@@ -190,20 +190,20 @@ class Build:
         props.setProperty("requestedAt", self.requestedAt, "Build")
         self.builder.setupProperties(props)
 
-    def setupSlaveBuilder(self, slavebuilder):
-        self.slavebuilder = slavebuilder
+    def setupSubordinateBuilder(self, subordinatebuilder):
+        self.subordinatebuilder = subordinatebuilder
 
-        # navigate our way back to the L{buildbot.buildslave.BuildSlave}
+        # navigate our way back to the L{buildbot.buildsubordinate.BuildSubordinate}
         # object that came from the config, and get its properties
-        buildslave_properties = slavebuilder.slave.properties
-        self.getProperties().updateFromProperties(buildslave_properties)
-        if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir", slavebuilder.slave.path_module.join(slavebuilder.slave.slave_basedir, self.builder.slavebuilddir), "slave")
+        buildsubordinate_properties = subordinatebuilder.subordinate.properties
+        self.getProperties().updateFromProperties(buildsubordinate_properties)
+        if subordinatebuilder.subordinate.subordinate_basedir:
+            self.setProperty("workdir", subordinatebuilder.subordinate.path_module.join(subordinatebuilder.subordinate.subordinate_basedir, self.builder.subordinatebuilddir), "subordinate")
 
-        self.slavename = slavebuilder.slave.slavename
-        self.build_status.setSlavename(self.slavename)
+        self.subordinatename = subordinatebuilder.subordinate.subordinatename
+        self.build_status.setSubordinatename(self.subordinatename)
 
-    def startBuild(self, build_status, expectations, slavebuilder):
+    def startBuild(self, build_status, expectations, subordinatebuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
@@ -217,8 +217,8 @@ class Build:
         self.build_status = build_status
         # now that we have a build_status, we can set properties
         self.setupProperties()
-        self.setupSlaveBuilder(slavebuilder)
-        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
+        self.setupSubordinateBuilder(subordinatebuilder)
+        subordinatebuilder.subordinate.updateSubordinateStatus(buildStarted=build_status)
 
         # convert all locks into their real forms
         lock_list = []
@@ -226,13 +226,13 @@ class Build:
             if not isinstance(access, locks.LockAccess):
                 # Buildbot 0.7.7 compability: user did not specify access
                 access = access.defaultAccess()
-            lock = self.builder.botmaster.getLockByID(access.lockid)
+            lock = self.builder.botmain.getLockByID(access.lockid)
             lock_list.append((lock, access))
         self.locks = lock_list
-        # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder), la)
+        # then narrow SubordinateLocks down to the right subordinate
+        self.locks = [(l.getLock(self.subordinatebuilder), la)
                        for l, la in self.locks]
-        self.remote = slavebuilder.remote
+        self.remote = subordinatebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
@@ -243,11 +243,11 @@ class Build:
             return res
         d.addBoth(_uncount_build)
 
-        def _release_slave(res, slave, bs):
-            self.slavebuilder.buildFinished()
-            slave.updateSlaveStatus(buildFinished=bs)
+        def _release_subordinate(res, subordinate, bs):
+            self.subordinatebuilder.buildFinished()
+            subordinate.updateSubordinateStatus(buildFinished=bs)
             return res
-        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
+        d.addCallback(_release_subordinate, self.subordinatebuilder.subordinate, build_status)
 
         try:
             self.setupBuild(expectations) # create .steps
@@ -311,7 +311,7 @@ class Build:
                         % (factory, args))
                 raise
             step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.slave)
+            step.setBuildSubordinate(self.subordinatebuilder.subordinate)
             if callable (self.workdir):
                 step.setDefaultWorkdir (self.workdir (self.source))
             else:
@@ -452,7 +452,7 @@ class Build:
         return terminate
 
     def lostRemote(self, remote=None):
-        # the slave went away. There are several possible reasons for this,
+        # the subordinate went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
@@ -467,7 +467,7 @@ class Build:
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
         # reason might be to abandon a stuck build. We want to mark the
-        # build as failed quickly rather than waiting for the slave's
+        # build as failed quickly rather than waiting for the subordinate's
         # timeout to kill it on its own.
 
         log.msg(" %s: stopping build: %s" % (self, reason))

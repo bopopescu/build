@@ -18,7 +18,7 @@ import os
 
 from twisted.internet import defer, utils, reactor, threads
 from twisted.python import log
-from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
+from buildbot.buildsubordinate import AbstractBuildSubordinate, AbstractLatentBuildSubordinate
 
 import libvirt
 
@@ -130,11 +130,11 @@ class Connection(object):
         return d
 
 
-class LibVirtSlave(AbstractLatentBuildSlave):
+class LibVirtSubordinate(AbstractLatentBuildSubordinate):
 
     def __init__(self, name, password, connection, hd_image, base_image = None, xml=None, max_builds=None, notify_on_missing=[],
                  missing_timeout=60*20, build_wait_timeout=60*10, properties={}, locks=None):
-        AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
+        AbstractLatentBuildSubordinate.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
         self.name = name
         self.connection = connection
@@ -220,7 +220,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
     def stop_instance(self, fast=False):
         """
         I attempt to stop a running VM.
-        I make sure any connection to the slave is removed.
+        I make sure any connection to the subordinate is removed.
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
@@ -240,14 +240,14 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         def _disconnect(res):
             log.msg("VM destroyed (%s): Forcing its connection closed." % self.name)
-            return AbstractBuildSlave.disconnect(self)
+            return AbstractBuildSubordinate.disconnect(self)
         d.addCallback(_disconnect)
 
         def _disconnected(res):
             log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.name)
             if self.base_image:
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForSlave(self.name)
+            self.botmain.maybeStartBuildsForSubordinate(self.name)
             return res
         d.addBoth(_disconnected)
 
@@ -255,10 +255,10 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
     def buildFinished(self, *args, **kwargs):
         """
-        I insubstantiate a slave after it has done a build, if that is
+        I insubstantiate a subordinate after it has done a build, if that is
         desired behaviour.
         """
-        AbstractLatentBuildSlave.buildFinished(self, *args, **kwargs)
+        AbstractLatentBuildSubordinate.buildFinished(self, *args, **kwargs)
         if self.insubstantiate_after_build:
             log.msg("Got buildFinished notification - attempting to insubstantiate")
             self.insubstantiate()

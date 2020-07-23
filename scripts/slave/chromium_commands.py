@@ -4,8 +4,8 @@
 
 """A subclass of commands.SVN that allows more flexible error recovery.
 
-This code is only used on the slave but it is living in common/ because it is
-directly imported from buildbot/slave/bot.py."""
+This code is only used on the subordinate but it is living in common/ because it is
+directly imported from buildbot/subordinate/bot.py."""
 
 import os
 import re
@@ -15,9 +15,9 @@ from twisted.internet import defer
 
 from common import chromium_utils
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave.commands.registry import commandRegistry
-from buildslave import runprocess
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate.commands.registry import commandRegistry
+from buildsubordinate import runprocess
 
 
 PROJECTS_LOOKING_FOR = {
@@ -210,7 +210,7 @@ class GClient(SourceBaseCommand):
   ['no_gclient_branch']:
     If --revision is specified, don't prepend it with <branch>@.  This is
     necessary for git, where the solution name is 'src' and the branch name
-    is 'master'. Use the project attribute if there are several solution in
+    is 'main'. Use the project attribute if there are several solution in
     the .gclient file.
 
   ['no_gclient_revision']:
@@ -315,7 +315,7 @@ class GClient(SourceBaseCommand):
       d.addCallback(self.doClobber, self.workdir)
     if not (self.sourcedirIsUpdateable() and self.sourcedataMatches()):
       # the directory cannot be updated, so we have to clobber it.
-      # Perhaps the master just changed modes from 'export' to
+      # Perhaps the main just changed modes from 'export' to
       # 'update'.
       d.addCallback(self.doClobber, self.srcdir)
     elif self.sourcedirIsPatched():
@@ -603,7 +603,7 @@ class GClient(SourceBaseCommand):
   def parseGotRevision(self):
     if not hasattr(self.command, 'stdout'):
       # self.command may or may not have a .stdout property. The problem is when
-      # buildslave.runprocess.RunProcess(keepStdout=False) is used, it doesn't
+      # buildsubordinate.runprocess.RunProcess(keepStdout=False) is used, it doesn't
       # set the property .stdout at all.
       #
       # It may happen depending on the order of execution as self.command only
@@ -613,7 +613,7 @@ class GClient(SourceBaseCommand):
 
 
   def _handleGotRevision(self, res):
-    """Sends parseGotRevision() return values as status updates to the master.
+    """Sends parseGotRevision() return values as status updates to the main.
     """
     d = defer.maybeDeferred(self.parseGotRevision)
     # parseGotRevision returns the revision dict, which is passed as the first
@@ -645,7 +645,7 @@ def RegisterCommands():
   try:
     # We run this code in a try because it fails with an assertion if
     # the module is loaded twice.
-    commandRegistry['gclient'] = 'slave.chromium_commands.GClient'
+    commandRegistry['gclient'] = 'subordinate.chromium_commands.GClient'
     return
   except (AssertionError, NameError):
     pass

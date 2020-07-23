@@ -25,7 +25,7 @@ from twisted.spread import pb
 from twisted.python import log
 from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildSubordinateTooOldError
 from buildbot.util import json
 
 
@@ -49,7 +49,7 @@ class _FileWriter(pb.Referenceable):
 
     def remote_write(self, data):
         """
-        Called from remote slave to write L{data} to L{fp} within boundaries
+        Called from remote subordinate to write L{data} to L{fp} within boundaries
         of L{maxsize}
 
         @type  data: C{string}
@@ -68,7 +68,7 @@ class _FileWriter(pb.Referenceable):
 
     def remote_close(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote subordinate to state that no more data will be transfered
         """
         self.fp.close()
         self.fp = None
@@ -143,7 +143,7 @@ class _DirectoryWriter(_FileWriter):
 
     def remote_unpack(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote subordinate to state that no more data will be transfered
         """
         # Make sure remote_close is called, otherwise atomic rename wont happen
         self.remote_close()
@@ -226,33 +226,33 @@ class _TransferBuildStep(BuildStep):
 
 class FileUpload(_TransferBuildStep):
     """
-    Build step to transfer a file from the slave to the master.
+    Build step to transfer a file from the subordinate to the main.
 
     arguments:
 
-    - ['slavesrc']   filename of source file at slave, relative to workdir
-    - ['masterdest'] filename of destination file at master
-    - ['workdir']    string with slave working directory relative to builder
+    - ['subordinatesrc']   filename of source file at subordinate, relative to workdir
+    - ['maindest'] filename of destination file at main
+    - ['workdir']    string with subordinate working directory relative to builder
                      base dir, default 'build'
     - ['maxsize']    maximum size of the file, default None (=unlimited)
     - ['blocksize']  maximum size of each block being transfered
-    - ['mode']       file access mode for the resulting master-side file.
+    - ['mode']       file access mode for the resulting main-side file.
                      The default (=None) is to leave it up to the umask of
-                     the buildmaster process.
+                     the buildmain process.
     - ['keepstamp']  whether to preserve file modified and accessed times
 
     """
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest' ]
+    renderables = [ 'subordinatesrc', 'maindest' ]
 
-    def __init__(self, slavesrc, masterdest,
+    def __init__(self, subordinatesrc, maindest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None, keepstamp=False,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
+        self.addFactoryArguments(subordinatesrc=subordinatesrc,
+                                 maindest=maindest,
                                  workdir=workdir,
                                  maxsize=maxsize,
                                  blocksize=blocksize,
@@ -260,8 +260,8 @@ class FileUpload(_TransferBuildStep):
                                  keepstamp=keepstamp,
                                  )
 
-        self.slavesrc = slavesrc
-        self.masterdest = masterdest
+        self.subordinatesrc = subordinatesrc
+        self.maindest = maindest
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -270,35 +270,35 @@ class FileUpload(_TransferBuildStep):
         self.keepstamp = keepstamp
 
     def start(self):
-        version = self.slaveVersion("uploadFile")
+        version = self.subordinateVersion("uploadFile")
 
         if not version:
-            m = "slave is too old, does not know about uploadFile"
-            raise BuildSlaveTooOldError(m)
+            m = "subordinate is too old, does not know about uploadFile"
+            raise BuildSubordinateTooOldError(m)
 
-        source = self.slavesrc
-        masterdest = self.masterdest
-        # we rely upon the fact that the buildmaster runs chdir'ed into its
-        # basedir to make sure that relative paths in masterdest are expanded
-        # properly. TODO: maybe pass the master's basedir all the way down
+        source = self.subordinatesrc
+        maindest = self.maindest
+        # we rely upon the fact that the buildmain runs chdir'ed into its
+        # basedir to make sure that relative paths in maindest are expanded
+        # properly. TODO: maybe pass the main's basedir all the way down
         # into the BuildStep so we can do this better.
-        masterdest = os.path.expanduser(masterdest)
-        log.msg("FileUpload started, from slave %r to master %r"
-                % (source, masterdest))
+        maindest = os.path.expanduser(maindest)
+        log.msg("FileUpload started, from subordinate %r to main %r"
+                % (source, maindest))
 
         self.step_status.setText(['uploading', os.path.basename(source)])
 
         # we use maxsize to limit the amount of data on both sides
-        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+        fileWriter = _FileWriter(maindest, self.maxsize, self.mode)
 
-        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile","2.13"):
-            m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.slavename )
-            raise BuildSlaveTooOldError(m)
+        if self.keepstamp and self.subordinateVersionIsOlderThan("uploadFile","2.13"):
+            m = ("This buildsubordinate (%s) does not support preserving timestamps. "
+                 "Please upgrade the buildsubordinate." % self.build.subordinatename )
+            raise BuildSubordinateTooOldError(m)
 
         # default arguments
         args = {
-            'slavesrc': source,
+            'subordinatesrc': source,
             'workdir': self._getWorkdir(),
             'writer': fileWriter,
             'maxsize': self.maxsize,
@@ -313,13 +313,13 @@ class FileUpload(_TransferBuildStep):
 
 class DirectoryUpload(BuildStep):
     """
-    Build step to transfer a directory from the slave to the master.
+    Build step to transfer a directory from the subordinate to the main.
 
     arguments:
 
-    - ['slavesrc']   name of source directory at slave, relative to workdir
-    - ['masterdest'] name of destination directory at master
-    - ['workdir']    string with slave working directory relative to builder
+    - ['subordinatesrc']   name of source directory at subordinate, relative to workdir
+    - ['maindest'] name of destination directory at main
+    - ['workdir']    string with subordinate working directory relative to builder
                      base dir, default 'build'
     - ['maxsize']    maximum size of the compressed tarfile containing the
                      whole directory
@@ -330,22 +330,22 @@ class DirectoryUpload(BuildStep):
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest' ]
+    renderables = [ 'subordinatesrc', 'maindest' ]
 
-    def __init__(self, slavesrc, masterdest,
+    def __init__(self, subordinatesrc, maindest,
                  workdir="build", maxsize=None, blocksize=16*1024,
                  compress=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(slavesrc=slavesrc,
-                                 masterdest=masterdest,
+        self.addFactoryArguments(subordinatesrc=subordinatesrc,
+                                 maindest=maindest,
                                  workdir=workdir,
                                  maxsize=maxsize,
                                  blocksize=blocksize,
                                  compress=compress,
                                  )
 
-        self.slavesrc = slavesrc
-        self.masterdest = masterdest
+        self.subordinatesrc = subordinatesrc
+        self.maindest = maindest
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -353,30 +353,30 @@ class DirectoryUpload(BuildStep):
         self.compress = compress
 
     def start(self):
-        version = self.slaveVersion("uploadDirectory")
+        version = self.subordinateVersion("uploadDirectory")
 
         if not version:
-            m = "slave is too old, does not know about uploadDirectory"
-            raise BuildSlaveTooOldError(m)
+            m = "subordinate is too old, does not know about uploadDirectory"
+            raise BuildSubordinateTooOldError(m)
 
-        source = self.slavesrc
-        masterdest = self.masterdest
-        # we rely upon the fact that the buildmaster runs chdir'ed into its
-        # basedir to make sure that relative paths in masterdest are expanded
-        # properly. TODO: maybe pass the master's basedir all the way down
+        source = self.subordinatesrc
+        maindest = self.maindest
+        # we rely upon the fact that the buildmain runs chdir'ed into its
+        # basedir to make sure that relative paths in maindest are expanded
+        # properly. TODO: maybe pass the main's basedir all the way down
         # into the BuildStep so we can do this better.
-        masterdest = os.path.expanduser(masterdest)
-        log.msg("DirectoryUpload started, from slave %r to master %r"
-                % (source, masterdest))
+        maindest = os.path.expanduser(maindest)
+        log.msg("DirectoryUpload started, from subordinate %r to main %r"
+                % (source, maindest))
 
         self.step_status.setText(['uploading', os.path.basename(source)])
         
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+        dirWriter = _DirectoryWriter(maindest, self.maxsize, self.compress, 0600)
 
         # default arguments
         args = {
-            'slavesrc': source,
+            'subordinatesrc': source,
             'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
@@ -414,7 +414,7 @@ class _FileReader(pb.Referenceable):
 
     def remote_read(self, maxlength):
         """
-        Called from remote slave to read at most L{maxlength} bytes of data
+        Called from remote subordinate to read at most L{maxlength} bytes of data
 
         @type  maxlength: C{integer}
         @param maxlength: Maximum number of data bytes that can be returned
@@ -430,7 +430,7 @@ class _FileReader(pb.Referenceable):
 
     def remote_close(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote subordinate to state that no more data will be transfered
         """
         if self.fp is not None:
             self.fp.close()
@@ -439,44 +439,44 @@ class _FileReader(pb.Referenceable):
 
 class FileDownload(_TransferBuildStep):
     """
-    Download the first 'maxsize' bytes of a file, from the buildmaster to the
-    buildslave. Set the mode of the file
+    Download the first 'maxsize' bytes of a file, from the buildmain to the
+    buildsubordinate. Set the mode of the file
 
     Arguments::
 
-     ['mastersrc'] filename of source file at master
-     ['slavedest'] filename of destination file at slave
-     ['workdir']   string with slave working directory relative to builder
+     ['mainsrc'] filename of source file at main
+     ['subordinatedest'] filename of destination file at subordinate
+     ['workdir']   string with subordinate working directory relative to builder
                    base dir, default 'build'
      ['maxsize']   maximum size of the file, default None (=unlimited)
      ['blocksize'] maximum size of each block being transfered
      ['mode']      use this to set the access permissions of the resulting
-                   buildslave-side file. This is traditionally an octal
+                   buildsubordinate-side file. This is traditionally an octal
                    integer, like 0644 to be world-readable (but not
                    world-writable), or 0600 to only be readable by
-                   the buildslave account, or 0755 to be world-executable.
+                   the buildsubordinate account, or 0755 to be world-executable.
                    The default (=None) is to leave it up to the umask of
-                   the buildslave process.
+                   the buildsubordinate process.
 
     """
     name = 'download'
 
-    renderables = [ 'mastersrc', 'slavedest' ]
+    renderables = [ 'mainsrc', 'subordinatedest' ]
 
-    def __init__(self, mastersrc, slavedest,
+    def __init__(self, mainsrc, subordinatedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
-        self.addFactoryArguments(mastersrc=mastersrc,
-                                 slavedest=slavedest,
+        self.addFactoryArguments(mainsrc=mainsrc,
+                                 subordinatedest=subordinatedest,
                                  workdir=workdir,
                                  maxsize=maxsize,
                                  blocksize=blocksize,
                                  mode=mode,
                                  )
 
-        self.mastersrc = mastersrc
-        self.slavedest = slavedest
+        self.mainsrc = mainsrc
+        self.subordinatedest = subordinatedest
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -484,20 +484,20 @@ class FileDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
+        version = self.subordinateVersion("downloadFile")
         if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+            m = "subordinate is too old, does not know about downloadFile"
+            raise BuildSubordinateTooOldError(m)
 
-        # we are currently in the buildmaster's basedir, so any non-absolute
+        # we are currently in the buildmain's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        source = os.path.expanduser(self.mastersrc)
-        slavedest = self.slavedest
-        log.msg("FileDownload started, from master %r to slave %r" %
-                (source, slavedest))
+        source = os.path.expanduser(self.mainsrc)
+        subordinatedest = self.subordinatedest
+        log.msg("FileDownload started, from main %r to subordinate %r" %
+                (source, subordinatedest))
 
         self.step_status.setText(['downloading', "to",
-                                  os.path.basename(slavedest)])
+                                  os.path.basename(subordinatedest)])
 
         # setup structures for reading the file
         try:
@@ -505,7 +505,7 @@ class FileDownload(_TransferBuildStep):
         except IOError:
             # if file does not exist, bail out with an error
             self.addCompleteLog('stderr',
-                                'File %r not available at master' % source)
+                                'File %r not available at main' % source)
             # TODO: once BuildStep.start() gets rewritten to use
             # maybeDeferred, just re-raise the exception here.
             reactor.callLater(0, BuildStep.finished, self, FAILURE)
@@ -514,7 +514,7 @@ class FileDownload(_TransferBuildStep):
 
         # default arguments
         args = {
-            'slavedest': slavedest,
+            'subordinatedest': subordinatedest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
@@ -528,35 +528,35 @@ class FileDownload(_TransferBuildStep):
 
 class StringDownload(_TransferBuildStep):
     """
-    Download the first 'maxsize' bytes of a string, from the buildmaster to the
-    buildslave. Set the mode of the file
+    Download the first 'maxsize' bytes of a string, from the buildmain to the
+    buildsubordinate. Set the mode of the file
 
     Arguments::
 
      ['s']         string to transfer
-     ['slavedest'] filename of destination file at slave
-     ['workdir']   string with slave working directory relative to builder
+     ['subordinatedest'] filename of destination file at subordinate
+     ['workdir']   string with subordinate working directory relative to builder
                    base dir, default 'build'
      ['maxsize']   maximum size of the file, default None (=unlimited)
      ['blocksize'] maximum size of each block being transfered
      ['mode']      use this to set the access permissions of the resulting
-                   buildslave-side file. This is traditionally an octal
+                   buildsubordinate-side file. This is traditionally an octal
                    integer, like 0644 to be world-readable (but not
                    world-writable), or 0600 to only be readable by
-                   the buildslave account, or 0755 to be world-executable.
+                   the buildsubordinate account, or 0755 to be world-executable.
                    The default (=None) is to leave it up to the umask of
-                   the buildslave process.
+                   the buildsubordinate process.
     """
     name = 'string_download'
 
-    renderables = [ 'slavedest', 's' ]
+    renderables = [ 'subordinatedest', 's' ]
 
-    def __init__(self, s, slavedest,
+    def __init__(self, s, subordinatedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(s=s,
-                                 slavedest=slavedest,
+                                 subordinatedest=subordinatedest,
                                  workdir=workdir,
                                  maxsize=maxsize,
                                  blocksize=blocksize,
@@ -564,7 +564,7 @@ class StringDownload(_TransferBuildStep):
                                  )
 
         self.s = s
-        self.slavedest = slavedest
+        self.subordinatedest = subordinatedest
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -572,18 +572,18 @@ class StringDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
+        version = self.subordinateVersion("downloadFile")
         if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+            m = "subordinate is too old, does not know about downloadFile"
+            raise BuildSubordinateTooOldError(m)
 
-        # we are currently in the buildmaster's basedir, so any non-absolute
+        # we are currently in the buildmain's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        slavedest = self.slavedest
-        log.msg("StringDownload started, from master to slave %r" % slavedest)
+        subordinatedest = self.subordinatedest
+        log.msg("StringDownload started, from main to subordinate %r" % subordinatedest)
 
         self.step_status.setText(['downloading', "to",
-                                  os.path.basename(slavedest)])
+                                  os.path.basename(subordinatedest)])
 
         # setup structures for reading the file
         fp = StringIO(self.s)
@@ -591,7 +591,7 @@ class StringDownload(_TransferBuildStep):
 
         # default arguments
         args = {
-            'slavedest': slavedest,
+            'subordinatedest': subordinatedest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
@@ -605,31 +605,31 @@ class StringDownload(_TransferBuildStep):
 
 class JSONStringDownload(StringDownload):
     """
-    Encode object o as a json string and save it on the buildslave
+    Encode object o as a json string and save it on the buildsubordinate
 
     Arguments::
 
      ['o']         object to encode and transfer
     """
     name = "json_download"
-    def __init__(self, o, slavedest, **buildstep_kwargs):
+    def __init__(self, o, subordinatedest, **buildstep_kwargs):
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
         s = json.dumps(o)
-        StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
+        StringDownload.__init__(self, s=s, subordinatedest=subordinatedest, **buildstep_kwargs)
         self.addFactoryArguments(o=o)
 
 class JSONPropertiesDownload(StringDownload):
     """
     Download the current build properties as a json string and save it on the
-    buildslave
+    buildsubordinate
     """
     name = "json_properties_download"
-    def __init__(self, slavedest, **buildstep_kwargs):
+    def __init__(self, subordinatedest, **buildstep_kwargs):
         self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        StringDownload.__init__(self, s=None, slavedest=slavedest, **buildstep_kwargs)
+        StringDownload.__init__(self, s=None, subordinatedest=subordinatedest, **buildstep_kwargs)
 
     def start(self):
         properties = self.build.getProperties()

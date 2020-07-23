@@ -81,15 +81,15 @@ class WebRTCApi(recipe_api.RecipeApi):
     return self.bot_config.get('parent_buildername')
 
   def apply_bot_config(self, builders, recipe_configs, perf_config=None):
-    mastername = self.m.properties.get('mastername')
+    mainname = self.m.properties.get('mainname')
     buildername = self.m.properties.get('buildername')
-    master_dict = builders.get(mastername, {})
-    self.master_config = master_dict.get('settings', {})
-    perf_config = self.master_config.get('PERF_CONFIG')
+    main_dict = builders.get(mainname, {})
+    self.main_config = main_dict.get('settings', {})
+    perf_config = self.main_config.get('PERF_CONFIG')
 
-    self.bot_config = master_dict.get('builders', {}).get(buildername)
-    assert self.bot_config, ('Unrecognized builder name "%r" for master "%r".' %
-                             (buildername, mastername))
+    self.bot_config = main_dict.get('builders', {}).get(buildername)
+    assert self.bot_config, ('Unrecognized builder name "%r" for main "%r".' %
+                             (buildername, mainname))
 
     self.bot_type = self.bot_config.get('bot_type', 'builder_tester')
     recipe_config_name = self.bot_config['recipe_config']
@@ -131,7 +131,7 @@ class WebRTCApi(recipe_api.RecipeApi):
       self.m.chromium_tests.configure_swarming(
           'webrtc',
           precommit=self.m.tryserver.is_tryserver,
-          mastername=mastername)
+          mainname=mainname)
       self.m.swarming.set_default_dimension(
           'os',
           self.m.swarming.prefered_os_dimension(
@@ -246,8 +246,8 @@ class WebRTCApi(recipe_api.RecipeApi):
 
   def package_build(self):
     upload_url = self.m.archive.legacy_upload_url(
-        self.master_config.get('build_gs_bucket'),
-        extra_url_components=self.m.properties['mastername'])
+        self.main_config.get('build_gs_bucket'),
+        extra_url_components=self.m.properties['mainname'])
     self.m.archive.zip_and_upload_build(
         'package build',
         self.m.chromium.c.build_config_fs,
@@ -267,8 +267,8 @@ class WebRTCApi(recipe_api.RecipeApi):
         self.m.chromium.c.build_dir.join(self.m.chromium.c.build_config_fs))
 
     download_url = self.m.archive.legacy_download_url(
-       self.master_config.get('build_gs_bucket'),
-       extra_url_components=self.m.properties['mastername'])
+       self.main_config.get('build_gs_bucket'),
+       extra_url_components=self.m.properties['mainname'])
     self.m.archive.download_and_unzip_build(
         'extract build',
         self.m.chromium.c.build_config_fs,

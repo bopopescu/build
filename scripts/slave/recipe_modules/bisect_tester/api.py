@@ -80,7 +80,7 @@ class BisectTesterApi(recipe_api.RecipeApi):
           self.m.properties['buildnumber'])
     else:
       url = "http://build.chromium.org/p/%s/json/builders/%s/builds/%s" % (
-          self.m.properties['mastername'],
+          self.m.properties['mainname'],
           self.m.properties['buildername'],
           self.m.properties['buildnumber'])
     local_save_results = self.m.python('saving url to temp file',

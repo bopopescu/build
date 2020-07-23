@@ -36,8 +36,8 @@ def Android_Debug__Nexus_9__steps(api):
   api.gclient.revert()
   # cleanup_temp step
   api.chromium.cleanup_temp()
-  # slave_steps step
-  api.python("slave_steps", "src/build/android/buildbot/bb_run_bot.py",
+  # subordinate_steps step
+  api.python("subordinate_steps", "src/build/android/buildbot/bb_run_bot.py",
       args=['--build-properties=%s' % api.json.dumps(api.properties.legacy(),
                                                      separators=(',', ':')),
             '--factory-properties={"GYP_DEFINES":" component=shared_library",'+\
@@ -70,8 +70,8 @@ def Android_Debug__Nexus_5__steps(api):
   api.gclient.revert()
   # cleanup_temp step
   api.chromium.cleanup_temp()
-  # slave_steps step
-  api.python("slave_steps", "src/build/android/buildbot/bb_run_bot.py",
+  # subordinate_steps step
+  api.python("subordinate_steps", "src/build/android/buildbot/bb_run_bot.py",
       args=['--build-properties=%s' % api.json.dumps(api.properties.legacy(),
                                                      separators=(',', ':')),
             '--factory-properties={"GYP_DEFINES":" component=shared_library",'+\
@@ -104,8 +104,8 @@ def Android_Debug__Nexus_6__steps(api):
   api.gclient.revert()
   # cleanup_temp step
   api.chromium.cleanup_temp()
-  # slave_steps step
-  api.python("slave_steps", "src/build/android/buildbot/bb_run_bot.py",
+  # subordinate_steps step
+  api.python("subordinate_steps", "src/build/android/buildbot/bb_run_bot.py",
       args=['--build-properties=%s' % api.json.dumps(api.properties.legacy(),
                                                      separators=(',', ':')),
             '--factory-properties={"GYP_DEFINES":" component=shared_library",'+\
@@ -129,22 +129,22 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('Android_Debug__Nexus_9_') +
-    api.properties(mastername='chromium.gpu') +
+    api.properties(mainname='chromium.gpu') +
     api.properties(buildername='Android Debug (Nexus 9)') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Android_Debug__Nexus_5_') +
-    api.properties(mastername='chromium.gpu') +
+    api.properties(mainname='chromium.gpu') +
     api.properties(buildername='Android Debug (Nexus 5)') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Android_Debug__Nexus_6_') +
-    api.properties(mastername='chromium.gpu') +
+    api.properties(mainname='chromium.gpu') +
     api.properties(buildername='Android Debug (Nexus 6)') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('builder_not_in_dispatch_directory') +
-    api.properties(mastername='chromium.gpu') +
+    api.properties(mainname='chromium.gpu') +
     api.properties(buildername='nonexistent_builder') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )

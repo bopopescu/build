@@ -56,20 +56,20 @@ def GenTests(api):
 
     return test_data
 
-  for mastername, slaves in TEST_BUILDERS.iteritems():
-    for slavename, builders_by_slave in slaves.iteritems():
-      for builder in builders_by_slave:
+  for mainname, subordinates in TEST_BUILDERS.iteritems():
+    for subordinatename, builders_by_subordinate in subordinates.iteritems():
+      for builder in builders_by_subordinate:
         test = (
           api.test(builder) +
           api.properties(buildername=builder,
-                         mastername=mastername,
-                         slavename=slavename,
+                         mainname=mainname,
+                         subordinatename=subordinatename,
                          buildnumber=5,
                          revision='abc123',
                          swarm_out_dir='[SWARM_OUT_DIR]') +
           api.path.exists(
-              api.path['slave_build'].join('skia'),
-              api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+              api.path['subordinate_build'].join('skia'),
+              api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
           )
         )
         if ('Android' in builder and

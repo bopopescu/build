@@ -15,7 +15,7 @@ import json
 import logging
 import os
 
-from slave.performance_log_processor import _FormatHumanReadable
+from subordinate.performance_log_processor import _FormatHumanReadable
 
 
 class TelemetryResultsProcessor(object):

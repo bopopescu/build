@@ -42,16 +42,16 @@ def RunSteps(api):
       ['--author', 'v8-autoroll@chromium.org',
        '--reviewer', 'v8-autoroll@chromium.org',
        '--push',
-       '--work-dir', api.path['slave_build'].join('workdir')],
+       '--work-dir', api.path['subordinate_build'].join('workdir')],
       cwd=api.path['checkout'],
     )
 
 
 def GenTests(api):
   yield api.test('standard') + api.properties.generic(
-      mastername='client.v8.fyi')
+      mainname='client.v8.fyi')
   yield (api.test('rolling_deactivated') +
-      api.properties.generic(mastername='client.v8.fyi') +
+      api.properties.generic(mainname='client.v8.fyi') +
       api.override_step_data(
           'check roll status', api.raw_io.stream_output('0', stream='stdout'))
     )

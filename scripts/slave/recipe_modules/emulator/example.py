@@ -40,11 +40,11 @@ BUILDERS = freeze({
 
 PROPERTIES = {
   'buildername': Property(),
-  'mastername': Property(),
+  'mainname': Property(),
 }
 
-def RunSteps(api, mastername, buildername):
-  builder = BUILDERS[mastername][buildername]
+def RunSteps(api, mainname, buildername):
+  builder = BUILDERS[mainname][buildername]
   api.chromium_android.configure_from_properties(
       builder['config'],
       REPO_NAME='src',
@@ -77,11 +77,11 @@ def RunSteps(api, mastername, buildername):
 def GenTests(api):
   sanitize = lambda s: ''.join(c if c.isalnum() else '_' for c in s)
 
-  for mastername in BUILDERS:
-    master = BUILDERS[mastername]
-    for buildername in master:
+  for mainname in BUILDERS:
+    main = BUILDERS[mainname]
+    for buildername in main:
       yield (
           api.test('%s_test_basic' % sanitize(buildername)) +
           api.properties.generic(
               buildername=buildername,
-              mastername=mastername))
+              mainname=mainname))

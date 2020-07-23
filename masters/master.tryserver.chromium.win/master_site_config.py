@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class TryServerChromiumWin(Master.Master4a):
+class TryServerChromiumWin(Main.Main4a):
   project_name = 'Chromium Win Try Server'
-  master_port = 8090
-  slave_port = 8190
-  master_port_alt = 8290
+  main_port = 8090
+  subordinate_port = 8190
+  main_port_alt = 8290
   try_job_port = 8390
   # Select tree status urls and codereview location.
   reply_to = 'chrome-troopers+tryserver@google.com'
@@ -22,4 +22,4 @@ class TryServerChromiumWin(Master.Master4a):
   svn_url = 'svn://svn-mirror.golo.chromium.org/chrome-try/try'
   buildbot_url = 'http://build.chromium.org/p/tryserver.chromium.win/'
   service_account_file = 'service-account-chromium-tryserver.json'
-  buildbucket_bucket = 'master.tryserver.chromium.win'
+  buildbucket_bucket = 'main.tryserver.chromium.win'

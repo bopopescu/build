@@ -143,13 +143,13 @@ BUILDERS = freeze({
 from recipe_engine.recipe_api import Property
 
 PROPERTIES = {
-  'mastername': Property(),
+  'mainname': Property(),
   'buildername': Property(),
   'revision': Property(default='HEAD'),
 }
 
-def _RunStepsInternal(api, mastername, buildername, revision):
-  bot_config = BUILDERS[mastername][buildername]
+def _RunStepsInternal(api, mainname, buildername, revision):
+  bot_config = BUILDERS[mainname][buildername]
   droid = api.chromium_android
 
   default_kwargs = {
@@ -183,7 +183,7 @@ def _RunStepsInternal(api, mastername, buildername, revision):
   api.chromium.runhooks()
 
   if bot_config.get('run_mb'):
-    api.chromium.run_mb(mastername, buildername, use_goma=True)
+    api.chromium.run_mb(mainname, buildername, use_goma=True)
 
   if bot_config.get('check_licenses'):
     with bot_config['check_licenses']():
@@ -200,9 +200,9 @@ def _RunStepsInternal(api, mastername, buildername, revision):
     droid.zip_and_upload_build(upload_config['bucket'])
 
 
-def RunSteps(api, mastername, buildername, revision):
+def RunSteps(api, mainname, buildername, revision):
   with api.tryserver.set_failure_hash():
-    return _RunStepsInternal(api, mastername, buildername, revision)
+    return _RunStepsInternal(api, mainname, buildername, revision)
 
 
 def _sanitize_nonalpha(text):
@@ -211,33 +211,33 @@ def _sanitize_nonalpha(text):
 
 def GenTests(api):
   # tests bots in BUILDERS
-  for mastername, builders in BUILDERS.iteritems():
+  for mainname, builders in BUILDERS.iteritems():
     for buildername in builders:
       yield (
-        api.test('full_%s_%s' % (_sanitize_nonalpha(mastername),
+        api.test('full_%s_%s' % (_sanitize_nonalpha(mainname),
                                  _sanitize_nonalpha(buildername))) +
         api.properties.generic(buildername=buildername,
             repository='svn://svn.chromium.org/chrome/trunk/src',
             buildnumber=257,
-            mastername=mastername,
+            mainname=mainname,
             issue='8675309',
             patchset='1',
             revision='267739',
             got_revision='267739'))
 
-  def step_failure(mastername, buildername, steps, tryserver=False):
+  def step_failure(mainname, buildername, steps, tryserver=False):
     props = api.properties.tryserver if tryserver else api.properties.generic
     return (
       api.test('%s_%s_fail_%s' % (
-        _sanitize_nonalpha(mastername),
+        _sanitize_nonalpha(mainname),
         _sanitize_nonalpha(buildername),
         '_'.join(_sanitize_nonalpha(step) for step in steps))) +
-      props(mastername=mastername, buildername=buildername) +
+      props(mainname=mainname, buildername=buildername) +
       reduce(lambda a, b: a + b,
              (api.step_data(step, retcode=1) for step in steps))
     )
 
-  yield step_failure(mastername='chromium.android',
+  yield step_failure(mainname='chromium.android',
                      buildername='Android x64 Builder (dbg)',
                      steps=['check licenses'])
 

@@ -9,9 +9,9 @@ import re
 
 from twisted.python import log
 
-from master import build_utils
-from master import chromium_notifier
-from master import failures_history
+from main import build_utils
+from main import chromium_notifier
+from main import failures_history
 
 
 class FailuresNotifier(chromium_notifier.ChromiumNotifier):
@@ -48,17 +48,17 @@ class FailuresNotifier(chromium_notifier.ChromiumNotifier):
         self, build_status, step_status, results):
       return False
 
-    # Check if the slave is still alive. We should not close the tree for
-    # inactive slaves.
-    slave_name = build_status.getSlavename()
-    if slave_name in self.master_status.getSlaveNames():
-      # @type self.master_status: L{buildbot.status.builder.Status}
-      # @type self.parent: L{buildbot.master.BuildMaster}
-      # @rtype getSlave(): L{buildbot.status.builder.SlaveStatus}
-      slave_status = self.master_status.getSlave(slave_name)
-      if slave_status and not slave_status.isConnected():
-        log.msg('[failurenotifier] Slave %s was disconnected, '
-                'not sending a warning' % slave_name)
+    # Check if the subordinate is still alive. We should not close the tree for
+    # inactive subordinates.
+    subordinate_name = build_status.getSubordinatename()
+    if subordinate_name in self.main_status.getSubordinateNames():
+      # @type self.main_status: L{buildbot.status.builder.Status}
+      # @type self.parent: L{buildbot.main.BuildMain}
+      # @rtype getSubordinate(): L{buildbot.status.builder.SubordinateStatus}
+      subordinate_status = self.main_status.getSubordinate(subordinate_name)
+      if subordinate_status and not subordinate_status.isConnected():
+        log.msg('[failurenotifier] Subordinate %s was disconnected, '
+                'not sending a warning' % subordinate_name)
         return False
 
     # If all the failure_ids were observed in older builds then this
@@ -94,18 +94,18 @@ class FailuresNotifier(chromium_notifier.ChromiumNotifier):
     #
     # This code is intentionally put after Put calls so we don't send failure
     # notifications with the wrong blamelist once bots cycle for the second time
-    # after a master restart.
+    # after a main restart.
     latest_revision = build_utils.getLatestRevision(build_status)
     if not latest_revision or not build_status.getResponsibleUsers():
-      log.msg('[failurenotifier] Slave %s failed, but no version stamp, '
-              'so skipping.' % slave_name)
+      log.msg('[failurenotifier] Subordinate %s failed, but no version stamp, '
+              'so skipping.' % subordinate_name)
       return False
 
     if has_failures_to_report:
-      log.msg('[failurenotifier] Decided to send a warning because of slave %s '
-              'on revision %s' % (slave_name, str(latest_revision)))
+      log.msg('[failurenotifier] Decided to send a warning because of subordinate %s '
+              'on revision %s' % (subordinate_name, str(latest_revision)))
       return True
     else:
-      log.msg('[failurenotifier] Slave %s revision %s has no interesting '
-              'failures' % (slave_name, str(latest_revision)))
+      log.msg('[failurenotifier] Subordinate %s revision %s has no interesting '
+              'failures' % (subordinate_name, str(latest_revision)))
       return False

@@ -11,7 +11,7 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-from slave import performance_log_processor
+from subordinate import performance_log_processor
 
 # These should be the same as the constants used in performance_log_processor.
 # See: http://docs.buildbot.net/current/developer/results.html

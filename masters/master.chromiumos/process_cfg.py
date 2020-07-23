@@ -3,13 +3,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Reads master.cfg and makes exports for buildbot."""
+"""Reads main.cfg and makes exports for buildbot."""
 
 import sys
 
 def main(_argv):
 
-  localDict = {'__file__': 'master.cfg'}
+  localDict = {'__file__': 'main.cfg'}
 
   with open(localDict['__file__'], 'r') as f:
     exec f in localDict

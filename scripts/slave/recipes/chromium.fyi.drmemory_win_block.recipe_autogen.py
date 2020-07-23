@@ -20,7 +20,7 @@ def Windows_Tests__DrMemory__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -52,7 +52,7 @@ def Windows_Tests__DrMemory__steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -60,7 +60,7 @@ def Windows_Tests__DrMemory__steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
@@ -69,7 +69,7 @@ def Windows_Tests__DrMemory__steps(api):
       # runtest step
       api.python(
           "memory test: webkit",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--run-shell-script', '--target', 'Release',
             "--build-properties=%s" %
@@ -87,7 +87,7 @@ def Windows_Tests__DrMemory__steps(api):
       # runtest step
       api.python(
           "memory test: webkit",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--run-shell-script', '--target', 'Release',
             "--build-properties=%s" %
@@ -109,7 +109,7 @@ def Windows_Browser__DrMemory_light___1__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -141,7 +141,7 @@ def Windows_Browser__DrMemory_light___1__steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -149,7 +149,7 @@ def Windows_Browser__DrMemory_light___1__steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
@@ -157,7 +157,7 @@ def Windows_Browser__DrMemory_light___1__steps(api):
     # runtest step
     api.python(
         "memory test: browser_tests",
-        api.path["build"].join("scripts", "slave", "runtest.py"),
+        api.path["build"].join("scripts", "subordinate", "runtest.py"),
         args=
         ['--run-shell-script', '--target', 'Release', "--build-properties=%s" %
          api.json.dumps(build_properties,
@@ -179,7 +179,7 @@ def Windows_Builder__DrMemory__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -211,7 +211,7 @@ def Windows_Builder__DrMemory__steps(api):
            'GYP_DEFINES': 'build_for_tool=drmemory component=shared_library',
            'LANDMINES_VERBOSE': '1'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -222,12 +222,12 @@ def Windows_Builder__DrMemory__steps(api):
     if "clobber" in api.properties:
         args.append("--clobber")
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # zip_build step
     step_result = api.python(
         "zip build",
-        api.path["build"].join("scripts", "slave", "zip_build.py"),
+        api.path["build"].join("scripts", "subordinate", "zip_build.py"),
         args=
         ["--json-urls", api.json.output(),
          "--target", "Release", '--build-url',
@@ -261,7 +261,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -283,7 +283,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
         {'builder_name': 'Windows Browser (DrMemory light) (1)',
          "properties":
@@ -298,7 +298,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -320,7 +320,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
         {'builder_name': 'Windows Browser (DrMemory light) (2)',
          "properties":
@@ -335,7 +335,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -357,7 +357,7 @@ def Windows_Builder__DrMemory__steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
     ]
     api.trigger(*trigger_spec)
@@ -368,7 +368,7 @@ def Windows_Browser__DrMemory_light___2__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -400,7 +400,7 @@ def Windows_Browser__DrMemory_light___2__steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -408,7 +408,7 @@ def Windows_Browser__DrMemory_light___2__steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
@@ -416,7 +416,7 @@ def Windows_Browser__DrMemory_light___2__steps(api):
     # runtest step
     api.python(
         "memory test: browser_tests",
-        api.path["build"].join("scripts", "slave", "runtest.py"),
+        api.path["build"].join("scripts", "subordinate", "runtest.py"),
         args=
         ['--run-shell-script', '--target', 'Release', "--build-properties=%s" %
          api.json.dumps(build_properties,
@@ -452,35 +452,35 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('Windows_Tests__DrMemory_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Windows Tests (DrMemory)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Windows_Browser__DrMemory_light___1_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Windows Browser (DrMemory light) (1)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Windows_Builder__DrMemory_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Windows Builder (DrMemory)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.step_data('zip build', api.json.output({'storage_url': 'abc',
       'zip_url': 'abc'})) +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Windows_Builder__DrMemory_clobber') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Windows Builder (DrMemory)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
@@ -488,19 +488,19 @@ def GenTests(api):
     api.properties(clobber='') +
     api.step_data('zip build', api.json.output({'storage_url': 'abc',
       'zip_url': 'abc'})) +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Windows_Browser__DrMemory_light___2_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Windows Browser (DrMemory light) (2)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('builder_not_in_dispatch_directory') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='nonexistent_builder') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )

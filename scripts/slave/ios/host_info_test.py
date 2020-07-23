@@ -11,7 +11,7 @@ Usage:
 
 import unittest
 
-from slave.ios import host_info
+from subordinate.ios import host_info
 
 
 class ExtractXcodeVersionTest(unittest.TestCase):

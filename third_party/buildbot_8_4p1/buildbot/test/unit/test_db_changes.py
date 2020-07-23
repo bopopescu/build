@@ -47,15 +47,15 @@ class TestChangesConnectorComponent(
 
     change13_rows = [
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
-            is_dir=0, branch="master", revision="deadbeef",
+            is_dir=0, branch="main", revision="deadbeef",
             when_timestamp=266738400, revlink=None, category=None,
             repository='', project=''),
 
         fakedb.ChangeLink(changeid=13, link='http://buildbot.net'),
         fakedb.ChangeLink(changeid=13, link='http://sf.net/projects/buildbot'),
 
-        fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
-        fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
+        fakedb.ChangeFile(changeid=13, filename='main/README.txt'),
+        fakedb.ChangeFile(changeid=13, filename='subordinate/README.txt'),
 
         fakedb.ChangeProperty(changeid=13, property_name='notest',
             property_value='["no","Change"]'),
@@ -67,7 +67,7 @@ class TestChangesConnectorComponent(
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
             category='devel', repository='git://warner', project='Buildbot'),
 
-        fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
+        fakedb.ChangeFile(changeid=14, filename='main/buildbot/__init__.py'),
     ]
 
     change14_dict = {
@@ -76,7 +76,7 @@ class TestChangesConnectorComponent(
         'branch': u'warnerdb',
         'category': u'devel',
         'comments': u'fix whitespace',
-        'files': [u'master/buildbot/__init__.py'],
+        'files': [u'main/buildbot/__init__.py'],
         'is_dir': 0,
         'links': [],
         'project': u'Buildbot',
@@ -100,7 +100,7 @@ class TestChangesConnectorComponent(
          branch=u'warnerdb',
          revlink=u'http://warner/0e92a098b',
          properties={},
-         files=[u'master/buildbot/__init__.py'],
+         files=[u'main/buildbot/__init__.py'],
          revision=u'0e92a098b'))
         c.number = 14
         return c
@@ -182,13 +182,13 @@ class TestChangesConnectorComponent(
     def test_addChange(self):
         d = self.db.changes.addChange(
                  author=u'dustin',
-                 files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
+                 files=[u'main/LICENSING.txt', u'subordinate/LICENSING.txt'],
                  comments=u'fix spelling',
                  is_dir=0,
                  links=[u'http://slashdot.org', u'http://wired.com/g'],
                  revision=u'2d6caa52',
                  when_timestamp=epoch2datetime(266738400),
-                 branch=u'master',
+                 branch=u'main',
                  category=None,
                  revlink=None,
                  properties={u'platform': (u'linux', 'Change')},
@@ -205,7 +205,7 @@ class TestChangesConnectorComponent(
                 self.assertEqual(r[0].author, 'dustin')
                 self.assertEqual(r[0].comments, 'fix spelling')
                 self.assertFalse(r[0].is_dir)
-                self.assertEqual(r[0].branch, 'master')
+                self.assertEqual(r[0].branch, 'main')
                 self.assertEqual(r[0].revision, '2d6caa52')
                 self.assertEqual(r[0].when_timestamp, 266738400)
                 self.assertEqual(r[0].category, None)
@@ -233,8 +233,8 @@ class TestChangesConnectorComponent(
                 r = conn.execute(query)
                 r = r.fetchall()
                 self.assertEqual(len(r), 2)
-                self.assertEqual(r[0].filename, 'master/LICENSING.txt')
-                self.assertEqual(r[1].filename, 'slave/LICENSING.txt')
+                self.assertEqual(r[0].filename, 'main/LICENSING.txt')
+                self.assertEqual(r[1].filename, 'subordinate/LICENSING.txt')
             return self.db.pool.do(thd)
         d.addCallback(check_change_files)
         def check_change_properties(_):
@@ -262,7 +262,7 @@ class TestChangesConnectorComponent(
                  links=[],
                  revision=u'2d6caa52',
                  when_timestamp=None,
-                 branch=u'master',
+                 branch=u'main',
                  category=None,
                  revlink=None,
                  properties={},
@@ -402,7 +402,7 @@ class TestChangesConnectorComponent(
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
             self.assertEqual(sorted(changes[0]['files']),
-                        sorted(['master/README.txt', 'slave/README.txt']))
+                        sorted(['main/README.txt', 'subordinate/README.txt']))
             self.assertEqual(sorted(changes[0]['links']),
                         sorted(['http://buildbot.net',
                                 'http://sf.net/projects/buildbot']))

@@ -18,14 +18,14 @@
 import os, sys, re, time
 from twisted.python import usage
 
-def isBuildslaveDir(dir):
+def isBuildsubordinateDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     if not os.path.isfile(buildbot_tac):
         print "no buildbot.tac"
         return False
 
     contents = open(buildbot_tac, "r").read()
-    return "Application('buildslave')" in contents
+    return "Application('buildsubordinate')" in contents
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -102,11 +102,11 @@ class Maker:
         if secret:
             os.chmod(tacfile, 0600)
 
-slaveTACTemplate = ["""
+subordinateTACTemplate = ["""
 import os
 
 from twisted.application import service
-from buildslave.bot import BuildSlave
+from buildsubordinate.bot import BuildSubordinate
 
 basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
@@ -117,9 +117,9 @@ if basedir == '.':
     import os.path
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-# note: this line is matched against to check that this is a buildslave
+# note: this line is matched against to check that this is a buildsubordinate
 # directory; do not edit it.
-application = service.Application('buildslave')
+application = service.Application('buildsubordinate')
 """,
 """
 try:
@@ -133,51 +133,51 @@ except ImportError:
   pass
 """,
 """
-buildmaster_host = '%(host)s'
+buildmain_host = '%(host)s'
 port = %(port)d
-slavename = '%(name)s'
+subordinatename = '%(name)s'
 passwd = '%(passwd)s'
 keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
 
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+s = BuildSubordinate(buildmain_host, port, subordinatename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 
 """]
 
-def createSlave(config):
+def createSubordinate(config):
     m = Maker(config)
     m.mkdir()
     m.chdir()
     if config['relocatable']:
         config['basedir'] = '.'
     try:
-        master = config['master']
+        main = config['main']
         port = None
-        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
+        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', main).groups()
         if port == None:
             port = '9989'
         config['host'] = host
         config['port'] = int(port)
     except:
-        print "unparseable master location '%s'" % master
+        print "unparseable main location '%s'" % main
         print " expecting something more like localhost:8007 or localhost"
         raise
 
     if config['no-logrotate']:
-        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
+        subordinateTAC = "".join([subordinateTACTemplate[0]] + subordinateTACTemplate[2:])
     else:
-        slaveTAC = "".join(slaveTACTemplate)
-    contents = slaveTAC % config
+        subordinateTAC = "".join(subordinateTACTemplate)
+    contents = subordinateTAC % config
 
     m.makeTAC(contents, secret=True)
     m.mkinfo()
 
     if not m.quiet:
-        print "buildslave configured in %s" % m.basedir
+        print "buildsubordinate configured in %s" % m.basedir
 
 
 
@@ -186,8 +186,8 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
+    if not isBuildsubordinateDir(config['basedir']):
+        print "not a buildsubordinate directory"
         sys.exit(1)
 
     os.chdir(basedir)
@@ -196,7 +196,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     except:
         if returnFalseOnNotRunning:
             return False
-        if not quiet: print "buildslave not running."
+        if not quiet: print "buildsubordinate not running."
         sys.exit(0)
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
@@ -218,7 +218,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                print "buildslave process %d is dead" % pid
+                print "buildsubordinate process %d is dead" % pid
             return
         timer += 1
         time.sleep(1)
@@ -228,16 +228,16 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
 def restart(config):
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
+    if not isBuildsubordinateDir(config['basedir']):
+        print "not a buildsubordinate directory"
         sys.exit(1)
 
-    from buildslave.scripts.startup import start
+    from buildsubordinate.scripts.startup import start
     if not stop(config, wait=True, returnFalseOnNotRunning=True):
         if not quiet:
-            print "no old buildslave process found to stop"
+            print "no old buildsubordinate process found to stop"
     if not quiet:
-        print "now restarting buildslave process.."
+        print "now restarting buildsubordinate process.."
     start(config)
 
 
@@ -271,39 +271,39 @@ class StartOptions(MakerBase):
         ['quiet', 'q', "Don't display startup log messages"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildslave start [<basedir>]"
+        return "Usage:    buildsubordinate start [<basedir>]"
 
 class StopOptions(MakerBase):
     def getSynopsis(self):
-        return "Usage:    buildslave stop [<basedir>]"
+        return "Usage:    buildsubordinate stop [<basedir>]"
 
 class RestartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildslave restart [<basedir>]"
+        return "Usage:    buildsubordinate restart [<basedir>]"
 
-class UpgradeSlaveOptions(MakerBase):
+class UpgradeSubordinateOptions(MakerBase):
     optFlags = [
         ]
     optParameters = [
         ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave upgrade-slave [<basedir>]"
+        return "Usage:    buildsubordinate upgrade-subordinate [<basedir>]"
 
     longdesc = """
-    This command takes an existing buildslave working directory and
+    This command takes an existing buildsubordinate working directory and
     upgrades it to the current version.
     """
 
-def upgradeSlave(config):
+def upgradeSubordinate(config):
     basedir = os.path.expanduser(config['basedir'])
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
     new_buildbot_tac = buildbot_tac.replace(
-        "from buildbot.slave.bot import BuildSlave",
-        "from buildslave.bot import BuildSlave")
+        "from buildbot.subordinate.bot import BuildSubordinate",
+        "from buildsubordinate.bot import BuildSubordinate")
     if new_buildbot_tac != buildbot_tac:
         open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
         print "buildbot.tac updated"
@@ -313,13 +313,13 @@ def upgradeSlave(config):
     return 0
 
 
-class SlaveOptions(MakerBase):
+class SubordinateOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
         ["no-logrotate", "n",
-         "Do not permit buildmaster rotate logs by itself"]
+         "Do not permit buildmain rotate logs by itself"]
         ]
     optParameters = [
         ["keepalive", "k", 600,
@@ -337,29 +337,29 @@ class SlaveOptions(MakerBase):
         ]
     
     longdesc = """
-    This command creates a buildslave working directory and buildbot.tac
+    This command creates a buildsubordinate working directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
-    itself when connecting to the master. All commands are run in a
-    build-specific subdirectory of <basedir>. <master> is a string of the
-    form 'hostname[:port]', and specifies where the buildmaster can be reached.
+    itself when connecting to the main. All commands are run in a
+    build-specific subdirectory of <basedir>. <main> is a string of the
+    form 'hostname[:port]', and specifies where the buildmain can be reached.
     port defaults to 9989
 
-    The appropriate values for <name>, <passwd>, and <master> should be
-    provided to you by the buildmaster administrator. You must choose <basedir>
+    The appropriate values for <name>, <passwd>, and <main> should be
+    provided to you by the buildmain administrator. You must choose <basedir>
     yourself.
     """
 
     def getSynopsis(self):
-        return "Usage:    buildslave create-slave [options] <basedir> <master> <name> <passwd>"
+        return "Usage:    buildsubordinate create-subordinate [options] <basedir> <main> <name> <passwd>"
 
     def parseArgs(self, *args):
         if len(args) < 4:
             raise usage.UsageError("command needs more arguments")
-        basedir, master, name, passwd = args
-        if master[:5] == "http:":
-            raise usage.UsageError("<master> is not a URL - do not use URL")
+        basedir, main, name, passwd = args
+        if main[:5] == "http:":
+            raise usage.UsageError("<main> is not a URL - do not use URL")
         self['basedir'] = basedir
-        self['master'] = master
+        self['main'] = main
         self['name'] = name
         self['passwd'] = passwd
 
@@ -376,23 +376,23 @@ class SlaveOptions(MakerBase):
                                    " or None")
 
 class Options(usage.Options):
-    synopsis = "Usage:    buildslave <command> [command options]"
+    synopsis = "Usage:    buildsubordinate <command> [command options]"
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, SlaveOptions,
-         "Create and populate a directory for a new buildslave"],
-        ['upgrade-slave', None, UpgradeSlaveOptions,
-         "Upgrade an existing buildslave directory for the current version"],
-        ['start', None, StartOptions, "Start a buildslave"],
-        ['stop', None, StopOptions, "Stop a buildslave"],
+        ['create-subordinate', None, SubordinateOptions,
+         "Create and populate a directory for a new buildsubordinate"],
+        ['upgrade-subordinate', None, UpgradeSubordinateOptions,
+         "Upgrade an existing buildsubordinate directory for the current version"],
+        ['start', None, StartOptions, "Start a buildsubordinate"],
+        ['stop', None, StopOptions, "Stop a buildsubordinate"],
         ['restart', None, RestartOptions,
-         "Restart a buildslave"],
+         "Restart a buildsubordinate"],
         ]
 
     def opt_version(self):
-        import buildslave
-        print "Buildslave version: %s" % buildslave.version
+        import buildsubordinate
+        print "Buildsubordinate version: %s" % buildsubordinate.version
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -418,16 +418,16 @@ def run():
     command = config.subCommand
     so = config.subOptions
 
-    if command == "create-slave":
-        createSlave(so)
-    elif command == "upgrade-slave":
-        upgradeSlave(so)
+    if command == "create-subordinate":
+        createSubordinate(so)
+    elif command == "upgrade-subordinate":
+        upgradeSubordinate(so)
     elif command == "start":
-        if not isBuildslaveDir(so['basedir']):
-            print "not a buildslave directory"
+        if not isBuildsubordinateDir(so['basedir']):
+            print "not a buildsubordinate directory"
             sys.exit(1)
 
-        from buildslave.scripts.startup import start
+        from buildsubordinate.scripts.startup import start
         start(so)
     elif command == "stop":
         stop(so, wait=True)

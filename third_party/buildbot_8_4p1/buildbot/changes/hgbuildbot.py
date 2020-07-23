@@ -30,7 +30,7 @@
 # config items:
 #
 # REQUIRED:
-#   master = host:port                   # host to send buildbot changes
+#   main = host:port                   # host to send buildbot changes
 #
 # OPTIONAL:
 #   branchtype = inrepo|dirname          # dirname: branch = name of directory
@@ -41,7 +41,7 @@
 #   branch = branchname                  # if set, branch is always branchname
 #
 #   fork = True|False                    # if mercurial should fork before 
-#                                        # notifying the master
+#                                        # notifying the main
 #
 #   strip = 3                            # number of path to strip for local 
 #                                        # repo path to form 'repository'
@@ -80,8 +80,8 @@ except ImportError:
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
-    master = ui.config('hgbuildbot', 'master')
-    if master:
+    main = ui.config('hgbuildbot', 'main')
+    if main:
         branchtype = ui.config('hgbuildbot', 'branchtype')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
@@ -124,7 +124,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         auth = 'change:changepw'
     auth = auth.split(':', 1)
 
-    s = sendchange.Sender(master, auth=auth)
+    s = sendchange.Sender(main, auth=auth)
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
     # process changesets
@@ -157,7 +157,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         if branch:
             branch = fromlocal(branch)
         change = {
-            'master': master,
+            'main': main,
             'username': fromlocal(user),
             'revision': hex(node),
             'comments': fromlocal(desc),

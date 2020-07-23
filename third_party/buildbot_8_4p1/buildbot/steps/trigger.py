@@ -129,8 +129,8 @@ class Trigger(LoggingBuildStep):
 
         self.running = True
 
-        # (is there an easier way to find the BuildMaster?)
-        all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
+        # (is there an easier way to find the BuildMain?)
+        all_schedulers = self.build.builder.botmain.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
         unknown_schedulers = []
         triggered_schedulers = []
@@ -151,9 +151,9 @@ class Trigger(LoggingBuildStep):
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
             return self.end(FAILURE)
 
-        master = self.build.builder.botmaster.parent # seriously?!
+        main = self.build.builder.botmain.parent # seriously?!
         if self.sourceStamp:
-            d = master.db.sourcestamps.addSourceStamp(**self.sourceStamp)
+            d = main.db.sourcestamps.addSourceStamp(**self.sourceStamp)
         elif self.alwaysUseLatest:
             d = defer.succeed(None)
         else:
@@ -162,7 +162,7 @@ class Trigger(LoggingBuildStep):
                 got = properties.getProperty('got_revision')
                 if got:
                     ss = ss.getAbsoluteSourceStamp(got)
-            d = ss.getSourceStampId(master)
+            d = ss.getSourceStampId(main)
         def start_builds(ssid):
             dl = []
             for scheduler in triggered_schedulers:

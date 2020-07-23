@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-# Test clean shutdown functionality of the master
+# Test clean shutdown functionality of the main
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer

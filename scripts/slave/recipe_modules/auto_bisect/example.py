@@ -56,13 +56,13 @@ def RunSteps(api):
   # Test runner for classic bisect script; calls bisect script in recipe
   # wrapper with extra_src and path_to_config to override default behavior for
   # android-chrome bisect jobs.
-  if api.properties.get('mastername'):
+  if api.properties.get('mainname'):
     # TODO(akuegel): Load the config explicitly instead of relying on the
     # builders.py entries in chromium_tests.
-    mastername = api.properties.get('mastername')
+    mainname = api.properties.get('mainname')
     buildername = api.properties.get('buildername')
     bot_config = api.chromium_tests.create_bot_config_object(
-        mastername, buildername)
+        mainname, buildername)
     api.chromium_tests.configure_build(bot_config)
     api.chromium_tests.prepare_checkout(bot_config)
     kwargs = {
@@ -180,9 +180,9 @@ def GenTests(api):
   bisect_script_test = _make_test(
       api, _get_basic_test_data(), 'basic_bisect_script')
 
-  bisect_script_test += api.properties(mastername='tryserver.chromium.perf',
+  bisect_script_test += api.properties(mainname='tryserver.chromium.perf',
                                        buildername='linux_perf_bisect',
-                                       slavename='dummyslave')
+                                       subordinatename='dummysubordinate')
   yield bisect_script_test
 
 
@@ -401,7 +401,7 @@ def _get_config(params=None):
       'bug_id': '-1',
       'max_time_minutes': '5',
       'gs_bucket': 'chrome-perf',
-      'builder_host': 'master4.golo.chromium.org',
+      'builder_host': 'main4.golo.chromium.org',
       'builder_port': '8341',
       'dummy_builds': 'True',
       'dummy_job_names': 'True',
@@ -422,7 +422,7 @@ def _get_step_data_for_revision(api, revision_data, include_build_steps=True):
 
   if 'refrange' in revision_data:
     parent_step = 'Resolving reference range.'
-    commit_pos = 'refs/heads/master@{#%s}' % commit_pos_number
+    commit_pos = 'refs/heads/main@{#%s}' % commit_pos_number
     step_name = parent_step + 'crrev get commit hash for ' + commit_pos
     yield api.step_data(
         step_name,

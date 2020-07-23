@@ -21,7 +21,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
-     css_classes, path_to_build, path_to_builder, path_to_slave, \
+     css_classes, path_to_build, path_to_builder, path_to_subordinate, \
      getAndCheckProperties, path_to_authfail
 
 from buildbot.status.web.step import StepsResource
@@ -86,7 +86,7 @@ class StatusResourceBuild(HtmlResource):
             cxt['got_revision'] = str(got_revision)
 
         try:
-            cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))
+            cxt['subordinate_url'] = path_to_subordinate(req, status.getSubordinate(b.getSubordinatename()))
         except KeyError:
             pass
 
@@ -181,7 +181,7 @@ class StatusResourceBuild(HtmlResource):
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
 
-        c = interfaces.IControl(self.getBuildmaster(req))
+        c = interfaces.IControl(self.getBuildmain(req))
         bldrc = c.getBuilder(self.build_status.getBuilder().getName())
         if bldrc:
             bldc = bldrc.getBuild(self.build_status.getNumber())
@@ -201,7 +201,7 @@ class StatusResourceBuild(HtmlResource):
             return Redirect(path_to_authfail(req))
 
         # get a control object
-        c = interfaces.IControl(self.getBuildmaster(req))
+        c = interfaces.IControl(self.getBuildmain(req))
         bc = c.getBuilder(self.build_status.getBuilder().getName())
 
         b = self.build_status

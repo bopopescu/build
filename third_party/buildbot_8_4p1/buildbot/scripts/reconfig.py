@@ -17,7 +17,7 @@
 import os, signal, platform
 from twisted.internet import reactor
 
-from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
+from buildbot.scripts.logwatcher import LogWatcher, BuildmainTimeoutError, \
      ReconfigError
 
 class Reconfigurator:
@@ -64,11 +64,11 @@ Reconfiguration appears to have completed successfully.
         reactor.stop()
 
     def failure(self, why):
-        if why.check(BuildmasterTimeoutError):
+        if why.check(BuildmainTimeoutError):
             print "Never saw reconfiguration finish."
         elif why.check(ReconfigError):
             print """
-Reconfiguration failed. Please inspect the master.cfg file for errors,
+Reconfiguration failed. Please inspect the main.cfg file for errors,
 correct them, then try 'buildbot reconfig' again.
 """
         elif why.check(IOError):

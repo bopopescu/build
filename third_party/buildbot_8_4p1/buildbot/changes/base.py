@@ -24,8 +24,8 @@ from buildbot import util
 class ChangeSource(service.Service, util.ComparableMixin):
     implements(IChangeSource)
 
-    master = None
-    "if C{self.running} is true, then C{cs.master} points to the buildmaster."
+    main = None
+    "if C{self.running} is true, then C{cs.main} points to the buildmain."
 
     def describe(self):
         pass

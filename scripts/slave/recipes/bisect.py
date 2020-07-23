@@ -18,12 +18,12 @@ DEPS = [
 ]
 
 def RunSteps(api):
-  mastername = api.m.properties.get('mastername')
+  mainname = api.m.properties.get('mainname')
   buildername = api.m.properties.get('buildername')
   # TODO(akuegel): Explicitly load the configs for the builders and don't rely
   # on builders.py in chromium_tests recipe module.
   bot_config = api.chromium_tests.create_bot_config_object(
-      mastername, buildername)
+      mainname, buildername)
   api.chromium_tests.configure_build(bot_config)
   api.m.chromium_tests.prepare_checkout(bot_config)
   api.auto_bisect.perform_bisect()
@@ -34,16 +34,16 @@ def GenTests(api):
   broken_good_rev_test = api.test('broken_good_revision_test')
   return_code_test = api.test('basic_return_code_test')
   basic_test += api.properties.generic(
-      mastername='tryserver.chromium.perf',
+      mainname='tryserver.chromium.perf',
       buildername='linux_perf_bisector')
   broken_bad_rev_test += api.properties.generic(
-      mastername='tryserver.chromium.perf',
+      mainname='tryserver.chromium.perf',
       buildername='linux_perf_bisector')
   broken_good_rev_test += api.properties.generic(
-      mastername='tryserver.chromium.perf',
+      mainname='tryserver.chromium.perf',
       buildername='linux_perf_bisector')
   return_code_test += api.properties.generic(
-      mastername='tryserver.chromium.perf',
+      mainname='tryserver.chromium.perf',
       buildername='linux_perf_bisector')
 
   bisect_config = {
@@ -57,7 +57,7 @@ def GenTests(api):
       'max_time_minutes': '5',
       'bug_id': '425582',
       'gs_bucket': 'chrome-perf',
-      'builder_host': 'master4.golo.chromium.org',
+      'builder_host': 'main4.golo.chromium.org',
       'builder_port': '8341',
       'dummy_initial_confidence': '95',
       'poll_sleep': 0,
@@ -265,7 +265,7 @@ def _get_step_data_for_revision(api, revision_data, skip_results=False):
 
   if 'refrange' in revision_data:
     parent_step = 'Resolving reference range.'
-    commit_pos = 'refs/heads/master@{#%s}' % commit_pos_number
+    commit_pos = 'refs/heads/main@{#%s}' % commit_pos_number
     step_name = parent_step + 'crrev get commit hash for ' + commit_pos
     yield api.step_data(
         step_name,

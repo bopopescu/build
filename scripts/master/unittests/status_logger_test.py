@@ -12,7 +12,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from master import status_logger
+from main import status_logger
 
 
 ### Mock buildbot objects.
@@ -40,7 +40,7 @@ class Build(object):
   def getBuilder(self):
     return Builder()
 
-  def getSlavename(self):
+  def getSubordinatename(self):
     return 'cool-m1'
 
   def getProperty(self, _name):

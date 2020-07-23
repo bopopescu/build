@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""A small maintenance tool to do quiet test state creation on test masters."""
+"""A small maintenance tool to do quiet test state creation on test mains."""
 
 import os
 import optparse
@@ -43,7 +43,7 @@ dump direction comes first (the database is essentially rebuilt).
 Sample usage:
   %prog --dump
   %prog --restore
-  %prog --dump --db master.chromium/state.sqlite --txt=template.txt
+  %prog --dump --db main.chromium/state.sqlite --txt=template.txt
   %prog --dump --restore --yes # see omphaloskepsis
 """
 

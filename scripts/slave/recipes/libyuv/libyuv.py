@@ -765,12 +765,12 @@ BUILDERS = freeze({
 })
 
 def RunSteps(api):
-  mastername = api.properties.get('mastername')
+  mainname = api.properties.get('mainname')
   buildername = api.properties.get('buildername')
-  master_dict = BUILDERS.get(mastername, {})
-  bot_config = master_dict.get('builders', {}).get(buildername)
-  assert bot_config, ('Unrecognized builder name "%r" for master "%r".' %
-                      (buildername, mastername))
+  main_dict = BUILDERS.get(mainname, {})
+  bot_config = main_dict.get('builders', {}).get(buildername)
+  assert bot_config, ('Unrecognized builder name "%r" for main "%r".' %
+                      (buildername, mainname))
   recipe_config_name = bot_config['recipe_config']
   recipe_config = RECIPE_CONFIGS.get(recipe_config_name)
   assert recipe_config, ('Cannot find recipe_config "%s" for builder "%r".' %
@@ -804,17 +804,17 @@ def _sanitize_nonalpha(text):
 
 
 def GenTests(api):
-  def generate_builder(mastername, buildername, revision, suffix=None):
+  def generate_builder(mainname, buildername, revision, suffix=None):
     suffix = suffix or ''
-    bot_config = BUILDERS[mastername]['builders'][buildername]
+    bot_config = BUILDERS[mainname]['builders'][buildername]
 
     chromium_kwargs = bot_config.get('chromium_config_kwargs', {})
     test = (
-      api.test('%s_%s%s' % (_sanitize_nonalpha(mastername),
+      api.test('%s_%s%s' % (_sanitize_nonalpha(mainname),
                             _sanitize_nonalpha(buildername), suffix)) +
-      api.properties(mastername=mastername,
+      api.properties(mainname=mainname,
                      buildername=buildername,
-                     slavename='slavename',
+                     subordinatename='subordinatename',
                      BUILD_CONFIG=chromium_kwargs['BUILD_CONFIG']) +
       api.platform(bot_config['testing']['platform'],
                    chromium_kwargs.get('TARGET_BITS', 64))
@@ -823,19 +823,19 @@ def GenTests(api):
     if revision:
       test += api.properties(revision=revision)
 
-    if mastername.startswith('tryserver'):
+    if mainname.startswith('tryserver'):
       test += api.properties(patch_url='try_job_svn_patch')
     return test
 
-  for mastername, master_config in BUILDERS.iteritems():
-    for buildername in master_config['builders'].keys():
-      yield generate_builder(mastername, buildername, revision='12345')
+  for mainname, main_config in BUILDERS.iteritems():
+    for buildername in main_config['builders'].keys():
+      yield generate_builder(mainname, buildername, revision='12345')
 
   # Forced builds (not specifying any revision) and test failures.
-  mastername = 'client.libyuv'
-  yield generate_builder(mastername, 'Linux64 Debug', revision=None,
+  mainname = 'client.libyuv'
+  yield generate_builder(mainname, 'Linux64 Debug', revision=None,
                          suffix='_forced')
-  yield generate_builder(mastername, 'Android Debug', revision=None,
+  yield generate_builder(mainname, 'Android Debug', revision=None,
                          suffix='_forced')
 
   yield generate_builder('tryserver.libyuv', 'linux', revision=None,

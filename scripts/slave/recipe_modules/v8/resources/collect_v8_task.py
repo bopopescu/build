@@ -12,7 +12,7 @@ import sys
 import tempfile
 import traceback
 
-from slave import slave_utils
+from subordinate import subordinate_utils
 
 
 MISSING_SHARDS_MSG = r"""Missing results from the following shard(s): %s
@@ -31,7 +31,7 @@ def emit_warning(title, log=None):
   print '@@@STEP_WARNINGS@@@'
   print title
   if log:
-    slave_utils.WriteLogLines(title, log.split('\n'))
+    subordinate_utils.WriteLogLines(title, log.split('\n'))
 
 
 def merge_shard_results(

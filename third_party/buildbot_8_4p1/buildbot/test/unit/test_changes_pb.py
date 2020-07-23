@@ -35,14 +35,14 @@ class TestPBChangeSource(
         d = self.setUpChangeSource()
 
         def setup(_):
-            # fill in some extra details of the master
-            self.master.slavePortnum = '9999'
-            self.master.pbmanager = self.pbmanager
+            # fill in some extra details of the main
+            self.main.subordinatePortnum = '9999'
+            self.main.pbmanager = self.pbmanager
         d.addCallback(setup)
 
         return d
 
-    def test_registration_slaveport(self):
+    def test_registration_subordinateport(self):
         return self._test_registration(('9999', 'alice', 'sekrit'),
                 user='alice', passwd='sekrit')
 
@@ -84,14 +84,14 @@ class TestPBChangeSource(
 class TestChangePerspective(unittest.TestCase):
     def setUp(self):
         self.added_changes = []
-        self.master = mock.Mock()
+        self.main = mock.Mock()
         def addChange(**chdict):
             self.added_changes.append(chdict)
             return defer.succeed(None)
-        self.master.addChange = addChange
+        self.main.addChange = addChange
 
     def test_addChange_noprefix(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(dict(who="bar", files=['a']))
         def check(_):
             self.assertEqual(self.added_changes,
@@ -100,7 +100,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_prefix(self):
-        cp = pb.ChangePerspective(self.master, 'xx/')
+        cp = pb.ChangePerspective(self.main, 'xx/')
         d = cp.perspective_addChange(
                 dict(who="bar", files=['xx/a', 'yy/b']))
         def check(_):
@@ -110,7 +110,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_sanitize_None(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(
                 dict(project=None, revlink=None, repository=None)
                 )
@@ -121,7 +121,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_when_None(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(
                 dict(when=None)
                 )
@@ -132,7 +132,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_files_tuple(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(
                 dict(files=('a', 'b'))
                 )
@@ -143,7 +143,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_unicode(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
                     comments=u"\N{SNOWMAN}",
                     links=[u'\N{HEAVY BLACK HEART}'],
@@ -158,7 +158,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_unicode_as_bytestring(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
                     comments=u"\N{SNOWMAN}".encode('utf8'),
                     links=[u'\N{HEAVY BLACK HEART}'.encode('utf8')],
@@ -173,7 +173,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_non_utf8_bytestring(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         bogus_utf8 = '\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
         d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
@@ -184,7 +184,7 @@ class TestChangePerspective(unittest.TestCase):
         return d
 
     def test_addChange_old_param_names(self):
-        cp = pb.ChangePerspective(self.master, None)
+        cp = pb.ChangePerspective(self.main, None)
         d = cp.perspective_addChange(dict(isdir=1, who='me', when=1234,
                                           files=[]))
         def check(_):

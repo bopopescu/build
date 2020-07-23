@@ -41,7 +41,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
                               tree="MyTinderboxTree",
                               extraRecipients=["tinderboxdaemon@host.org"])
 
-    The builder name (as specified in master.cfg) is used as the "build"
+    The builder name (as specified in main.cfg) is used as the "build"
     tinderbox option.
 
     """

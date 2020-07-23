@@ -4,7 +4,7 @@
 
 """Generate JSON results from given test results.
 
-Forked from build/scripts/slave/gtest/json_results_generator.py and original
+Forked from build/scripts/subordinate/gtest/json_results_generator.py and original
 will be deleted as all tests are moved to swarming.
 """
 
@@ -90,7 +90,7 @@ class JSONResultsGenerator(object):
   def __init__(self, builder_name, build_number,
                results_file_base_path,
                test_results_map, svn_revisions=None,
-               master_name='',
+               main_name='',
                file_writer=None):
     """Modifies the results.json file. Grabs it off the archive directory
     if it is not found locally.
@@ -105,7 +105,7 @@ class JSONResultsGenerator(object):
       svn_revisions: A (json_field_name, revision) pair for SVN
         repositories that tests rely on.  The SVN revision will be
         included in the JSON with the given json_field_name.
-      master_name: the name of the buildbot master.
+      main_name: the name of the buildbot main.
       file_writer: if given the parameter is used to write JSON data to a file.
         The parameter must be the function that takes two arguments, 'file_path'
         and 'data' to be written into the file_path.
@@ -120,7 +120,7 @@ class JSONResultsGenerator(object):
     if not self._svn_revisions:
       self._svn_revisions = {}
 
-    self._master_name = master_name
+    self._main_name = main_name
     self._file_writer = file_writer
 
   def generate_json_output(self):

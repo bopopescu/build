@@ -15,8 +15,8 @@ import os
 import re
 import sys
 
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 FILENAME = 'task_profile.json'
 GOOGLE_STORAGE_BUCKET = 'chromium-browser-profiling-data'
@@ -34,7 +34,7 @@ def CopyToGoogleStorage(src, dst):
   if not os.path.exists(src):
     print 'No such file', src
     return False
-  return slave_utils.GSUtilCopy(src, dst, None, 'public-read')
+  return subordinate_utils.GSUtilCopy(src, dst, None, 'public-read')
 
 
 def Archive(revision, build_dir, builder_name, test_name):
@@ -52,8 +52,8 @@ def Archive(revision, build_dir, builder_name, test_name):
     print 'No build directory'
     return True
 
-  # Profiling data is in /b/build/slave/SLAVE_NAME/build/src/chrome/test/data
-  # and |build_dir| is /b/build/slave/SLAVE_NAME/build/src/build.
+  # Profiling data is in /b/build/subordinate/SLAVE_NAME/build/src/chrome/test/data
+  # and |build_dir| is /b/build/subordinate/SLAVE_NAME/build/src/build.
   profiling_data_dir = os.path.join(build_dir, '..', 'chrome', 'test', 'data')
   if not os.path.exists(profiling_data_dir):
     print 'No profiling_data_dir: ', profiling_data_dir

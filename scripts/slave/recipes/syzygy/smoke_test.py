@@ -8,12 +8,12 @@ To be tested using a command-line like:
 
   /build/scripts/tools/run_recipe.py syzygy/continuous
       revision=0e9f25b1098271be2b096fd1c095d6d907cf86f7
-      mastername=master.client.syzygy
+      mainname=main.client.syzygy
       "buildername=Syzygy Smoke Test"
-      slavename=fake_slave
+      subordinatename=fake_subordinate
       buildnumber=1
 
-Places resulting output in build/slave/fake_slave. In order for the Smoke Test
+Places resulting output in build/subordinate/fake_subordinate. In order for the Smoke Test
 builder to run successfully the appropriate gsutil boto credentials must be
 placed in build/site_config/.boto. Cloud storage destinations will be prefixed
 with 'test/' in order to not pollute the official coverage archives during
@@ -48,7 +48,7 @@ def RunSteps(api, buildername):
   api.chromium.set_config('syzygy', **kwargs)
   api.gclient.set_config('syzygy', **kwargs)
 
-  # Clean up any running processes on the slave.
+  # Clean up any running processes on the subordinate.
   s.taskkill()
 
   # Checkout and compile the project.

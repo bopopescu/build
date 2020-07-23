@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='libyuv_windows_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=0,
                             builderNames=[
           'Win32 Debug (VS2010)',
@@ -36,24 +36,24 @@ def Update(c):
   ])
 
   specs = [
-    {'name': 'Win32 Debug (VS2010)', 'slavebuilddir': 'win_2010'},
-    {'name': 'Win32 Release (VS2010)', 'slavebuilddir': 'win_2010'},
-    {'name': 'Win64 Debug (VS2010)', 'slavebuilddir': 'win_2010'},
-    {'name': 'Win64 Release (VS2010)', 'slavebuilddir': 'win_2010'},
-    {'name': 'Win32 Debug (VS2012)', 'slavebuilddir': 'win_2012'},
-    {'name': 'Win32 Release (VS2012)', 'slavebuilddir': 'win_2012'},
-    {'name': 'Win64 Debug (VS2012)', 'slavebuilddir': 'win_2012'},
-    {'name': 'Win64 Release (VS2012)', 'slavebuilddir': 'win_2012'},
-    {'name': 'Win32 Debug (VS2013)', 'slavebuilddir': 'win_2013'},
-    {'name': 'Win32 Release (VS2013)', 'slavebuilddir': 'win_2013'},
-    {'name': 'Win64 Debug (VS2013)', 'slavebuilddir': 'win_2013'},
-    {'name': 'Win64 Release (VS2013)', 'slavebuilddir': 'win_2013'},
-    {'name': 'Win32 Debug (Clang)', 'slavebuilddir': 'win_clang'},
-    {'name': 'Win32 Release (Clang)', 'slavebuilddir': 'win_clang'},
-    {'name': 'Win64 Debug (Clang)', 'slavebuilddir': 'win_clang'},
-    {'name': 'Win64 Release (Clang)', 'slavebuilddir': 'win_clang'},
-    {'name': 'Win64 Debug (GN)', 'slavebuilddir': 'win64_gn'},
-    {'name': 'Win64 Release (GN)', 'slavebuilddir': 'win64_gn'},
+    {'name': 'Win32 Debug (VS2010)', 'subordinatebuilddir': 'win_2010'},
+    {'name': 'Win32 Release (VS2010)', 'subordinatebuilddir': 'win_2010'},
+    {'name': 'Win64 Debug (VS2010)', 'subordinatebuilddir': 'win_2010'},
+    {'name': 'Win64 Release (VS2010)', 'subordinatebuilddir': 'win_2010'},
+    {'name': 'Win32 Debug (VS2012)', 'subordinatebuilddir': 'win_2012'},
+    {'name': 'Win32 Release (VS2012)', 'subordinatebuilddir': 'win_2012'},
+    {'name': 'Win64 Debug (VS2012)', 'subordinatebuilddir': 'win_2012'},
+    {'name': 'Win64 Release (VS2012)', 'subordinatebuilddir': 'win_2012'},
+    {'name': 'Win32 Debug (VS2013)', 'subordinatebuilddir': 'win_2013'},
+    {'name': 'Win32 Release (VS2013)', 'subordinatebuilddir': 'win_2013'},
+    {'name': 'Win64 Debug (VS2013)', 'subordinatebuilddir': 'win_2013'},
+    {'name': 'Win64 Release (VS2013)', 'subordinatebuilddir': 'win_2013'},
+    {'name': 'Win32 Debug (Clang)', 'subordinatebuilddir': 'win_clang'},
+    {'name': 'Win32 Release (Clang)', 'subordinatebuilddir': 'win_clang'},
+    {'name': 'Win64 Debug (Clang)', 'subordinatebuilddir': 'win_clang'},
+    {'name': 'Win64 Release (Clang)', 'subordinatebuilddir': 'win_clang'},
+    {'name': 'Win64 Debug (GN)', 'subordinatebuilddir': 'win64_gn'},
+    {'name': 'Win64 Release (GN)', 'subordinatebuilddir': 'win64_gn'},
   ]
 
   c['builders'].extend([
@@ -62,6 +62,6 @@ def Update(c):
         'factory': m_annotator.BaseFactory('libyuv/libyuv'),
         'notify_on_missing': True,
         'category': 'win',
-        'slavebuilddir': spec['slavebuilddir'],
+        'subordinatebuilddir': spec['subordinatebuilddir'],
       } for spec in specs
   ])

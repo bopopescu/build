@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class DynamoRIO(Master.Master3):
+class DynamoRIO(Main.Main3):
   project_name = 'DynamoRIO'
-  master_port = 8059
-  slave_port = 8159
-  master_port_alt = 8259
+  main_port = 8059
+  subordinate_port = 8159
+  main_port_alt = 8259
   buildbot_url = 'http://build.chromium.org/p/client.dynamorio/'

@@ -34,7 +34,7 @@ drm_mirror_url = MIRROR_BASE + '/DynamoRIO/drmemory.git';
 # TODO(rnk): Don't make assumptions about absolute path layout.  This won't work
 # on bare metal bots.  We can't use a relative path because we often configure
 # builds at different directory depths.
-WIN_BUILD_ENV_PATH = r'E:\b\build\scripts\slave\drmemory\build_env.bat'
+WIN_BUILD_ENV_PATH = r'E:\b\build\scripts\subordinate\drmemory\build_env.bat'
 
 # These tests are ordered roughly from shortest to longest so failure is
 # reported earlier.
@@ -203,7 +203,7 @@ class DrCommands(object):
                    description='unpack tools')
 
   def AddFindFileIntoPropertyStep(self, pattern, property_name):
-    """Finds a file on the slave and stores the name in property_name.
+    """Finds a file on the subordinate and stores the name in property_name.
 
     TODO(rnk): This won't work if pattern matches more than one file.
     """
@@ -219,7 +219,7 @@ class DrCommands(object):
                  property=property_name)
 
   def AddFindFileBaseIntoPropertyStep(self, pattern):
-    """Finds a file on the slave and stores the name minus extension
+    """Finds a file on the subordinate and stores the name minus extension
     in the property .
     TODO(rnk): This won't work if pattern matches more than one file.
     """
@@ -286,11 +286,11 @@ class DrCommands(object):
     self.AddTools()
     self.AddDRSuite('pre-commit suite', '')
     # The Linux bot has all the dependencies for docs generation, so we have it
-    # upload the docs to the master.
+    # upload the docs to the main.
     if self.target_platform == 'linux':
       self.AddStep(DirectoryUpload,
-                   slavesrc='install/docs/html',
-                   masterdest='public_html/dr_docs')
+                   subordinatesrc='install/docs/html',
+                   maindest='public_html/dr_docs')
     return self.factory
 
   def DynamoRIONightly(self):
@@ -324,8 +324,8 @@ class DrCommands(object):
                   '-*%(pkg_buildnum)s.tar.gz')
     self.AddFindFileIntoPropertyStep(src_file, 'package_name')
     self.AddStep(FileUpload,
-                 slavesrc=WithProperties('%(package_name)s'),
-                 masterdest=WithProperties('public_html/builds/' +
+                 subordinatesrc=WithProperties('%(package_name)s'),
+                 maindest=WithProperties('public_html/builds/' +
                                            '%(package_name)s'),
                  name='Upload DR package')
     return self.factory
@@ -397,20 +397,20 @@ class DrCommands(object):
                        name='create sfx archive',
                        description='create sfx archive')
       self.AddStep(FileUpload,
-                   slavesrc=WithProperties(src_file),
-                   masterdest=LATEST_WIN_BUILD,
+                   subordinatesrc=WithProperties(src_file),
+                   maindest=LATEST_WIN_BUILD,
                    name='upload latest build')
       self.AddStep(FileUpload,
-                   slavesrc=WithProperties(src_file),
-                   masterdest=WithProperties('public_html/builds/' + sfx_file),
+                   subordinatesrc=WithProperties(src_file),
+                   maindest=WithProperties('public_html/builds/' + sfx_file),
                    name='upload revision build')
     else:
       src_file = ('DrMemory-' + OsFullName(self.target_platform) +
                   '-*%(pkg_buildnum)s.tar.gz')
       self.AddFindFileIntoPropertyStep(src_file, 'package_name')
       self.AddStep(FileUpload,
-                   slavesrc=WithProperties('%(package_name)s'),
-                   masterdest=WithProperties('public_html/builds/' +
+                   subordinatesrc=WithProperties('%(package_name)s'),
+                   maindest=WithProperties('public_html/builds/' +
                                              '%(package_name)s'),
                    name='upload revision build')
     return self.factory
@@ -506,13 +506,13 @@ class DrCommands(object):
                      name='Pack test results',
                      description='pack results')
     self.AddStep(FileUpload,
-                 slavesrc='testlogs.7z',
+                 subordinatesrc='testlogs.7z',
                  # We're ok with a git hash as revision here:
-                 masterdest=WithProperties(
+                 maindest=WithProperties(
                      'public_html/testlogs/' +
                      'from_%(buildername)s/testlogs_r%(got_revision)s_b' +
                      '%(buildnumber)s.7z'),
-                 name='Upload test logs to the master')
+                 name='Upload test logs to the main')
 
 
 class CTest(Test):
@@ -740,8 +740,8 @@ def CreateWinChromeFactory(builder):
   ret = factory.BuildFactory()
   sfx_name = 'drm-sfx'  # TODO: add .exe when BB supports that, d'oh!
   ret.addStep(
-      FileDownload(mastersrc=LATEST_WIN_BUILD,
-                   slavedest=(sfx_name + '.exe'),
+      FileDownload(mainsrc=LATEST_WIN_BUILD,
+                   subordinatedest=(sfx_name + '.exe'),
                    name='Download the latest build'))
   ret.addStep(
       ShellCommand(command=[sfx_name, '-ounpacked', '-y'],
@@ -790,7 +790,7 @@ def CreateWinChromeFactory(builder):
                'remoting', 'ipc_tests', 'base_unittests', 'net', 'unit']:
     ret.addStep(
         Test(command=[
-                 # Use the build dir of the chrome builder on this slave.
+                 # Use the build dir of the chrome builder on this subordinate.
                  ('..\\..\\' + builder + '\\build\\' +
                   'src\\tools\\valgrind\\chrome_tests.bat'),
                  '-t', test, '--tool', 'drmemory_light', '--keep_logs',
@@ -809,7 +809,7 @@ def CreateLinuxChromeFactory():
   TODO(rnk): Run drmemory, not dynamorio.
 
   We use a build of chrome produced weekly from a known good revision on the
-  same slave.
+  same subordinate.
   """
   cr_src = '../../linux-cr-builder/build/src'
   ret = factory.BuildFactory()

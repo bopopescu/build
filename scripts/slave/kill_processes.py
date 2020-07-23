@@ -149,7 +149,7 @@ processes = [
     'lighttpd.exe',
     'outlook.exe',
     'perl.exe',
-    'python_slave.exe',
+    'python_subordinate.exe',
     'rdpclip.exe',
     'svn.exe',
 

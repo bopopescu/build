@@ -205,7 +205,7 @@ RESERVED_WORDS = set(
      'interval', 'into', 'is', 'iterate', 'join', 'key', 'keys', 'kill',
      'leading', 'leave', 'left', 'like', 'limit', 'linear', 'lines', 'load',
      'localtime', 'localtimestamp', 'lock', 'long', 'longblob', 'longtext',
-     'loop', 'low_priority', 'master_ssl_verify_server_cert', 'match',
+     'loop', 'low_priority', 'main_ssl_verify_server_cert', 'match',
      'mediumblob', 'mediumint', 'mediumtext', 'middleint',
      'minute_microsecond', 'minute_second', 'mod', 'modifies', 'natural',
      'not', 'no_write_to_binlog', 'null', 'numeric', 'on', 'optimize',
@@ -224,7 +224,7 @@ RESERVED_WORDS = set(
      'varchar', 'varcharacter', 'varying', 'when', 'where', 'while', 'with',
      'write', 'x509', 'xor', 'year_month', 'zerofill', # 5.0
      'columns', 'fields', 'privileges', 'soname', 'tables', # 4.1
-     'accessible', 'linear', 'master_ssl_verify_server_cert', 'range',
+     'accessible', 'linear', 'main_ssl_verify_server_cert', 'range',
      'read_only', 'read_write', # 5.1
      ])
 

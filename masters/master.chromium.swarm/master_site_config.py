@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumSwarm(Master.Master1):
+class ChromiumSwarm(Main.Main1):
   project_name = 'Chromium Swarm'
-  master_port = 8023
-  slave_port = 8123
-  master_port_alt = 8223
+  main_port = 8023
+  subordinate_port = 8123
+  main_port_alt = 8223
   buildbot_url = 'http://build.chromium.org/p/chromium.swarm/'

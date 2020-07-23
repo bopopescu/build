@@ -11,8 +11,8 @@ first."""
 import os
 import re
 
-from master.factory.build_factory import BuildFactory
-from master.factory import commands
+from main.factory.build_factory import BuildFactory
+from main.factory import commands
 
 import config
 
@@ -132,7 +132,7 @@ class GClientSolution(object):
 
 
 class GClientFactory(object):
-  """Encapsulates data and methods common to both (all) master.cfg files."""
+  """Encapsulates data and methods common to both (all) main.cfg files."""
 
   def __init__(self, build_dir, solutions, target_platform=None,
                nohooks_on_update=False, target_os=None, revision_mapping=None):
@@ -157,7 +157,7 @@ class GClientFactory(object):
   def BaseFactory(self, gclient_spec=None, official_release=False,
                   factory_properties=None, build_properties=None,
                   delay_compile_step=False, sudo_for_remove=False,
-                  gclient_deps=None, slave_type=None, options=None,
+                  gclient_deps=None, subordinate_type=None, options=None,
                   target=None):
     if gclient_spec is None:
       gclient_spec = self.BuildGClientSpec()
@@ -197,7 +197,7 @@ class GClientFactory(object):
     # activate depending on its own criteria, but the expectation is that if
     # this does activate, it will emit a BOT_UPDATED file in the build/
     # directory to signal to the other gclient update steps to no-op.
-    code_review_site = config.Master.Master4.code_review_site
+    code_review_site = config.Main.Main4.code_review_site
     factory_cmd_obj.AddBotUpdateStep(env, gclient_spec, self._revision_mapping,
                                      server=code_review_site,
                                      blink_config=blink_config)
@@ -221,7 +221,7 @@ class GClientFactory(object):
       factory_cmd_obj.AddGClientRevertStep()
       if not delay_compile_step:
         self.AddUpdateStep(gclient_spec, factory_properties, factory,
-                           slave_type, sudo_for_remove,
+                           subordinate_type, sudo_for_remove,
                            gclient_deps=gclient_deps, options=options,
                            blink_config=blink_config)
 
@@ -240,7 +240,7 @@ class GClientFactory(object):
     return factory
 
   def BuildFactory(self, target='Release', clobber=False, tests=None, mode=None,
-                   slave_type='BuilderTester', options=None,
+                   subordinate_type='BuilderTester', options=None,
                    compile_timeout=1200, build_url=None, project=None,
                    factory_properties=None, gclient_deps=None,
                    target_arch=None, skip_archive_steps=False):
@@ -257,7 +257,7 @@ class GClientFactory(object):
     # Initialize the factory with the basic steps.
     factory = self.BaseFactory(gclient_spec,
                                factory_properties=factory_properties,
-                               slave_type=slave_type,
+                               subordinate_type=subordinate_type,
                                gclient_deps=gclient_deps, options=options)
 
     # Optional repository root (default: 'src').
@@ -286,7 +286,7 @@ class GClientFactory(object):
           factory_properties['update_nacl_sdk'])
 
     # Add the compile step if needed.
-    if slave_type in ['BuilderTester', 'Builder', 'Trybot', 'Indexer',
+    if subordinate_type in ['BuilderTester', 'Builder', 'Trybot', 'Indexer',
                       'TrybotBuilder']:
       if self._target_platform == 'win32':
         # Look for a solution named for its enclosing directory.
@@ -311,7 +311,7 @@ class GClientFactory(object):
 
     if not skip_archive_steps:
       # Archive the full output directory if the machine is a builder.
-      if slave_type in ['Builder', 'TrybotBuilder']:
+      if subordinate_type in ['Builder', 'TrybotBuilder']:
         if build_url or factory_properties.get('build_url'):
           # There are some builders that are classified as builders, but only
           # because we only need to see if the patch compiles, and not
@@ -322,14 +322,14 @@ class GClientFactory(object):
                                       factory_properties=factory_properties)
 
       # Download the full output directory if the machine is a tester.
-      if slave_type in ['Tester', 'TrybotTester']:
+      if subordinate_type in ['Tester', 'TrybotTester']:
         factory_cmd_obj.AddExtractBuild()
 
 
     return factory
 
   # pylint: disable=R0201
-  def TriggerFactory(self, factory, slave_type, factory_properties):
+  def TriggerFactory(self, factory, subordinate_type, factory_properties):
     """Add post steps on a build created by BuildFactory."""
     # Trigger any schedulers waiting on the build to complete.
     factory_properties = factory_properties or {}
@@ -349,7 +349,7 @@ class GClientFactory(object):
         trigger_set_properties=set_properties))
 
   def AddUpdateStep(self, gclient_spec, factory_properties, factory,
-                    slave_type, sudo_for_remove=False, gclient_deps=None,
+                    subordinate_type, sudo_for_remove=False, gclient_deps=None,
                     options=None, blink_config=False):
     if gclient_spec is None:
       gclient_spec = self.BuildGClientSpec()
@@ -371,7 +371,7 @@ class GClientFactory(object):
     gclient_jobs = factory_properties.get('gclient_jobs')
 
     # Do not run gyp_chromium on testers.
-    if slave_type in ('Tester',):
+    if subordinate_type in ('Tester',):
       env.update({'GYP_CHROMIUM_NO_ACTION': '1'})
 
     # Add the update step.
@@ -389,11 +389,11 @@ class GClientFactory(object):
         gclient_jobs=gclient_jobs,
         blink_config=blink_config)
 
-    if slave_type in ('AnnotatedTrybot', 'CrosTrybot', 'Trybot', 'Bisect',
+    if subordinate_type in ('AnnotatedTrybot', 'CrosTrybot', 'Trybot', 'Bisect',
                       'TrybotTester', 'TrybotBuilder'):
       factory_cmd_obj.AddApplyIssueStep(
           timeout=timeout,
-          server=config.Master.Master4.code_review_site,
+          server=config.Main.Main4.code_review_site,
           revision_mapping=self._revision_mapping)
 
     if not self._nohooks_on_update:

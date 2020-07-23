@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class DartFYI(Master.Master3):
+class DartFYI(Main.Main3):
   # This IP refers to a golem server in BigCluster
   http_status_push_url = "http://108.170.219.8:8080/submit-buildbot-info/"
   project_name = 'Dart FYI'
-  master_port = 8055
-  slave_port = 8155
+  main_port = 8055
+  subordinate_port = 8155
   # Enable when there's a public waterfall.
-  master_port_alt = 8255
+  main_port_alt = 8255
   buildbot_url = 'http://build.chromium.org/p/client.dart.fyi/'

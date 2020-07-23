@@ -14,11 +14,11 @@ import ssh_devices
 class SSHFlavorUtils(default_flavor.DefaultFlavorUtils):
   def __init__(self, *args, **kwargs):
     super(SSHFlavorUtils, self).__init__(*args, **kwargs)
-    slave_info = ssh_devices.SLAVE_INFO.get(self._skia_api.slave_name,
+    subordinate_info = ssh_devices.SLAVE_INFO.get(self._skia_api.subordinate_name,
                                             ssh_devices.SLAVE_INFO['default'])
-    self._host = slave_info.ssh_host
-    self._port = slave_info.ssh_port
-    self._user = slave_info.ssh_user
+    self._host = subordinate_info.ssh_host
+    self._port = subordinate_info.ssh_port
+    self._user = subordinate_info.ssh_user
 
   @property
   def host(self):

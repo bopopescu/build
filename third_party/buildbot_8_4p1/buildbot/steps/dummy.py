@@ -22,7 +22,7 @@ from buildbot.status.results import SUCCESS, FAILURE
 # these classes are used internally by buildbot unit tests
 
 class Dummy(BuildStep):
-    """I am a dummy no-op step, which runs entirely on the master, and simply
+    """I am a dummy no-op step, which runs entirely on the main, and simply
     waits 5 seconds before finishing with SUCCESS
     """
 
@@ -55,7 +55,7 @@ class Dummy(BuildStep):
         self.finished(SUCCESS)
 
 class FailingDummy(Dummy):
-    """I am a dummy no-op step that 'runs' master-side and finishes (with a
+    """I am a dummy no-op step that 'runs' main-side and finishes (with a
     FAILURE status) after 5 seconds."""
 
     name = "failing dummy"
@@ -70,7 +70,7 @@ class FailingDummy(Dummy):
 class RemoteDummy(LoggingBuildStep):
     """I am a dummy no-op step that runs on the remote side and
     simply waits 5 seconds before completing with success.
-    See L{buildbot.slave.commands.DummyCommand}
+    See L{buildbot.subordinate.commands.DummyCommand}
     """
 
     haltOnFailure = True
@@ -96,7 +96,7 @@ class RemoteDummy(LoggingBuildStep):
         self.startCommand(cmd)
 
 class Wait(LoggingBuildStep):
-    """I start a command on the slave that waits for the unit test to
+    """I start a command on the subordinate that waits for the unit test to
     tell it when to finish.
     """
 

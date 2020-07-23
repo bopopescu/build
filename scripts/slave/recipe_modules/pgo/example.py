@@ -44,8 +44,8 @@ TEST_BUILDERS = freeze({
 
 def RunSteps(api, buildername):
   buildername = api.properties['buildername']
-  mastername = api.properties['mastername']
-  bot_config = TEST_BUILDERS.get(mastername, {}).get(buildername)
+  mainname = api.properties['mainname']
+  bot_config = TEST_BUILDERS.get(mainname, {}).get(buildername)
 
   api.pgo.compile_pgo(bot_config)
 
@@ -54,12 +54,12 @@ def GenTests(api):
   def _sanitize_nonalpha(text):
     return ''.join(c if c.isalnum() else '_' for c in text)
 
-  for mastername, builders in TEST_BUILDERS.iteritems():
+  for mainname, builders in TEST_BUILDERS.iteritems():
     for buildername in builders:
       yield (
-        api.test('full_%s_%s' % (_sanitize_nonalpha(mastername),
+        api.test('full_%s_%s' % (_sanitize_nonalpha(mainname),
                                  _sanitize_nonalpha(buildername))) +
-        api.properties.generic(mastername=mastername, buildername=buildername) +
+        api.properties.generic(mainname=mainname, buildername=buildername) +
         api.platform('win', 64)
       )
 
@@ -67,7 +67,7 @@ def GenTests(api):
     api.test('full_%s_%s_benchmark_failure' %
         (_sanitize_nonalpha('chromium_pgo.test'),
          _sanitize_nonalpha('Test builder'))) +
-    api.properties.generic(mastername='chromium_pgo.test',
+    api.properties.generic(mainname='chromium_pgo.test',
                            buildername='Test builder') +
     api.platform('win', 32) +
     api.step_data('Telemetry benchmark: sunspider', retcode=1)

@@ -6,7 +6,7 @@ import codecs
 import socket
 
 from common import url_helper
-from slave.gtest.networktransaction import NetworkTransaction
+from subordinate.gtest.networktransaction import NetworkTransaction
 
 
 class TestResultsUploader(object):

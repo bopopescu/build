@@ -149,7 +149,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.startConsumingChanges(**kwargs)
         def test(_):
             # check that it registered a callback
-            callbacks = self.master.getSubscriptionCallbacks()
+            callbacks = self.main.getSubscriptionCallbacks()
             self.assertNotEqual(callbacks['changes'], None)
 
             # invoke the callback with the change, and check the result

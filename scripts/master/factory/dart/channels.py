@@ -14,10 +14,10 @@ class Channel(object):
     self.standalone_deps_path = '/' + branch + '/deps/standalone.deps'
     self.dartium_deps_path = '/' + branch + '/deps/dartium.deps'
 
-# The channel names are replicated in the slave.cfg files for all
+# The channel names are replicated in the subordinate.cfg files for all
 # dart waterfalls. If you change anything here please also change it there.
 CHANNELS = [
-  Channel('be', 'master', 0, '', 4),
+  Channel('be', 'main', 0, '', 4),
   Channel('dev', 'dev', 1, '-dev', 2),
   Channel('stable', 'stable', 2, '-stable', 1),
   Channel('integration', 'integration', 3, '-integration', 3),

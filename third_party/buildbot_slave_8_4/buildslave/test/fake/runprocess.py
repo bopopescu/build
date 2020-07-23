@@ -63,7 +63,7 @@ class Expect:
 
 class FakeRunProcess:
     """
-    A fake version of L{buildslave.runprocess.RunProcess} which will
+    A fake version of L{buildsubordinate.runprocess.RunProcess} which will
     simulate running external processes without actually running them (which is
     very fragile in tests!)
 
@@ -103,7 +103,7 @@ class FakeRunProcess:
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, initialStdin=None,
                  keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config")
+                 logEnviron=True, logfiles={}, usePTY="subordinate-config")
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: %s" % (kwargs,))

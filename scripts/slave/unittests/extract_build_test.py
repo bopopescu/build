@@ -8,10 +8,10 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-from slave import extract_build
-from slave import slave_utils
+from subordinate import extract_build
+from subordinate import subordinate_utils
 
-# build/scripts/slave/unittests
+# build/scripts/subordinate/unittests
 _SCRIPT_DIR = os.path.dirname(__file__)
 _BUILD_DIR = os.path.abspath(os.path.join(
     _SCRIPT_DIR, os.pardir, os.pardir))
@@ -20,11 +20,11 @@ _BUILD_DIR = os.path.abspath(os.path.join(
 class MockOptions(object):
   build_properties = {}
   build_archive_url = None
-  master_name = 'chromium.fyi'
+  main_name = 'chromium.fyi'
   build_number = 456
   parent_build_number = 789
   parent_builder_name = 'Builder'
-  parent_slave_name = 'slave'
+  parent_subordinate_name = 'subordinate'
   parent_build_dir = '/b/foo'
 
 
@@ -36,7 +36,7 @@ class ExtractBuildTest(unittest.TestCase):
   def testGetBuildUrl(self):
     options = MockOptions()
 
-    base_filename, version_suffix = slave_utils.GetZipFileNames(
+    base_filename, version_suffix = subordinate_utils.GetZipFileNames(
         '', None, None, build_revision=self._build_revision,
         webkit_revision=self._webkit_revision,
         extract=True)

@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 
-from slave import slave_utils
+from subordinate import subordinate_utils
 
 
 def _RunNinjaSubTool(options, tmp_dir, sub_tool):
@@ -37,9 +37,9 @@ def _RunNinjaSubTool(options, tmp_dir, sub_tool):
     with gzip.open(txt_gz, 'w') as g:
       g.writelines(f)
 
-  upload_url = 'gs://blame-bot.appspot.com/%s/%s/%s' % (options.master,
+  upload_url = 'gs://blame-bot.appspot.com/%s/%s/%s' % (options.main,
       options.builder, options.build)
-  slave_utils.GSUtilCopyFile(txt_gz, upload_url)
+  subordinate_utils.GSUtilCopyFile(txt_gz, upload_url)
 
 
 def Archive(options, args):
@@ -65,7 +65,7 @@ def main():
                            help='path to the root of the source tree')
   option_parser.add_option('--target', default='Release',
                            help='build target (Debug or Release)')
-  option_parser.add_option('--master', help='master name (e.g. chromium)')
+  option_parser.add_option('--main', help='main name (e.g. chromium)')
   option_parser.add_option('--builder', help='builder name (e.g. Linux)')
   option_parser.add_option('--build', help='build number (e.g. 53197)')
 
@@ -73,7 +73,7 @@ def main():
 
   options.src_dir = os.path.abspath(options.src_dir)
 
-  if not options.master or not options.builder or not options.build:
+  if not options.main or not options.builder or not options.build:
     print option_parser.usage
     return 1
 

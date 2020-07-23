@@ -12,7 +12,7 @@ DEPS = [
 ]
 
 class ChromiteTestApi(recipe_test_api.RecipeTestApi):
-  def seed_chromite_config(self, data, branch='master'):
+  def seed_chromite_config(self, data, branch='main'):
     """Seeds step data for the Chromite configuration fetch.
     """
     return self.m.step.step_data('read chromite config',

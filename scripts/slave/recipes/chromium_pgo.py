@@ -62,8 +62,8 @@ PGO_BUILDERS = freeze({
 
 def RunSteps(api):
   buildername = api.properties['buildername']
-  mastername = api.properties['mastername']
-  bot_config = PGO_BUILDERS.get(mastername, {}).get(buildername)
+  mainname = api.properties['mainname']
+  bot_config = PGO_BUILDERS.get(mainname, {}).get(buildername)
 
   api.pgo.compile_pgo(bot_config)
   api.archive.zip_and_upload_build(
@@ -76,11 +76,11 @@ def GenTests(api):
   def _sanitize_nonalpha(text):
     return ''.join(c if c.isalnum() else '_' for c in text)
 
-  for mastername, builders in PGO_BUILDERS.iteritems():
+  for mainname, builders in PGO_BUILDERS.iteritems():
     for buildername in builders:
       yield (
-        api.test('full_%s_%s' % (_sanitize_nonalpha(mastername),
+        api.test('full_%s_%s' % (_sanitize_nonalpha(mainname),
                                  _sanitize_nonalpha(buildername))) +
-        api.properties.generic(mastername=mastername, buildername=buildername) +
+        api.properties.generic(mainname=mainname, buildername=buildername) +
         api.platform('win', 64)
       )

@@ -10,7 +10,7 @@ from recipe_engine import recipe_api
 class CommitPositionApi(recipe_api.RecipeApi):
   """Recipe module providing commit position parsing and manipulation."""
   RE_COMMIT_POSITION = re.compile('(?P<branch>.+)@{#(?P<revision>\d+)}')
-  COMMIT_POS_STR = '^Cr-Commit-Position: refs/heads/master@{#%d}'
+  COMMIT_POS_STR = '^Cr-Commit-Position: refs/heads/main@{#%d}'
 
   @classmethod
   def parse(cls, value):
@@ -46,7 +46,7 @@ class CommitPositionApi(recipe_api.RecipeApi):
                                     % (commit_pos,))
     step_result = self.m.git('log', '--format=hash:%H', '--grep',
                              self.COMMIT_POS_STR % int_pos, '-1',
-                             'origin/master',
+                             'origin/main',
                              stdout=self.m.raw_io.output(),
                              name='resolving commit_pos ' + str(commit_pos))
     try:

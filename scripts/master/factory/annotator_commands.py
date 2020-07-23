@@ -8,16 +8,16 @@ This is based on commands.py and adds annotator-specific commands.
 """
 
 
-from master import chromium_step
-from master.factory import commands
+from main import chromium_step
+from main.factory import commands
 
 
 class AnnotatorCommands(commands.FactoryCommands):
   """Encapsulates methods to add annotator commands to a factory."""
 
-  def __init__(self, factory=None, active_master=None):
+  def __init__(self, factory=None, active_main=None):
     self._call_counts = {}
-    self.active_master = active_master
+    self.active_main = active_main
     # Set self._script_dir and self._python, among other things.
     commands.FactoryCommands.__init__(self, factory)
 
@@ -36,4 +36,4 @@ class AnnotatorCommands(commands.FactoryCommands):
                           maxTime=max_time,
                           haltOnFailure=True,
                           command=cmd,
-                          active_master=self.active_master)
+                          active_main=self.active_main)

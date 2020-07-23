@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Library to generate, maintain, and read static slave pool maps."""
+"""Library to generate, maintain, and read static subordinate pool maps."""
 
 import collections
 import itertools
@@ -10,77 +10,77 @@ import json
 import os
 
 
-# Used to store a unique slave class. Consists of a name and an optional
+# Used to store a unique subordinate class. Consists of a name and an optional
 # subclass.
-SlaveClass = collections.namedtuple('SlaveClass',
+SubordinateClass = collections.namedtuple('SubordinateClass',
     ('name', 'subtype'))
 
-# Used to store a full slave configuration. Each slave class maps to a single
-# slave configuration.
-SlaveClassConfig = collections.namedtuple('SlaveClassConfig',
+# Used to store a full subordinate configuration. Each subordinate class maps to a single
+# subordinate configuration.
+SubordinateClassConfig = collections.namedtuple('SubordinateClassConfig',
     ('cls', 'exclusive', 'pools', 'count'))
 
-# Used to store associations between slave class and slaves. Also used to
+# Used to store associations between subordinate class and subordinates. Also used to
 # store persistent state.
-SlaveState = collections.namedtuple('SlaveState',
+SubordinateState = collections.namedtuple('SubordinateState',
     ('class_map', 'unallocated'))
 
-# Used to store a slave map entry (see SlaveAllocator.GetSlaveMap())
-SlaveMap = collections.namedtuple('SlaveMap',
+# Used to store a subordinate map entry (see SubordinateAllocator.GetSubordinateMap())
+SubordinateMap = collections.namedtuple('SubordinateMap',
     ('entries', 'unallocated'))
 
-# Used to store a slave map entry (see SlaveAllocator.GetSlaveMap())
-SlaveMapEntry = collections.namedtuple('SlaveMapEntry',
+# Used to store a subordinate map entry (see SubordinateAllocator.GetSubordinateMap())
+SubordinateMapEntry = collections.namedtuple('SubordinateMapEntry',
     ('classes', 'keys'))
 
 
-class SlaveAllocator(object):
-  """A slave pool management object.
+class SubordinateAllocator(object):
+  """A subordinate pool management object.
 
   Pools:
-  Individual slave machines are added to named Pools. A slave cannot be a member
+  Individual subordinate machines are added to named Pools. A subordinate cannot be a member
   of more than one pool.
 
   Classes:
   A Class is a named allocation specification. When allocation is performed,
-  the allocator maps Clases to Slaves. Therefore, a Class is the unit at which
+  the allocator maps Clases to Subordinates. Therefore, a Class is the unit at which
   allocation is performed.
 
   Classes may optionally include a subtype string to help disambiguate them;
   for all practical purposes the subtype is just part of the name.
 
-  The primary allocation function, '_GetSlaveClassMap', deterministically
-  associates Classes with sets of slaves from the registered Pools according
+  The primary allocation function, '_GetSubordinateClassMap', deterministically
+  associates Classes with sets of subordinates from the registered Pools according
   to their registered specification.
 
   Keys:
   Keys are a generalization of a builder name, representing a specific entity
-  that requires slave allocation. While key names need not correspond to
+  that requires subordinate allocation. While key names need not correspond to
   builder names, it is expected that they largely will.
 
   In order to be assigned, Keys gain Class membership via 'Join()'. A key may
-  join multiple classes, and will be assigned the superset of slaves that those
+  join multiple classes, and will be assigned the superset of subordinates that those
   classes were assigned.
 
   State:
   The Allocator may optionally save and load its class allocation state to an
-  external JSON file. This can be used to enforce class-to-slave mapping
+  external JSON file. This can be used to enforce class-to-subordinate mapping
   consistency (i.e., builder affinity).
 
-  When a new allocation is performed, the SlaveAllocator's State is updated, and
+  When a new allocation is performed, the SubordinateAllocator's State is updated, and
   subsequent operations will prefer the previous layout.
   """
 
   # The default path to load/save state to, if none is specified.
-  DEFAULT_STATE_PATH = 'slave_pool.json'
+  DEFAULT_STATE_PATH = 'subordinate_pool.json'
 
   def __init__(self, state_path=None, list_unallocated=False):
-    """Initializes a new slave pool instance.
+    """Initializes a new subordinate pool instance.
 
     Args:
       state_path (str): The path (relative or absolute) of the allocation
           save-state JSON file. If None, DEFAULT_STATE_PATH will be used.
-      list_unallocated (bool): Include an entry listing unallocated slaves.
+      list_unallocated (bool): Include an entry listing unallocated subordinates.
           This entry will be ignored for operations, but can be useful when
           generating expectations.
     """
@@ -91,7 +91,7 @@ class SlaveAllocator(object):
     self._pools = {}
     self._classes = {}
     self._membership = {}
-    self._all_slaves = {}
+    self._all_subordinates = {}
 
   @property
   def state_path(self):
@@ -103,7 +103,7 @@ class SlaveAllocator(object):
     The state dictionary is structured:
       <class-name>: {
         <class-subtype>: [
-          <slave>
+          <subordinate>
           ...
         ],
         ...
@@ -119,15 +119,15 @@ class SlaveAllocator(object):
 
     class_map = {}
     for class_name, class_name_entry in state_class_map.iteritems():
-      for subtype, slave_list in class_name_entry.iteritems():
-        cls = SlaveClass(name=class_name, subtype=subtype)
-        class_map.setdefault(cls, []).extend(str(s) for s in slave_list)
-    self._state = SlaveState(
+      for subtype, subordinate_list in class_name_entry.iteritems():
+        cls = SubordinateClass(name=class_name, subtype=subtype)
+        class_map.setdefault(cls, []).extend(str(s) for s in subordinate_list)
+    self._state = SubordinateState(
         class_map=class_map,
         unallocated=None)
 
   def LoadState(self, enforce=True):
-    """Loads slave pools from the store, replacing the current in-memory set.
+    """Loads subordinate pools from the store, replacing the current in-memory set.
 
     Args:
       enforce (bool): If True, raise an IOError if the state file does not
@@ -146,14 +146,14 @@ class SlaveAllocator(object):
     self.LoadStateDict(state.get('class_map'))
 
   def SaveState(self):
-    """Saves the current slave pool set to the store path."""
+    """Saves the current subordinate pool set to the store path."""
     state_dict = {}
     if self._state and self._state.class_map:
       class_map = state_dict['class_map'] = {}
-      for sc, slave_list in self._state.class_map.iteritems():
+      for sc, subordinate_list in self._state.class_map.iteritems():
         class_dict = class_map.setdefault(sc.name, {})
         subtype_dict = class_dict.setdefault(sc.subtype, [])
-        subtype_dict.extend(slave_list)
+        subtype_dict.extend(subordinate_list)
 
     if self._list_unallocated:
       state_dict['unallocated'] = list(self._state.unallocated or ())
@@ -161,29 +161,29 @@ class SlaveAllocator(object):
     with open(self.state_path, 'w') as fd:
       json.dump(state_dict, fd, sort_keys=True, indent=2)
 
-  def AddPool(self, name, *slaves):
-    """Returns (str): The slave pool that was allocated (for chaining).
+  def AddPool(self, name, *subordinates):
+    """Returns (str): The subordinate pool that was allocated (for chaining).
 
     Args:
-      name (str): The slave pool name.
-      slaves: Slave name strings that belong to this pool.
+      name (str): The subordinate pool name.
+      subordinates: Subordinate name strings that belong to this pool.
     """
     pool = self._pools.get(name)
     if not pool:
       pool = self._pools[name] = set()
-    for slave in slaves:
-      current_pool = self._all_slaves.get(slave)
+    for subordinate in subordinates:
+      current_pool = self._all_subordinates.get(subordinate)
       if current_pool is not None:
         if current_pool != name:
-          raise ValueError("Cannot register slave '%s' with multiple pools "
-                           "(%s, %s)" % (slave, current_pool, name))
+          raise ValueError("Cannot register subordinate '%s' with multiple pools "
+                           "(%s, %s)" % (subordinate, current_pool, name))
       else:
-        self._all_slaves[slave] = name
-    pool.update(slaves)
+        self._all_subordinates[subordinate] = name
+    pool.update(subordinates)
     return name
 
   def GetPool(self, name):
-    """Returns (frozenset): The contents of the named slave pol.
+    """Returns (frozenset): The contents of the named subordinate pol.
 
     Args:
       name (str): The name of the pool to query.
@@ -196,17 +196,17 @@ class SlaveAllocator(object):
     return frozenset(pool)
 
   def Alloc(self, name, subtype=None, exclusive=True, pools=None, count=1):
-    """Returns (SlaveClass): The SlaveClass that was allocated.
+    """Returns (SubordinateClass): The SubordinateClass that was allocated.
 
     Args:
       name (str): The base name of the class to allocate.
       subtype (str): If not None, the class subtype. This, along with the name,
           forms the class ID.
-      exclusive (bool): If True, slaves allocated in this class may not be
+      exclusive (bool): If True, subordinates allocated in this class may not be
           reused in other allocations.
-      pools (iterable): If not None, constrain allocation to the named slave
+      pools (iterable): If not None, constrain allocation to the named subordinate
           pools.
-      count (int): The number of slaves to allocate for this class.
+      count (int): The number of subordinates to allocate for this class.
     """
     # Expand our pools.
     pools = set(pools or ())
@@ -215,8 +215,8 @@ class SlaveAllocator(object):
     assert not invalid_pools, (
         "Class references undefined pools: %s" % (sorted(invalid_pools),))
 
-    cls = SlaveClass(name=name, subtype=subtype)
-    config = SlaveClassConfig(cls=cls, exclusive=exclusive, pools=pools,
+    cls = SubordinateClass(name=name, subtype=subtype)
+    config = SubordinateClassConfig(cls=cls, exclusive=exclusive, pools=pools,
                               count=count)
 
     # Register this configuration.
@@ -230,78 +230,78 @@ class SlaveAllocator(object):
       self._classes[cls] = config
     return cls
 
-  def Join(self, key, slave_class):
-    """Returns (SlaveClass): The 'slave_class' passed in (for chaining).
+  def Join(self, key, subordinate_class):
+    """Returns (SubordinateClass): The 'subordinate_class' passed in (for chaining).
 
     Args:
-      name (str): The key to join to the slave class.
-      slave_class (SlaveClass): The slave class to join.
+      name (str): The key to join to the subordinate class.
+      subordinate_class (SubordinateClass): The subordinate class to join.
     """
-    self._membership.setdefault(slave_class, set()).add(key)
-    return slave_class
+    self._membership.setdefault(subordinate_class, set()).add(key)
+    return subordinate_class
 
-  def _GetSlaveClassMap(self):
-    """Returns (dict): A dictionary mapping SlaveClass to slave tuples.
+  def _GetSubordinateClassMap(self):
+    """Returns (dict): A dictionary mapping SubordinateClass to subordinate tuples.
 
-    Applies the current slave configuration to the allocator's slave class. The
-    result is a dictionary mapping slave names to a tuple of keys belonging
-    to that slave.
+    Applies the current subordinate configuration to the allocator's subordinate class. The
+    result is a dictionary mapping subordinate names to a tuple of keys belonging
+    to that subordinate.
     """
-    all_slaves = set(self._all_slaves.iterkeys())
-    n_state = SlaveState(
+    all_subordinates = set(self._all_subordinates.iterkeys())
+    n_state = SubordinateState(
         class_map={},
-        unallocated=all_slaves.copy())
-    lru = all_slaves.copy()
+        unallocated=all_subordinates.copy())
+    lru = all_subordinates.copy()
     exclusive = set()
 
     # The remaining classes to allocate. We keep this sorted for determinism.
     remaining_classes = sorted(self._classes.iterkeys())
 
-    def allocate_slaves(config, slaves):
-      class_slaves = n_state.class_map.setdefault(config.cls, [])
+    def allocate_subordinates(config, subordinates):
+      class_subordinates = n_state.class_map.setdefault(config.cls, [])
       if config.count:
-        slaves = slaves[:max(0, config.count - len(class_slaves))]
-      class_slaves.extend(slaves)
+        subordinates = subordinates[:max(0, config.count - len(class_subordinates))]
+      class_subordinates.extend(subordinates)
       if config.exclusive:
-        exclusive.update(slaves)
-      lru.difference_update(slaves)
-      n_state.unallocated.difference_update(slaves)
+        exclusive.update(subordinates)
+      lru.difference_update(subordinates)
+      n_state.unallocated.difference_update(subordinates)
       if len(lru) == 0:
         # Reload LRU.
-        lru.update(all_slaves)
-      return class_slaves
+        lru.update(all_subordinates)
+      return class_subordinates
 
-    def candidate_slaves(config, state):
-      # Get slaves from the candidate pools.
-      slaves = set()
+    def candidate_subordinates(config, state):
+      # Get subordinates from the candidate pools.
+      subordinates = set()
       for pool in (config.pools or self._pools.iterkeys()):
-        slaves.update(self._pools[pool])
+        subordinates.update(self._pools[pool])
       if state:
-        slaves &= set(state.class_map.get(config.cls, ()))
+        subordinates &= set(state.class_map.get(config.cls, ()))
 
-      # Remove any slaves that have been exclusively allocated.
-      slaves.difference_update(exclusive)
+      # Remove any subordinates that have been exclusively allocated.
+      subordinates.difference_update(exclusive)
 
-      # Deterministically prefer slaves that haven't been used over those that
+      # Deterministically prefer subordinates that haven't been used over those that
       # have.
-      return sorted(slaves & lru) + sorted(slaves.difference(lru))
+      return sorted(subordinates & lru) + sorted(subordinates.difference(lru))
 
     def apply_config(state=None, finite=False):
       incomplete_classes = []
-      for slave_class in remaining_classes:
-        if not self._membership.get(slave_class):
-          # This slave class has no members; ignore it.
+      for subordinate_class in remaining_classes:
+        if not self._membership.get(subordinate_class):
+          # This subordinate class has no members; ignore it.
           continue
-        config = self._classes[slave_class]
+        config = self._classes[subordinate_class]
 
         if not (finite and config.count is None):
-          slaves = candidate_slaves(config, state)
+          subordinates = candidate_subordinates(config, state)
         else:
           # We're only applying finite configurations in this pass.
-          slaves = ()
-        allocated_slaves = allocate_slaves(config, slaves)
-        if len(allocated_slaves) < max(config.count, 1):
-          incomplete_classes.append(slave_class)
+          subordinates = ()
+        allocated_subordinates = allocate_subordinates(config, subordinates)
+        if len(allocated_subordinates) < max(config.count, 1):
+          incomplete_classes.append(subordinate_class)
 
       # Return the set of classes that still need allocations.
       return incomplete_classes
@@ -309,40 +309,40 @@ class SlaveAllocator(object):
     # If we have a state, apply as much as possible to the current
     # configuration. Note that anything can change between the saved state and
     # the current configuration, including:
-    # - Slaves added / removed from pools.
-    # - Slaves moved from one pool to another.
-    # - Slave classes added/removed.
+    # - Subordinates added / removed from pools.
+    # - Subordinates moved from one pool to another.
+    # - Subordinate classes added/removed.
     if self._state:
       remaining_classes = apply_config(self._state)
     remaining_classes = apply_config(finite=True)
     remaining_classes = apply_config()
 
-    # Are there any slave classes remaining?
+    # Are there any subordinate classes remaining?
     assert not remaining_classes, (
-        "Failed to apply config for slave classes: %s" % (remaining_classes,))
+        "Failed to apply config for subordinate classes: %s" % (remaining_classes,))
     self._state = n_state
     return n_state
 
-  def GetSlaveMap(self):
-    """Returns (dict): A dictionary mapping slaves to lists of keys.
+  def GetSubordinateMap(self):
+    """Returns (dict): A dictionary mapping subordinates to lists of keys.
     """
-    slave_map_entries = {}
-    n_state = self._GetSlaveClassMap()
-    for slave_class, slaves in n_state.class_map.iteritems():
-      for slave in slaves:
-        entry = slave_map_entries.get(slave)
+    subordinate_map_entries = {}
+    n_state = self._GetSubordinateClassMap()
+    for subordinate_class, subordinates in n_state.class_map.iteritems():
+      for subordinate in subordinates:
+        entry = subordinate_map_entries.get(subordinate)
         if not entry:
-          entry = slave_map_entries[slave] = SlaveMapEntry(classes=set(),
+          entry = subordinate_map_entries[subordinate] = SubordinateMapEntry(classes=set(),
                                                            keys=[])
-        entry.classes.add(slave_class)
-        entry.keys.extend(self._membership.get(slave_class, ()))
+        entry.classes.add(subordinate_class)
+        entry.keys.extend(self._membership.get(subordinate_class, ()))
 
-    # Convert SlaveMapEntry fields to immutable form.
-    result = SlaveMap(
+    # Convert SubordinateMapEntry fields to immutable form.
+    result = SubordinateMap(
         entries={},
         unallocated=frozenset(n_state.unallocated))
-    for k, v in slave_map_entries.iteritems():
-      result.entries[k] = SlaveMapEntry(
+    for k, v in subordinate_map_entries.iteritems():
+      result.entries[k] = SubordinateMapEntry(
           classes=frozenset(v.classes),
           keys=tuple(sorted(v.keys)))
     return result

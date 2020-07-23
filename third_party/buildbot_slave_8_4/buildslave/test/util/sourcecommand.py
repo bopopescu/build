@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildslave import runprocess
-from buildslave.test.util import command
+from buildsubordinate import runprocess
+from buildsubordinate.test.util import command
 
 class SourceCommandTestMixin(command.CommandTestMixin):
     """

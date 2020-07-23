@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""A tool to extract a build, executed by a buildbot slave.
+"""A tool to extract a build, executed by a buildbot subordinate.
 """
 
 import optparse
@@ -14,8 +14,8 @@ import traceback
 import urllib
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 class ExtractHandler(object):
   def __init__(self, url, archive_name):
@@ -25,7 +25,7 @@ class ExtractHandler(object):
 
 class GSHandler(ExtractHandler):
   def download(self):
-    status = slave_utils.GSUtilCopy(self.url, '.')
+    status = subordinate_utils.GSUtilCopy(self.url, '.')
     if 0 != status:
       return False
     try:
@@ -65,8 +65,8 @@ def GetBuildUrl(options, build_revision, webkit_revision=None):
   if options.build_archive_url:
     return options.build_archive_url, None
 
-  base_filename, version_suffix = slave_utils.GetZipFileNames(
-      options.master_name,
+  base_filename, version_suffix = subordinate_utils.GetZipFileNames(
+      options.main_name,
       options.build_number,
       options.parent_build_number,
       build_revision, webkit_revision, extract=True)
@@ -74,7 +74,7 @@ def GetBuildUrl(options, build_revision, webkit_revision=None):
   replace_dict = {
     'base_filename': base_filename,
     'parentname': options.parent_builder_name,
-    'parentslavename': options.parent_slave_name,
+    'parentsubordinatename': options.parent_subordinate_name,
     'parent_builddir': options.parent_build_dir,
   }
   # If builddir isn't specified, assume buildbot used the builder name
@@ -83,7 +83,7 @@ def GetBuildUrl(options, build_revision, webkit_revision=None):
     replace_dict['parent_builddir'] = replace_dict.get('parentname', '')
   url = options.build_url
   if not url:
-    url = ('http://%(parentslavename)s/b/build/slave/%(parent_builddir)s/'
+    url = ('http://%(parentsubordinatename)s/b/build/subordinate/%(parent_builddir)s/'
            'chrome_staging')
   if url[-4:] != '.zip': # assume filename not specified
     # Append the filename to the base URL. First strip any trailing slashes.
@@ -111,7 +111,7 @@ def real_main(options):
 
   src_dir = os.path.dirname(abs_build_dir)
   if not options.build_revision and not options.build_archive_url:
-    (build_revision, webkit_revision) = slave_utils.GetBuildRevisions(
+    (build_revision, webkit_revision) = subordinate_utils.GetBuildRevisions(
         src_dir, options.webkit_dir, options.revision_dir)
   else:
     build_revision = options.build_revision
@@ -138,7 +138,7 @@ def real_main(options):
     if not failure:
       if not handler.download():
         if options.halt_on_missing_build:
-          return slave_utils.ERROR_EXIT_CODE
+          return subordinate_utils.ERROR_EXIT_CODE
         failure = True
 
     # If the versioned url failed, we try to get the latest build.
@@ -185,11 +185,11 @@ def real_main(options):
 
     if failure:
       # We successfully extracted the archive, but it was the generic one.
-      return slave_utils.WARNING_EXIT_CODE
+      return subordinate_utils.WARNING_EXIT_CODE
     return 0
 
   # If we get here, that means that it failed 3 times. We return a failure.
-  return slave_utils.ERROR_EXIT_CODE
+  return subordinate_utils.ERROR_EXIT_CODE
 
 
 def main():
@@ -200,7 +200,7 @@ def main():
   option_parser.add_option('--src-dir', default='src',
                            help='path to the top-level sources directory')
   option_parser.add_option('--build-dir', help='ignored')
-  option_parser.add_option('--master-name', help='Name of the buildbot master.')
+  option_parser.add_option('--main-name', help='Name of the buildbot main.')
   option_parser.add_option('--build-number', type=int,
                            help='Buildbot build number.')
   option_parser.add_option('--parent-build-dir',
@@ -208,8 +208,8 @@ def main():
                                 'builder.')
   option_parser.add_option('--parent-builder-name',
                            help='Name of parent buildbot builder.')
-  option_parser.add_option('--parent-slave-name',
-                           help='Name of parent buildbot slave.')
+  option_parser.add_option('--parent-subordinate-name',
+                           help='Name of parent buildbot subordinate.')
   option_parser.add_option('--parent-build-number', type=int,
                            help='Buildbot parent build number.')
   option_parser.add_option('--build-url',
@@ -242,16 +242,16 @@ def main():
     print 'Unknown options: %s' % args
     return 1
 
-  if not options.master_name:
-    options.master_name = options.build_properties.get('mastername', '')
+  if not options.main_name:
+    options.main_name = options.build_properties.get('mainname', '')
   if not options.build_number:
     options.build_number = options.build_properties.get('buildnumber')
   if not options.parent_build_dir:
     options.parent_build_dir = options.build_properties.get('parent_builddir')
   if not options.parent_builder_name:
     options.parent_builder_name = options.build_properties.get('parentname')
-  if not options.parent_slave_name:
-    options.parent_slave_name = options.build_properties.get('parentslavename')
+  if not options.parent_subordinate_name:
+    options.parent_subordinate_name = options.build_properties.get('parentsubordinatename')
   if not options.parent_build_number:
     options.parent_build_number = options.build_properties.get(
         'parent_buildnumber')

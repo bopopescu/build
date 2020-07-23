@@ -18,9 +18,9 @@ import re
 
 from twisted.internet import defer
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave import runprocess
-from buildslave.commands.base import AbandonChain
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate import runprocess
+from buildsubordinate.commands.base import AbandonChain
 
 
 class Repo(SourceBaseCommand):
@@ -29,7 +29,7 @@ class Repo(SourceBaseCommand):
 
     ['manifest_url'] (required):    The manifests repo repository.
     ['manifest_branch'] (optional): Which manifest repo version (i.e. branch or tag)
-                                    to retrieve. Default: "master".
+                                    to retrieve. Default: "main".
     ['manifest_file'] (optional):   Which manifest file to use. Default: "default.xml".
     ['tarball'] (optional):         The tarball base to accelerate the fetch.
     ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
@@ -46,7 +46,7 @@ class Repo(SourceBaseCommand):
         self.tarball = args.get('tarball')
         self.repo_downloads = args.get('repo_downloads')
         # we're using string instead of an array here, because it will be transferred back
-        # to the master as string anyway and using eval() could have security implications.
+        # to the main as string anyway and using eval() could have security implications.
         self.repo_downloaded = ""
 
         self.sourcedata = "%s %s %s" % (self.manifest_url, self.manifest_branch, self.manifest_file)

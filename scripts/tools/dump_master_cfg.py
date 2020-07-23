@@ -4,9 +4,9 @@
 # found in the LICENSE file.
 
 """
-Dumps master config as JSON.
+Dumps main config as JSON.
 
-Uses master_cfg_utils.LoadConfig, which should be called at most once
+Uses main_cfg_utils.LoadConfig, which should be called at most once
 in the same process. That's why this is a separate utility.
 """
 
@@ -24,8 +24,8 @@ from common import env
 
 env.Install()
 
-from common import master_cfg_utils
-from master.factory.build_factory import BuildFactory
+from common import main_cfg_utils
+from main.factory.build_factory import BuildFactory
 
 
 class BuildbotJSONEncoder(json.JSONEncoder):
@@ -38,13 +38,13 @@ class BuildbotJSONEncoder(json.JSONEncoder):
 
 def main(argv):
   parser = argparse.ArgumentParser()
-  parser.add_argument('master')
+  parser.add_argument('main')
   parser.add_argument('output', type=argparse.FileType('w'), default=sys.stdout)
 
   args = parser.parse_args(argv)
 
-  result = master_cfg_utils.LoadConfig(args.master)
-  json.dump(result['BuildmasterConfig'],
+  result = main_cfg_utils.LoadConfig(args.main)
+  json.dump(result['BuildmainConfig'],
             args.output,
             cls=BuildbotJSONEncoder,
             indent=4)

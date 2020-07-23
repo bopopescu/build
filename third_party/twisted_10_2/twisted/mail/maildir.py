@@ -434,12 +434,12 @@ class MaildirDirdbmDomain(AbstractMaildirDomain):
     portal = None
     _credcheckers = None
 
-    def __init__(self, service, root, postmaster=0):
+    def __init__(self, service, root, postmain=0):
         """Initialize
 
         The first argument is where the Domain directory is rooted.
         The second is whether non-existing addresses are simply
-        forwarded to postmaster instead of outright bounce
+        forwarded to postmain instead of outright bounce
 
         The directory structure of a MailddirDirdbmDomain is:
 
@@ -451,20 +451,20 @@ class MaildirDirdbmDomain(AbstractMaildirDomain):
         if not os.path.exists(dbm):
             os.makedirs(dbm)
         self.dbm = dirdbm.open(dbm)
-        self.postmaster = postmaster
+        self.postmain = postmain
 
     def userDirectory(self, name):
         """Get the directory for a user
 
         If the user exists in the dirdbm file, return the directory
         os.path.join(root, name), creating it if necessary.
-        Otherwise, returns postmaster's mailbox instead if bounces
-        go to postmaster, otherwise return None
+        Otherwise, returns postmain's mailbox instead if bounces
+        go to postmain, otherwise return None
         """
         if not self.dbm.has_key(name):
-            if not self.postmaster:
+            if not self.postmain:
                 return None
-            name = 'postmaster'
+            name = 'postmain'
         dir = os.path.join(self.root, name)
         if not os.path.exists(dir):
             initializeMaildir(dir)

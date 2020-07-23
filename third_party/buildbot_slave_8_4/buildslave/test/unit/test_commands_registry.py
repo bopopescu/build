@@ -15,14 +15,14 @@
 
 from twisted.trial import unittest
 
-from buildslave.commands import registry
-from buildslave.commands import shell
+from buildsubordinate.commands import registry
+from buildsubordinate.commands import shell
 
 class Registry(unittest.TestCase):
 
     def test_getFactory(self):
         factory = registry.getFactory('shell')
-        self.assertEqual(factory, shell.SlaveShellCommand)
+        self.assertEqual(factory, shell.SubordinateShellCommand)
 
     def test_getFactory_KeyError(self):
         self.assertRaises(KeyError, lambda : registry.getFactory('nosuchcommand'))

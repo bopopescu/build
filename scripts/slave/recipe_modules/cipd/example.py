@@ -21,7 +21,7 @@ def RunSteps(api):
   package_instance_id = '7f751b2237df2fdf3c1405be00590fefffbaea2d'
   packages = {package_name: package_instance_id}
 
-  cipd_root = api.path['slave_build'].join('packages')
+  cipd_root = api.path['subordinate_build'].join('packages')
   # Some packages don't require credentials to be installed or queried.
   api.cipd.ensure(cipd_root, packages)
   step = api.cipd.search(package_name, tag='git_revision:40-chars-long-hash')

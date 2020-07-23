@@ -269,7 +269,7 @@ class BonsaiPoller(base.PollingChangeSource):
                      for file in cinode.files]
             self.lastChange = self.lastPoll
             w = defer.waitForDeferred(
-                    self.master.addChange(author = cinode.who,
+                    self.main.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
                                when_timestamp = epoch2datetime(cinode.date),

@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumWebRTC(Master.Master1):
+class ChromiumWebRTC(Main.Main1):
   project_name = 'Chromium WebRTC'
-  master_port = 8054
-  slave_port = 8154
-  master_port_alt = 8254
+  main_port = 8054
+  subordinate_port = 8154
+  main_port_alt = 8254
   server_url = 'http://webrtc.googlecode.com'
   project_url = 'http://webrtc.googlecode.com'
   from_address = 'chromium-webrtc-cb-watchlist@google.com'
@@ -20,4 +20,4 @@ class ChromiumWebRTC(Master.Master1):
   last_good_url = base_app_url + '/lkgr'
   buildbot_url = 'http://build.chromium.org/p/chromium.webrtc/'
   service_account_file = 'service-account-webrtc.json'
-  buildbucket_bucket = 'master.chromium.webrtc'
+  buildbucket_bucket = 'main.chromium.webrtc'

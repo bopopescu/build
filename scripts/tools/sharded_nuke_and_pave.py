@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Issues sharded slavekill, delete build directory, and reboot commands."""
+"""Issues sharded subordinatekill, delete build directory, and reboot commands."""
 
 import multiprocessing
 import optparse
@@ -14,83 +14,83 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from common import chromium_utils
-from master import slaves_list
+from main import subordinates_list
 
 
-def get_masters(parser, options):
-  """Given parser options, find suitable master directories."""
+def get_mains(parser, options):
+  """Given parser options, find suitable main directories."""
   paths = []
-  masters_path = chromium_utils.ListMasters()
+  mains_path = chromium_utils.ListMains()
 
-  # Populates by defaults with every masters with a twistd.pid, thus has
+  # Populates by defaults with every mains with a twistd.pid, thus has
   # been started.
-  if not options.master:
-    for m_p in masters_path:
+  if not options.main:
+    for m_p in mains_path:
       if  os.path.isfile(os.path.join(m_p, 'twistd.pid')):
         paths.append(m_p)
-  elif options.master == 'all':
-    paths.extend(masters_path)
-  elif options.master in (os.path.basename(p) for p in masters_path):
-    full_master = next(
-        p for p in masters_path if os.path.basename(p) == options.master)
-    paths.append(full_master)
+  elif options.main == 'all':
+    paths.extend(mains_path)
+  elif options.main in (os.path.basename(p) for p in mains_path):
+    full_main = next(
+        p for p in mains_path if os.path.basename(p) == options.main)
+    paths.append(full_main)
   else:
-    parser.error('Unknown master \'%s\'.\nChoices are:\n  %s' % (
-        options.master, '\n  '.join((
-            os.path.basename(p) for p in masters_path))))
+    parser.error('Unknown main \'%s\'.\nChoices are:\n  %s' % (
+        options.main, '\n  '.join((
+            os.path.basename(p) for p in mains_path))))
   return paths
 
 
-def get_slaves(master_paths, slavelist):
-  """Return slaves split up by OS.
+def get_subordinates(main_paths, subordinatelist):
+  """Return subordinates split up by OS.
 
-  Takes a list of master paths and an optional slave whitelist."""
+  Takes a list of main paths and an optional subordinate whitelist."""
 
-  slavedict = {}
-  for path in master_paths:
-    for slave in chromium_utils.GetSlavesFromMasterPath(path):
-      if 'hostname' in slave:
-        slavedict[slave['hostname']] = slave
-  slaves = slaves_list.BaseSlavesList(slavedict.values())
+  subordinatedict = {}
+  for path in main_paths:
+    for subordinate in chromium_utils.GetSubordinatesFromMainPath(path):
+      if 'hostname' in subordinate:
+        subordinatedict[subordinate['hostname']] = subordinate
+  subordinates = subordinates_list.BaseSubordinatesList(subordinatedict.values())
   def F(os_type):
-    out = slaves.GetSlaves(os=os_type)
-    named_slaves = [s.get('hostname') for s in out]
+    out = subordinates.GetSubordinates(os=os_type)
+    named_subordinates = [s.get('hostname') for s in out]
 
-    if slavelist:
-      return [s for s in named_slaves if s in slavelist]
+    if subordinatelist:
+      return [s for s in named_subordinates if s in subordinatelist]
     else:
-      return named_slaves
+      return named_subordinates
 
-  slave_dict = {}
-  slave_dict['win'] = list(set(F('win')))
-  slave_dict['linux'] = list(set(F('linux')))
-  slave_dict['mac'] = list(set(F('mac')))
+  subordinate_dict = {}
+  subordinate_dict['win'] = list(set(F('win')))
+  subordinate_dict['linux'] = list(set(F('linux')))
+  subordinate_dict['mac'] = list(set(F('mac')))
 
-  return slave_dict
+  return subordinate_dict
 
 
-def get_commands(slaves):
+def get_commands(subordinates):
   """Depending on OS, yield the proper nuke-and-pave command sequence."""
   commands = {}
-  for slave in slaves['win']:
+  for subordinate in subordinates['win']:
     def cmd(command):
       return 'cmd.exe /c "%s"' % command
     def cygwin(command):
       return 'c:\\cygwin\\bin\\bash --login -c "%s"' % (
           command.replace('"', '\\"'))
 
-    commands[slave] = [
+    commands[subordinate] = [
         cmd('taskkill /IM python.exe /F'),
         cygwin('sleep 3'),
-        cygwin('rm -r -f /cygdrive/e/b/build/slave/*/build'),
+        cygwin('rm -r -f /cygdrive/e/b/build/subordinate/*/build'),
         cmd('shutdown -r -f -t 1'),
     ]
 
-  for slave in slaves['mac'] + slaves['linux']:
-    commands[slave] = [
-        'make -C /b/build/slave stop',
+  for subordinate in subordinates['mac'] + subordinates['linux']:
+    commands[subordinate] = [
+        'make -C /b/build/subordinate stop',
         'sleep 3',
-        'rm -rf /b/build/slave/*/build',
+        'rm -rf /b/build/subordinate/*/build',
         'sudo shutdown -r now',
     ]
   return commands
@@ -106,60 +106,60 @@ def status_writer(queue):
 
 def stdout_writer(queue):
   # Send None to kill the stdout writer.
-  slave = queue.get()
-  while slave:
-    print '%s: finished' % slave
-    slave = queue.get()
+  subordinate = queue.get()
+  while subordinate:
+    print '%s: finished' % subordinate
+    subordinate = queue.get()
 
 
 def journal_writer(filename, queue):
   # Send None to kill the journal writer.
   with open(filename, 'a') as f:
-    slave = queue.get()
-    while slave:
+    subordinate = queue.get()
+    while subordinate:
       # pylint: disable=C0323
-      print >>f, slave
-      slave = queue.get()
+      print >>f, subordinate
+      subordinate = queue.get()
 
 
-def shard_slaves(slaves, max_per_shard):
-  """Shart slaves with no more than max_per_shard in each shard."""
+def shard_subordinates(subordinates, max_per_shard):
+  """Shart subordinates with no more than max_per_shard in each shard."""
   shards = []
-  for i in xrange(0, len(slaves), max_per_shard):
-    shards.append(list(slaves.iteritems())[i:i+max_per_shard])
+  for i in xrange(0, len(subordinates), max_per_shard):
+    shards.append(list(subordinates.iteritems())[i:i+max_per_shard])
   return shards
 
 
-def run_ssh_command(slavepair, worklog, status, errorlog, options):
+def run_ssh_command(subordinatepair, worklog, status, errorlog, options):
   """Execute an ssh command as chrome-bot."""
-  slave, commands = slavepair
-  needs_connect = slave.endswith('-c4')
+  subordinate, commands = subordinatepair
+  needs_connect = subordinate.endswith('-c4')
   if options.corp:
-    slave = slave + '.chrome'
+    subordinate = subordinate + '.chrome'
 
   if needs_connect:
-    ssh = ['connect', slave, '-r']
+    ssh = ['connect', subordinate, '-r']
   else:
-    identity = ['chrome-bot@%s' % slave]
+    identity = ['chrome-bot@%s' % subordinate]
     ssh = ['ssh', '-o ConnectTimeout=5'] + identity
   if options.dry_run:
     for command in commands:
-      status.put(['%s: %s' % (slave, command)])
+      status.put(['%s: %s' % (subordinate, command)])
     return
 
   retcode = 0
   for command in commands:
-    status.put(['%s: %s' % (slave, command)])
+    status.put(['%s: %s' % (subordinate, command)])
     retcode = subprocess.call(ssh + [command])
     if options.verbose:
-      status.put(['%s: previous command returned code %d' % (slave, retcode)])
-    if retcode != 0 and command != commands[0]:  # Don't fail on slavekill.
+      status.put(['%s: previous command returned code %d' % (subordinate, retcode)])
+    if retcode != 0 and command != commands[0]:  # Don't fail on subordinatekill.
       break
 
   if retcode == 0:
-    worklog.put(slave)
+    worklog.put(subordinate)
   else:
-    errorlog.put(slave)
+    errorlog.put(subordinate)
 
 
 class Worker(object):
@@ -168,29 +168,29 @@ class Worker(object):
     self.status = status
     self.options = options
     self.errorlog = errorlog
-  def __call__(self, slave):
-    run_ssh_command(slave, self.out_queue, self.status, self.errorlog,
+  def __call__(self, subordinate):
+    run_ssh_command(subordinate, self.out_queue, self.status, self.errorlog,
                     self.options)
 
 
 def main():
   usage = '%prog [options]'
   parser = optparse.OptionParser(usage=usage)
-  parser.add_option('--master',
-      help=('Master to use to load the slaves list. If omitted, all masters '
+  parser.add_option('--main',
+      help=('Main to use to load the subordinates list. If omitted, all mains '
             'that were started at least once are included. If \'all\', all '
-            'masters are selected.'))
-  parser.add_option('--slavelist',
-      help=('List of slaves to contact, separated by newlines.'))
+            'mains are selected.'))
+  parser.add_option('--subordinatelist',
+      help=('List of subordinates to contact, separated by newlines.'))
   parser.add_option('--max-per-shard', default=50,
-      help=('Each shard has no more than max-per-shard slaves.'))
+      help=('Each shard has no more than max-per-shard subordinates.'))
   parser.add_option('--max-connections', default=16,
       help=('Maximum concurrent SSH sessions.'))
   parser.add_option('--journal',
-      help=('Log completed slaves to a journal file, skipping them'
+      help=('Log completed subordinates to a journal file, skipping them'
             'on the next run.'))
   parser.add_option('--errorlog',
-      help='Log failed slaves to a file instead out stdout.')
+      help='Log failed subordinates to a file instead out stdout.')
   parser.add_option('--dry-run', action='store_true',
       help='Don\'t execute commands, only print them.')
   parser.add_option('--corp', action='store_true',
@@ -198,44 +198,44 @@ def main():
   parser.add_option('-v', '--verbose', action='store_true')
   options, _ = parser.parse_args(sys.argv)
 
-  masters = get_masters(parser, options)
+  mains = get_mains(parser, options)
   if options.verbose:
     print 'reading from:'
-    for master in masters:
-      print '  ', master
+    for main in mains:
+      print '  ', main
 
-  slavelist = []
-  if options.slavelist:
-    with open(options.slavelist) as f:
-      slavelist = [s.strip() for s in f.readlines()]
-  slaves = get_slaves(masters, slavelist)
+  subordinatelist = []
+  if options.subordinatelist:
+    with open(options.subordinatelist) as f:
+      subordinatelist = [s.strip() for s in f.readlines()]
+  subordinates = get_subordinates(mains, subordinatelist)
 
-  if options.verbose and options.slavelist:
-    wanted_slaves = set(slavelist)
-    got_slaves = set()
-    for _, s in slaves.iteritems():
-      got_slaves.update(s)
+  if options.verbose and options.subordinatelist:
+    wanted_subordinates = set(subordinatelist)
+    got_subordinates = set()
+    for _, s in subordinates.iteritems():
+      got_subordinates.update(s)
 
-    diff = wanted_slaves - got_slaves
+    diff = wanted_subordinates - got_subordinates
     if diff:
-      print 'Following slaves are not on selected masters:'
+      print 'Following subordinates are not on selected mains:'
       for s in diff:
         print '  ', s
 
   if options.journal and os.path.exists(options.journal):
     skipped = set()
     with open(options.journal) as f:
-      finished_slaves = set([s.strip() for s in f.readlines()])
-    for os_type in slaves:
-      skipped.update(set(slaves[os_type]) & finished_slaves)
-      slaves[os_type] = list(set(slaves[os_type]) - finished_slaves)
+      finished_subordinates = set([s.strip() for s in f.readlines()])
+    for os_type in subordinates:
+      skipped.update(set(subordinates[os_type]) & finished_subordinates)
+      subordinates[os_type] = list(set(subordinates[os_type]) - finished_subordinates)
     if options.verbose:
-      print 'Following slaves have already been processed:'
+      print 'Following subordinates have already been processed:'
       for s in skipped:
         print '  ', s
 
-  commands = get_commands(slaves)
-  shards = shard_slaves(commands, options.max_per_shard)
+  commands = get_commands(subordinates)
+  shards = shard_subordinates(commands, options.max_per_shard)
   pool = multiprocessing.Pool(processes=options.max_connections)
   m = multiprocessing.Manager()
   worklog = m.Queue()
@@ -256,9 +256,9 @@ def main():
   # Execute commands.
   for shard in shards:
     if options.verbose:
-      print 'Starting next shard with slaves:'
-      for slave in shard:
-        print '  ', slave
+      print 'Starting next shard with subordinates:'
+      for subordinate in shard:
+        print '  ', subordinate
 
     pool.map_async(Worker(worklog, status, errors, options), shard).get(9999999)
     raw_input('Shard finished, press enter to continue...')
@@ -283,7 +283,7 @@ def main():
           # pylint: disable=C0323
           print >>f, error
     else:
-      print 'Following slaves had errors:'
+      print 'Following subordinates had errors:'
       for error in error_list:
         print '  ', error
 

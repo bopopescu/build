@@ -29,7 +29,7 @@ class ChDict(dict):
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting changes into and out of the
-    database.  An instance is available at C{master.db.changes}.
+    database.  An instance is available at C{main.db.changes}.
 
     Changes are represented as dictionaries with the following keys:
 

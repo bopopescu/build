@@ -17,10 +17,10 @@ def DAYS(secs):
   return float(secs) / (60 * 60 * 24)
 
 
-def gen_masters_dirs(build_dir):
-  msdir = os.path.join(build_dir, 'masters')
+def gen_mains_dirs(build_dir):
+  msdir = os.path.join(build_dir, 'mains')
   return [os.path.join(msdir, x) for x in os.listdir(msdir)
-          if x.startswith('master') and os.path.isdir(os.path.join(msdir, x))]
+          if x.startswith('main') and os.path.isdir(os.path.join(msdir, x))]
 
 
 def is_builder_dir(bdir):
@@ -54,7 +54,7 @@ def get_builders(mdir):
 
 
 def find_builders(build_dir):
-  for mdir in gen_masters_dirs(build_dir):
+  for mdir in gen_mains_dirs(build_dir):
     for bdir in get_builders(mdir):
       yield bdir
 
@@ -76,22 +76,22 @@ def MiB(size):
 
 def preformat_build_dir(bdir, size=None, age=None):
   builder = os.path.basename(bdir)
-  master = os.path.basename(os.path.dirname(bdir))
+  main = os.path.basename(os.path.dirname(bdir))
   if size is None:
     size = get_dir_size(bdir)
   if age is None:
     age = get_age(bdir)
-  return (master, builder, '%.0f days' % DAYS(age), '%.1f MiB' % MiB(size))
+  return (main, builder, '%.0f days' % DAYS(age), '%.1f MiB' % MiB(size))
 
 
 def preformat_build_logs(bdir, logs, size):
   builder = os.path.basename(bdir)
-  master = os.path.basename(os.path.dirname(bdir))
+  main = os.path.basename(os.path.dirname(bdir))
   build_min, build_max = min(logs), max(logs)
   builds_range = 'builds ~ %6i(%4.f days) .. %6i(%4.0f days)' % (
       build_min, DAYS(get_logs_age(logs[build_min])),
       build_max, DAYS(get_logs_age(logs[build_max])))
-  return (master, builder, builds_range, '%.1f MiB' % MiB(size))
+  return (main, builder, builds_range, '%.1f MiB' % MiB(size))
 
 
 def print_table(table):

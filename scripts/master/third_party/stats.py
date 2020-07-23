@@ -199,7 +199,7 @@ class StatsStatusResource(HtmlResource):
 
         self.status = None
         self.control = None
-        self.changemaster = None
+        self.changemain = None
         self.allowForce = allowForce
         self.css = css
 
@@ -214,7 +214,7 @@ class StatsStatusResource(HtmlResource):
         else:
             return "BuildBot"
 
-    def getChangemaster(self, request):
+    def getChangemain(self, request):
         return request.site.buildbot_service.parent.change_svc
 
     def head(self, request):
@@ -278,7 +278,7 @@ class StatsStatusResource(HtmlResource):
         status = self.getStatus(request)
 
         # Get all revisions we can find.
-        source = self.getChangemaster(request)
+        source = self.getChangemain(request)
 
         data = "<script>"
         data += self.getMainVariables(status)

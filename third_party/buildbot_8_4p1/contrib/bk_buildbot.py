@@ -75,7 +75,7 @@ class ChangeSender:
 
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent
-        to the buildmaster's PBChangeSource."""
+        to the buildmain's PBChangeSource."""
 
         # first we extract information about the files that were changed
         repo = opts['repository']

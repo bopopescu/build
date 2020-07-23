@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='libyuv_mac_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=0,
                             builderNames=[
           'Mac64 Debug',
@@ -27,15 +27,15 @@ def Update(c):
   ])
 
   specs = [
-    {'name': 'Mac64 Debug', 'slavebuilddir': 'mac64'},
-    {'name': 'Mac64 Release', 'slavebuilddir': 'mac64'},
-    {'name': 'Mac64 Debug (GN)', 'slavebuilddir': 'mac64_gn'},
-    {'name': 'Mac64 Release (GN)', 'slavebuilddir': 'mac64_gn'},
-    {'name': 'Mac Asan', 'slavebuilddir': 'mac_asan'},
-    {'name': 'iOS Debug', 'slavebuilddir': 'mac32'},
-    {'name': 'iOS Release', 'slavebuilddir': 'mac32'},
-    {'name': 'iOS ARM64 Debug', 'slavebuilddir': 'mac64'},
-    {'name': 'iOS ARM64 Release', 'slavebuilddir': 'mac64'},
+    {'name': 'Mac64 Debug', 'subordinatebuilddir': 'mac64'},
+    {'name': 'Mac64 Release', 'subordinatebuilddir': 'mac64'},
+    {'name': 'Mac64 Debug (GN)', 'subordinatebuilddir': 'mac64_gn'},
+    {'name': 'Mac64 Release (GN)', 'subordinatebuilddir': 'mac64_gn'},
+    {'name': 'Mac Asan', 'subordinatebuilddir': 'mac_asan'},
+    {'name': 'iOS Debug', 'subordinatebuilddir': 'mac32'},
+    {'name': 'iOS Release', 'subordinatebuilddir': 'mac32'},
+    {'name': 'iOS ARM64 Debug', 'subordinatebuilddir': 'mac64'},
+    {'name': 'iOS ARM64 Release', 'subordinatebuilddir': 'mac64'},
   ]
 
   c['builders'].extend([
@@ -44,6 +44,6 @@ def Update(c):
         'factory': m_annotator.BaseFactory('libyuv/libyuv'),
         'notify_on_missing': True,
         'category': 'mac',
-        'slavebuilddir': spec['slavebuilddir'],
+        'subordinatebuilddir': spec['subordinatebuilddir'],
       } for spec in specs
   ])

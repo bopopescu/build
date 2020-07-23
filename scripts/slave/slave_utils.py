@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Functions specific to build slaves, shared by several buildbot scripts.
+"""Functions specific to build subordinates, shared by several buildbot scripts.
 """
 
 import datetime
@@ -15,8 +15,8 @@ import tempfile
 import time
 
 from common import chromium_utils
-from slave.bootstrap import ImportMasterConfigs # pylint: disable=W0611
-from common.chromium_utils import GetActiveMaster # pylint: disable=W0611
+from subordinate.bootstrap import ImportMainConfigs # pylint: disable=W0611
+from common.chromium_utils import GetActiveMain # pylint: disable=W0611
 
 # These codes used to distinguish true errors from script warnings.
 ERROR_EXIT_CODE = 1
@@ -169,11 +169,11 @@ def GetBuildRevisions(src_dir, webkit_dir=None, revision_dir=None):
 
 
 def GetZipFileNames(
-    mastername, buildnumber, parent_buildnumber, build_revision,
+    mainname, buildnumber, parent_buildnumber, build_revision,
     webkit_revision=None, extract=False, use_try_buildnumber=True):
   base_name = 'full-build-%s' % chromium_utils.PlatformName()
 
-  if 'try' in mastername and use_try_buildnumber:
+  if 'try' in mainname and use_try_buildnumber:
     if extract:
       if not parent_buildnumber:
         raise Exception('missing parent_buildnumber')
@@ -188,15 +188,15 @@ def GetZipFileNames(
   return base_name, version_suffix
 
 
-def SlaveBuildName(chrome_dir):
-  """Extracts the build name of this slave (e.g., 'chrome-release') from the
+def SubordinateBuildName(chrome_dir):
+  """Extracts the build name of this subordinate (e.g., 'chrome-release') from the
   leaf subdir of its build directory.
   """
-  return os.path.basename(SlaveBaseDir(chrome_dir))
+  return os.path.basename(SubordinateBaseDir(chrome_dir))
 
 
-def SlaveBaseDir(chrome_dir):
-  """Finds the full path to the build slave's base directory (e.g.
+def SubordinateBaseDir(chrome_dir):
+  """Finds the full path to the build subordinate's base directory (e.g.
   'c:/b/chrome/chrome-release').  This is assumed to be the parent of the
   shallowest 'build' directory in the chrome_dir path.
 
@@ -210,13 +210,13 @@ def SlaveBaseDir(chrome_dir):
     if leaf == 'build':
       # Remember this one and keep looking for something shallower.
       result = parent
-    if leaf == 'slave':
+    if leaf == 'subordinate':
       # We are too deep, stop now.
       break
     prev_dir = curr_dir
     curr_dir = parent
   if not result:
-    raise chromium_utils.PathNotFound('Unable to find slave base dir above %s' %
+    raise chromium_utils.PathNotFound('Unable to find subordinate base dir above %s' %
                                       chrome_dir)
   return result
 
@@ -226,7 +226,7 @@ def GetStagingDir(start_dir):
   full path.
   """
   start_dir = os.path.abspath(start_dir)
-  staging_dir = os.path.join(SlaveBaseDir(start_dir), 'chrome_staging')
+  staging_dir = os.path.join(SubordinateBaseDir(start_dir), 'chrome_staging')
   chromium_utils.MaybeMakeDirectory(staging_dir)
   return staging_dir
 

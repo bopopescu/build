@@ -20,8 +20,8 @@ from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
 from buildbot.sourcestamp import SourceStamp
 
-class FakeSlaveBuilder:
-    slave = None
+class FakeSubordinateBuilder:
+    subordinate = None
 
 
 class FakeBuildStatus:
@@ -84,7 +84,7 @@ class TestShellCommandProperties(unittest.TestCase):
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeSlaveBuilder()
+        b.subordinatebuilder = FakeSubordinateBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
@@ -101,7 +101,7 @@ class TestSetProperty(unittest.TestCase):
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeSlaveBuilder()
+        b.subordinatebuilder = FakeSubordinateBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)

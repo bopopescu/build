@@ -20,7 +20,7 @@ import urllib2
 
 SLAVE_GCLIENT_CONFIG = """solutions = [
   {
-    "name"      : "slave.DEPS",
+    "name"      : "subordinate.DEPS",
     "url"       : "https://chrome-internal.googlesource.com/chrome/tools/build/slave.DEPS.git",
     "deps_file" : ".DEPS.git",
     "managed"   : True,
@@ -37,13 +37,13 @@ INTERNAL_GCLIENT_CONFIG = """solutions = [
 ]"""
 
 GCLIENT_CONFIGS = {
-  'slave.DEPS': SLAVE_GCLIENT_CONFIG,
+  'subordinate.DEPS': SLAVE_GCLIENT_CONFIG,
   'internal.DEPS': INTERNAL_GCLIENT_CONFIG,
 }
 
 is_win = sys.platform.startswith('win')
 
-PREVENT_REBOOT_FILE_CONTENT = 'slave_svn_to_git'
+PREVENT_REBOOT_FILE_CONTENT = 'subordinate_svn_to_git'
 
 
 def log(line):
@@ -87,7 +87,7 @@ def report_checkout_state(b_dir, cur_host):
     return False
 
 
-def report_broken_slave(cur_host, error_type):
+def report_broken_subordinate(cur_host, error_type):
   try:
     url = ('https://svn-to-git-tracking.appspot.com/api/reportBrokenSlave?'
            'host=%s&error_type=%s' % (urllib2.quote(cur_host),
@@ -98,14 +98,14 @@ def report_broken_slave(cur_host, error_type):
 
 
 def get_svn2git_dirs(b_dir):
-  return [f for f in os.listdir(b_dir) if f.startswith('slave_svn_to_git')]
+  return [f for f in os.listdir(b_dir) if f.startswith('subordinate_svn_to_git')]
 
 
 def get_svn2git_noreboot_file(home_dir):
   noreboot_file_path = os.path.join(home_dir, 'no_reboot')
   if os.path.isfile(noreboot_file_path):
     with open(noreboot_file_path) as no_reboot_file:
-      if no_reboot_file.read() == 'slave_svn_to_git':
+      if no_reboot_file.read() == 'subordinate_svn_to_git':
         return noreboot_file_path
 
 
@@ -120,20 +120,20 @@ def report_host_state(home_dir, cur_host, b_dir):
   Returns:
     Whether the host checkout should be converted to Git.
   """
-  # Report and fix slaves with ~/no_reboot created by this script.
+  # Report and fix subordinates with ~/no_reboot created by this script.
   if get_svn2git_noreboot_file(home_dir):
     try:
       os.remove(get_svn2git_noreboot_file(home_dir))
     except Exception:
       pass
     if get_svn2git_noreboot_file(home_dir):
-      report_broken_slave(cur_host, 'no_reboot')
+      report_broken_subordinate(cur_host, 'no_reboot')
 
-  # Report slaves without /b/.gclient.
+  # Report subordinates without /b/.gclient.
   if not os.path.isfile(os.path.join(b_dir, '.gclient')):
-    report_broken_slave(cur_host, 'gclient_missing')
+    report_broken_subordinate(cur_host, 'gclient_missing')
 
-  # Report and fix slaves with /b/slave_svn_to_git* folders.
+  # Report and fix subordinates with /b/subordinate_svn_to_git* folders.
   if get_svn2git_dirs(b_dir):
     try:
       for d in get_svn2git_dirs(b_dir):
@@ -141,17 +141,17 @@ def report_host_state(home_dir, cur_host, b_dir):
     except Exception:
       pass
     if get_svn2git_dirs(b_dir):
-      report_broken_slave(cur_host, 'slave_svn_to_git_dir_present')
+      report_broken_subordinate(cur_host, 'subordinate_svn_to_git_dir_present')
 
-  # Report slaves without /b/build/site_config/.bot_password.
+  # Report subordinates without /b/build/site_config/.bot_password.
   if not os.path.isfile(os.path.join(b_dir, 'build', 'site_config',
                                      '.bot_password')):
-    report_broken_slave(cur_host, 'bot_password_missing')
+    report_broken_subordinate(cur_host, 'bot_password_missing')
 
-  # Report slaves without /b/build/site_config/.boto.
+  # Report subordinates without /b/build/site_config/.boto.
   if not re.match('^.*\d+-c\d+$', cur_host):  # GCE bots don't need .boto file.
     if not os.path.isfile(os.path.join(b_dir, 'build', 'site_config', '.boto')):
-      report_broken_slave(cur_host, 'boto_missing')
+      report_broken_subordinate(cur_host, 'boto_missing')
 
   return report_checkout_state(b_dir, cur_host)
 
@@ -214,7 +214,7 @@ def main():
   assert os.path.isfile(gclient_path), 'Did not find old .gclient config'
 
   # Detect type of checkout.
-  is_cros_slave = cur_host.startswith('cros')
+  is_cros_subordinate = cur_host.startswith('cros')
   with open(gclient_path) as gclient_file:
     exec_env = {}
     exec gclient_file in exec_env
@@ -222,8 +222,8 @@ def main():
   assert len(solutions) == 1, 'Number of solutions in .gclient is not 1'
   if not solutions[0]['url'].startswith('svn:'):
     log('Non-SVN URL in .gclient: %s' % solutions[0]['url'])
-    if is_cros_slave and solutions[0]['deps_file'] == 'DEPS':
-      log('Exempting unconverted CrOS slave from SVN URL requirement: %s' % (
+    if is_cros_subordinate and solutions[0]['deps_file'] == 'DEPS':
+      log('Exempting unconverted CrOS subordinate from SVN URL requirement: %s' % (
           cur_host,))
     else:
       return 0
@@ -232,7 +232,7 @@ def main():
   gclient_config = GCLIENT_CONFIGS[sol_name]
 
   tmpdir = tempfile.mkdtemp(dir=os.path.realpath(b_dir),
-                            prefix='slave_svn_to_git')
+                            prefix='subordinate_svn_to_git')
   try:
     # Create new temp Git checkout.
     with open(os.path.join(tmpdir, '.gclient'), 'w') as gclient_file:
@@ -244,14 +244,14 @@ def main():
         check_output(['gclient', 'sync'], cwd=b_dir, env=env)
       except subprocess.CalledProcessError:
         # On Windows, gclient sync occasionally reports 'checksum mismatch'
-        # error for build/scripts/slave/recipes/deterministic_build.expected/
+        # error for build/scripts/subordinate/recipes/deterministic_build.expected/
         # full_chromium_swarm_linux_deterministic.json when calling 'svn update'
         # on 'build' directory. As a workaround, we delete parent dir containing
         # invalid .svn files and try again. The missing directory should be
         # re-created with the correct checksum by repeated call to 'svn update'.
         if is_win:
           parent_dir = os.path.join(
-              b_dir, 'build', 'scripts', 'slave', 'recipes',
+              b_dir, 'build', 'scripts', 'subordinate', 'recipes',
               'deterministic_build.expected')
           check_call(['rmdir', parent_dir, '/s', '/q'], cwd=b_dir, env=env)
           check_output(['gclient', 'sync'], cwd=b_dir, env=env)
@@ -332,18 +332,18 @@ def main():
       shutil.rmtree(tmpdir)
 
   # Refresh gclient checkout.
-  if is_cros_slave:
+  if is_cros_subordinate:
     # Make sure our current root URL matches the one in the .gclient file.
     #
-    # On CrOS slaves, internal.DEPS is checked out as:
+    # On CrOS subordinates, internal.DEPS is checked out as:
     # https://...../internal.DEPS
     #
-    # The URL used for standard slaves (and the .gclient file that we drop) is:
+    # The URL used for standard subordinates (and the .gclient file that we drop) is:
     # https://...../internal.DEPS.git
     #
-    # Because CrOS slaves use a Git checkout for internal.DEPS, the initial
+    # Because CrOS subordinates use a Git checkout for internal.DEPS, the initial
     # repository is exempted from converstion. This will convert it to the
-    # standard slave checkout so we're all uniform.
+    # standard subordinate checkout so we're all uniform.
     with open(gclient_path) as gclient_file:
       exec_env = {}
       exec gclient_file in exec_env
@@ -360,7 +360,7 @@ def main():
 
 
 if __name__ == '__main__':
-  log('Running slave_svn_to_git on %s UTC' % datetime.datetime.utcnow())
+  log('Running subordinate_svn_to_git on %s UTC' % datetime.datetime.utcnow())
   try:
     retcode = main()
   except Exception as e:

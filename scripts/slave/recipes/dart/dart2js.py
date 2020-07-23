@@ -180,13 +180,13 @@ def GenTests(api):
    yield (
       api.test('dart2js-linux-jsshell-hostchecked-csp-3-5-be') +
       api.platform('linux', 64) +
-      api.properties.generic(mastername='client.dart',
+      api.properties.generic(mainname='client.dart',
           buildername='dart2js-linux-jsshell-hostchecked-csp-3-5-be'))
    yield (
       api.test('dart2js-win7-ie10-dev') + api.platform('win', 32) +
-      api.properties.generic(mastername='client.dart',
+      api.properties.generic(mainname='client.dart',
                              buildername='dart2js-win7-ie10-dev'))
    yield (
       api.test('dart2js-linux-drt-be') + api.platform('linux', 64) +
-      api.properties.generic(mastername='client.dart',
+      api.properties.generic(mainname='client.dart',
                              buildername='dart2js-linux-drt-93-105-dev'))

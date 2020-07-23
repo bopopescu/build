@@ -9,10 +9,10 @@ DEPS = [
 ]
 
 
-# Map master name to 'chromite' configuration name.
+# Map main name to 'chromite' configuration name.
 _MASTER_CONFIG_MAP = {
   'client.ndk': {
-    'master_config': 'chromite_config',
+    'main_config': 'chromite_config',
   },
 }
 
@@ -26,8 +26,8 @@ def GenTests(api):
   yield (
     api.test('basic') +
     api.properties.generic(
-      mastername='client.ndk',
-      branch='master',
+      mainname='client.ndk',
+      branch='main',
       cbb_config='ndk-linux-arm64-v8a'
     )
   )

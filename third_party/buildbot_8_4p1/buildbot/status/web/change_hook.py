@@ -31,7 +31,7 @@ class ChangeHookResource(resource.Resource):
     def __init__(self, dialects={}):
         """
         The keys of 'dialects' select a modules to load under
-        master/buildbot/status/web/hooks/
+        main/buildbot/status/web/hooks/
         The value is passed to the module's getChanges function, providing
         configuration options to the dialect.
         """
@@ -78,7 +78,7 @@ class ChangeHookResource(resource.Resource):
         Take the logic from the change hook, and then delegate it
         to the proper handler
         http://localhost/change_hook/DIALECT will load up
-        buildmaster/status/web/hooks/DIALECT.py
+        buildmain/status/web/hooks/DIALECT.py
         
         and call getChanges()
         
@@ -116,9 +116,9 @@ class ChangeHookResource(resource.Resource):
                 
     @defer.deferredGenerator
     def submitChanges(self, changes, request):
-        master = request.site.buildbot_service.master
+        main = request.site.buildbot_service.main
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(**chdict))
+            wfd = defer.waitForDeferred(main.addChange(**chdict))
             yield wfd
             change = wfd.getResult()
             log.msg("injected change %s" % change)

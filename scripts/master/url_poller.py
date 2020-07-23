@@ -4,7 +4,7 @@
 
 """This PollingChangeSource polls a URL for the change number.
 
-Each change is submited to change master which triggers build steps.
+Each change is submited to change main which triggers build steps.
 
 Example:
 To poll a change in Chromium build snapshots, use -
@@ -22,7 +22,7 @@ from buildbot.changes import base
 
 
 class URLPoller(base.PollingChangeSource):
-  """Poll a URL for change number and submit to change master."""
+  """Poll a URL for change number and submit to change main."""
 
   compare_attrs = ['changeurl', 'pollInterval']
 
@@ -66,7 +66,7 @@ class URLPoller(base.PollingChangeSource):
       extra = {}
       if self.include_revision:
         extra['revision'] = change.strip()
-      self.master.addChange(author='urlpoller',
+      self.main.addChange(author='urlpoller',
                             files=[],
                             comments='Polled from %s' % self.changeurl,
                             category=self.category,

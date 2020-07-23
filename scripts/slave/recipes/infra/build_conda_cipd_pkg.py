@@ -42,10 +42,10 @@ EXTRA_CONDA_PACKAGES = [
 def RunSteps(api):
   api.cipd.install_client()
   cipd_pkg_name = 'infra/conda_python/scientific/' + api.cipd.platform_suffix()
-  cipd_pkg_file = api.path['slave_build'].join('conda_python.cipd')
+  cipd_pkg_file = api.path['subordinate_build'].join('conda_python.cipd')
 
   # Prepare staging directory to install conda into.
-  staging_dir = api.path['slave_build'].join('conda_staging_dir')
+  staging_dir = api.path['subordinate_build'].join('conda_staging_dir')
   api.file.rmtree('cleaning staging dir', staging_dir)
 
   # Install miniconda and all Conda packages, package in CIPD and upload.
@@ -61,7 +61,7 @@ def RunSteps(api):
       api.cipd.set_service_account_credentials(creds)
       tags = {
         'buildbot_build': '%s/%s/%s' % (
-            api.properties['mastername'],
+            api.properties['mainname'],
             api.properties['buildername'],
             api.properties['buildnumber']),
         'conda': CONDA_VERSION.replace('.', '-'),

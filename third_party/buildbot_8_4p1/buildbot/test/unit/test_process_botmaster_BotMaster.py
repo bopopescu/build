@@ -16,13 +16,13 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.process.botmaster import BotMaster
+from buildbot.process.botmain import BotMain
 
 class TestCleanShutdown(unittest.TestCase):
     def setUp(self):
-        self.botmaster = BotMaster(mock.Mock())
+        self.botmain = BotMain(mock.Mock())
         self.reactor = mock.Mock()
-        self.botmaster.startService()
+        self.botmain.startService()
 
     def assertReactorStopped(self, _=None):
         self.assertTrue(self.reactor.stop.called)
@@ -38,8 +38,8 @@ class TestCleanShutdown(unittest.TestCase):
         self.build_deferred = defer.Deferred()
         build.waitUntilFinished.return_value = self.build_deferred
 
-        self.botmaster.builders = mock.Mock()
-        self.botmaster.builders.values.return_value = [builder]
+        self.botmain.builders = mock.Mock()
+        self.botmain.builders.values.return_value = [builder]
 
     def finishFakeBuild(self):
         self.fake_builder.builder_status.getCurrentBuilds.return_value = []
@@ -48,21 +48,21 @@ class TestCleanShutdown(unittest.TestCase):
     # tests
 
     def test_shutdown_idle(self):
-        """Test that the master shuts down when it's idle"""
-        self.botmaster.cleanShutdown(_reactor=self.reactor)
+        """Test that the main shuts down when it's idle"""
+        self.botmain.cleanShutdown(_reactor=self.reactor)
         self.assertReactorStopped()
 
     def test_shutdown_busy(self):
-        """Test that the master shuts down after builds finish"""
+        """Test that the main shuts down after builds finish"""
         self.makeFakeBuild()
 
-        self.botmaster.cleanShutdown(_reactor=self.reactor)
+        self.botmain.cleanShutdown(_reactor=self.reactor)
 
         # check that we haven't stopped yet, since there's a running build
         self.assertReactorNotStopped()
 
         # try to shut it down again, just to check that this does not fail
-        self.botmaster.cleanShutdown(_reactor=self.reactor)
+        self.botmain.cleanShutdown(_reactor=self.reactor)
 
         # Now we cause the build to finish
         self.finishFakeBuild()
@@ -74,23 +74,23 @@ class TestCleanShutdown(unittest.TestCase):
         """Test that calling cancelCleanShutdown when none is in progress
         works"""
         # this just shouldn't fail..
-        self.botmaster.cancelCleanShutdown()
+        self.botmain.cancelCleanShutdown()
 
     def test_shutdown_cancel(self):
         """Test that we can cancel a shutdown"""
         self.makeFakeBuild()
 
-        self.botmaster.cleanShutdown(_reactor=self.reactor)
+        self.botmain.cleanShutdown(_reactor=self.reactor)
 
         # Next we check that we haven't stopped yet, since there's a running
         # build.
         self.assertReactorNotStopped()
 
         # but the BuildRequestDistributor should not be running
-        self.assertFalse(self.botmaster.brd.running)
+        self.assertFalse(self.botmain.brd.running)
 
         # Cancel the shutdown
-        self.botmaster.cancelCleanShutdown()
+        self.botmain.cancelCleanShutdown()
 
         # Now we cause the build to finish
         self.finishFakeBuild()
@@ -99,38 +99,38 @@ class TestCleanShutdown(unittest.TestCase):
         self.assertReactorNotStopped()
 
         # and the BuildRequestDistributor should be, as well
-        self.assertTrue(self.botmaster.brd.running)
+        self.assertTrue(self.botmain.brd.running)
 
-class TestBotMaster(unittest.TestCase):
+class TestBotMain(unittest.TestCase):
 
     def setUp(self):
-        self.botmaster = BotMaster(mock.Mock())
+        self.botmain = BotMain(mock.Mock())
 
     def test_maybeStartBuildsForBuilder(self):
-        brd = self.botmaster.brd = mock.Mock()
+        brd = self.botmain.brd = mock.Mock()
 
-        self.botmaster.maybeStartBuildsForBuilder('frank')
+        self.botmain.maybeStartBuildsForBuilder('frank')
 
         brd.maybeStartBuildsOn.assert_called_once_with(['frank'])
 
-    def test_maybeStartBuildsForSlave(self):
-        brd = self.botmaster.brd = mock.Mock()
+    def test_maybeStartBuildsForSubordinate(self):
+        brd = self.botmain.brd = mock.Mock()
         b1 = mock.Mock(name='frank')
         b1.name = 'frank'
         b2 = mock.Mock(name='larry')
         b2.name = 'larry'
-        self.botmaster.getBuildersForSlave = mock.Mock(return_value=[b1, b2])
+        self.botmain.getBuildersForSubordinate = mock.Mock(return_value=[b1, b2])
 
-        self.botmaster.maybeStartBuildsForSlave('centos')
+        self.botmain.maybeStartBuildsForSubordinate('centos')
 
-        self.botmaster.getBuildersForSlave.assert_called_once_with('centos')
+        self.botmain.getBuildersForSubordinate.assert_called_once_with('centos')
         brd.maybeStartBuildsOn.assert_called_once_with(['frank', 'larry'])
 
     def test_maybeStartBuildsForAll(self):
-        brd = self.botmaster.brd = mock.Mock()
-        self.botmaster.builderNames = ['frank', 'larry']
+        brd = self.botmain.brd = mock.Mock()
+        self.botmain.builderNames = ['frank', 'larry']
 
-        self.botmaster.maybeStartBuildsForAllBuilders()
+        self.botmain.maybeStartBuildsForAllBuilders()
 
         brd.maybeStartBuildsOn.assert_called_once_with(['frank', 'larry'])
 

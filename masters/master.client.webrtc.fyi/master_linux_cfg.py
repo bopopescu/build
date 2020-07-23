@@ -5,14 +5,14 @@
 from buildbot.scheduler import Nightly
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 def Update(c):
   c['schedulers'].extend([
       SingleBranchScheduler(name='webrtc_linux_scheduler',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=0,
                             builderNames=[
                                 'Linux32 ARM',
@@ -31,20 +31,20 @@ def Update(c):
   specs = [
     {
       'name': 'Linux32 ARM',
-      'slavebuilddir': 'linux_arm',
+      'subordinatebuilddir': 'linux_arm',
     },
     {
       'name': 'Linux64 GCC',
-      'slavebuilddir': 'linux_gcc',
+      'subordinatebuilddir': 'linux_gcc',
     },
     {
       'name': 'Linux64 Release (swarming)',
-      'slavebuilddir': 'linux_swarming',
+      'subordinatebuilddir': 'linux_swarming',
     },
     {
       'name': 'Auto-roll - WebRTC DEPS',
       'recipe': 'webrtc/auto_roll_webrtc_deps',
-      'slavebuilddir': 'linux_autoroll',
+      'subordinatebuilddir': 'linux_autoroll',
     },
   ]
 
@@ -55,7 +55,7 @@ def Update(c):
                                                     'webrtc/standalone')),
         'notify_on_missing': True,
         'category': 'linux',
-        'slavebuilddir': spec['slavebuilddir'],
+        'subordinatebuilddir': spec['subordinatebuilddir'],
         'auto_reboot': False,
       } for spec in specs
   ])

@@ -4,7 +4,7 @@
 
 from buildbot.changes.filter import ChangeFilter
 from buildbot.schedulers.basic import SingleBranchScheduler
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 
 AF = annotator_factory.AnnotatorFactory()
@@ -17,7 +17,7 @@ def _VersionFileFilter(change):
   Args:
       change: a buildbot Change object.
   """
-  return change.branch == 'master' and 'syzygy/SYZYGY_VERSION' in change.files
+  return change.branch == 'main' and 'syzygy/SYZYGY_VERSION' in change.files
 
 
 # Official build scheduler for Syzygy
@@ -37,6 +37,6 @@ official_builder = {
     }
 
 
-def Update(config, active_master, c):
+def Update(config, active_main, c):
   c['schedulers'].append(official_scheduler)
   c['builders'].append(official_builder)

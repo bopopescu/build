@@ -332,13 +332,13 @@ def GetEnvPythonPath():
   return PythonPath.FromPathStr(pythonpath)
 
 
-def GetMasterPythonPath(master_dir):
-  """Returns (PythonPath): A path including a BuildBot master's directory.
+def GetMainPythonPath(main_dir):
+  """Returns (PythonPath): A path including a BuildBot main's directory.
 
   Args:
-    master_dir (str): The BuildBot master root directory.
+    main_dir (str): The BuildBot main root directory.
   """
-  return PythonPath.FromPaths(master_dir)
+  return PythonPath.FromPaths(main_dir)
 
 
 def GetBuildPythonPath():
@@ -353,23 +353,23 @@ def GetBuildPythonPath():
   return build_path
 
 
-def GetInfraPythonPath(hermetic=True, master_dir=None):
+def GetInfraPythonPath(hermetic=True, main_dir=None):
   """Returns (PythonPath): The full working Chrome Infra utility path.
 
-  This path is consistent for master, slave, and tool usage. It includes (in
+  This path is consistent for main, subordinate, and tool usage. It includes (in
   this order):
     - Any environment PYTHONPATH overrides.
-    - If 'master_dir' is supplied, the master's python path component.
+    - If 'main_dir' is supplied, the main's python path component.
     - The Chrome Infra build path.
     - The system python path.
 
   Args:
     hermetic (bool): True, prune any non-system path from the system path.
-    master_dir (str): If not None, include a master path component.
+    main_dir (str): If not None, include a main path component.
   """
   path = PythonPath()
-  if master_dir:
-    path += GetMasterPythonPath(master_dir)
+  if main_dir:
+    path += GetMainPythonPath(main_dir)
   path += GetBuildPythonPath()
   path += GetSysPythonPath(hermetic=hermetic)
   return path
@@ -382,7 +382,7 @@ def _InfraPathFromArgs(args):
     args (argparse.Namespace): The command-line arguments constructed by 'main'.
   """
   return GetInfraPythonPath(
-      master_dir=args.master_dir,
+      main_dir=args.main_dir,
   )
 
 
@@ -418,8 +418,8 @@ def _Command_Print(args, path):
 def main():
   """Main execution function."""
   parser = argparse.ArgumentParser()
-  parser.add_argument('-M', '--master_dir',
-      help="Augment the path with the master's directory.")
+  parser.add_argument('-M', '--main_dir',
+      help="Augment the path with the main's directory.")
   parser.add_argument('-o', '--output', metavar='PATH',
       type=argparse.FileType('w'), default='-',
       help="File to output to (use '-' for STDOUT).")

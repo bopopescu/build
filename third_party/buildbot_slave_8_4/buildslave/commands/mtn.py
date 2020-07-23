@@ -18,9 +18,9 @@ import os
 from twisted.python import log
 from twisted.internet import defer
 
-from buildslave.commands.base import SourceBaseCommand
-from buildslave import runprocess
-#from buildslave.util import remove_userpassword
+from buildsubordinate.commands.base import SourceBaseCommand
+from buildsubordinate import runprocess
+#from buildsubordinate.util import remove_userpassword
 
 class MonotoneError(Exception):
     """Error class for this module."""

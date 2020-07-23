@@ -15,7 +15,7 @@ DEPS = [
 
 def RunSteps(api):
   # 'isolate_tests' step needs swarming checkout.
-  api.swarming_client.checkout('master')
+  api.swarming_client.checkout('main')
 
   # Code coverage for isolate_server property.
   api.isolate.isolate_server = 'https://isolateserver-dev.appspot.com'

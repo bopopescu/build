@@ -10,7 +10,7 @@ class BuildbotApi(recipe_api.RecipeApi):
     # TODO(iannucci): Also do taskkill?
     self.m.python(
       'cleanup temp',
-      self.package_repo_resource('scripts', 'slave', 'cleanup_temp.py')
+      self.package_repo_resource('scripts', 'subordinate', 'cleanup_temp.py')
     )
 
   def copy_parent_got_revision_to_got_revision(self):

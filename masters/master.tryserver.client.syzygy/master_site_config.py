@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class SyzygyTryserver(Master.Master4a):
+class SyzygyTryserver(Main.Main4a):
   project_name = 'SyzygyTryserver'
-  master_port = 21404
-  slave_port = 31404
-  master_port_alt = 26404
+  main_port = 21404
+  subordinate_port = 31404
+  main_port_alt = 26404
   buildbot_url = 'https://build.chromium.org/p/tryserver.client.syzygy/'
-  buildbucket_bucket = 'master.tryserver.client.syzygy'
+  buildbucket_bucket = 'main.tryserver.client.syzygy'
   service_account_file = 'service-account-chromium-tryserver.json'

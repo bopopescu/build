@@ -22,7 +22,7 @@ BUILD_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 sys.path.insert(0, os.path.join(BUILD_ROOT, 'scripts'))
 
 import common.env
-import slave.infra_platform
+import subordinate.infra_platform
 
 # Instance-wide logger.
 LOGGER = logging.getLogger('cipd')
@@ -32,11 +32,11 @@ CipdPackage = collections.namedtuple('CipdPackage', ('name', 'version'))
 
 
 def bootstrap(path):
-  bootstrap_path = os.path.join(common.env.Build, 'scripts', 'slave',
+  bootstrap_path = os.path.join(common.env.Build, 'scripts', 'subordinate',
                                 'recipe_modules', 'cipd', 'resources',
                                 'bootstrap.py')
 
-  plat, bits = slave.infra_platform.get()
+  plat, bits = subordinate.infra_platform.get()
   plat = '%s-%s' % (
       plat.replace('win', 'windows'),
       {

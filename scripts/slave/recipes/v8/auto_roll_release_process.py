@@ -60,7 +60,7 @@ def PushRef(api, repo, ref, hsh):
 
   # Upload log for debugging.
   ref_log_file_name = ref.replace('/', '_') + '.log'
-  ref_log_path = api.path['slave_build'].join(ref_log_file_name)
+  ref_log_path = api.path['subordinate_build'].join(ref_log_file_name)
   log = []
   if api.path.exists(ref_log_path):
     log.append(api.file.read(
@@ -78,14 +78,14 @@ def ReadTimeStamp(api, name):
   return int(float(
       api.file.read(
           name,
-          api.path['slave_build'].join('timestamp.txt'),
+          api.path['subordinate_build'].join('timestamp.txt'),
       ).strip()))
 
 
 def WriteTimeStamp(api, name, timestamp):
   api.file.write(
       name,
-      api.path['slave_build'].join('timestamp.txt'),
+      api.path['subordinate_build'].join('timestamp.txt'),
       str(timestamp),
   )
 
@@ -122,7 +122,7 @@ def ClusterfuzzHasIssues(api):
       'check clusterfuzz',
       api.path['checkout'].join(
           'tools', 'release', 'check_clusterfuzz.py'),
-      ['--key-file', api.path['slave_build'].join('.cf_key'),
+      ['--key-file', api.path['subordinate_build'].join('.cf_key'),
        '--results-file', api.json.output(add_json_log=False)],
       # Note: Output is suppressed for security reasons.
       stdout=api.raw_io.output('out'),
@@ -203,7 +203,7 @@ def GenTests(api):
     current_roll = current_roll or current_lkgr
     return (
         api.test(name) +
-        api.properties.generic(mastername='client.v8.fyi',
+        api.properties.generic(mainname='client.v8.fyi',
                                buildername='Auto-roll - release process') +
         api.override_step_data(
             'get new lkgr',
@@ -227,7 +227,7 @@ def GenTests(api):
         ) +
         api.time.seed(int(float(new_date))) +
         api.time.step(2) +
-        api.path.exists(api.path['slave_build'].join(
+        api.path.exists(api.path['subordinate_build'].join(
             LKGR_REF.replace('/', '_') + '.log'))
     )
 

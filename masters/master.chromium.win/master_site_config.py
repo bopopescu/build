@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumWin(Master.Master1):
+class ChromiumWin(Main.Main1):
   project_name = 'Chromium Win'
-  master_port = 8085
-  slave_port = 8185
-  master_port_alt = 8285
+  main_port = 8085
+  subordinate_port = 8185
+  main_port_alt = 8285
   buildbot_url = 'http://build.chromium.org/p/chromium.win/'

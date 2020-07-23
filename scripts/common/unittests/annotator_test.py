@@ -293,7 +293,7 @@ class TestMatchAnnotation(unittest.TestCase):
 
 class TestMatchAnnotationImplementation(unittest.TestCase):
   def testChromiumStepAnnotationObserver(self):
-    from master.chromium_step import AnnotationObserver
+    from main.chromium_step import AnnotationObserver
     required = set(annotator.ALL_ANNOTATIONS.keys())
     implemented = set()
     for name, fn in AnnotationObserver.__dict__.iteritems():

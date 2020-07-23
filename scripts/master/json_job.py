@@ -12,7 +12,7 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.web import client
 
-from master import get_password as get_pw
+from main import get_password as get_pw
 
 
 _DEFAULT_POLLING_INTERVAL = 10  # seconds
@@ -116,13 +116,13 @@ class JsonScheduler(TryBase):
 
 
   def _createChange(self, job):
-    return self.master.addChange(
+    return self.main.addChange(
         author=','.join(job.get('blamelist', [])),
         revision=job.get('revision', ''),
         comments='')
 
   def _createSourcestamp(self, cid, job):
-    return self.master.db.sourcestamps.addSourceStamp(
+    return self.main.db.sourcestamps.addSourceStamp(
         project=job.get('project', ''),
         repository=job.get('repository', ''),
         branch=job.get('branch', ''),

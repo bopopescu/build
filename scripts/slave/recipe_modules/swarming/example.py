@@ -25,7 +25,7 @@ PROPERTIES = {
 def RunSteps(api, simulated_version,
              show_isolated_out_in_collect_step, show_shards_in_collect_step):
   # Checkout swarming client.
-  api.swarming_client.checkout('master')
+  api.swarming_client.checkout('main')
 
   # Ensure swarming_client version is fresh enough.
   api.swarming.check_client_version(
@@ -34,7 +34,7 @@ def RunSteps(api, simulated_version,
   # Configure isolate & swarming modules (this is optional).
   api.isolate.isolate_server = 'https://isolateserver-dev.appspot.com'
   api.swarming.swarming_server = 'https://chromium-swarm-dev.appspot.com'
-  api.swarming.add_default_tag('master:tryserver')
+  api.swarming.add_default_tag('main:tryserver')
   api.swarming.default_expiration = 60*60
   api.swarming.default_hard_timeout = 60*60
   api.swarming.default_io_timeout = 20*60

@@ -23,11 +23,11 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import runtime
 
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands import transfer
+from buildsubordinate.test.fake.remote import FakeRemote
+from buildsubordinate.test.util.command import CommandTestMixin
+from buildsubordinate.commands import transfer
 
-class FakeMasterMethods(object):
+class FakeMainMethods(object):
     # a fake to represent any of:
     # - FileWriter 
     # - FileDirectoryWriter
@@ -93,7 +93,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-        self.fakemaster = FakeMasterMethods(self.add_update)
+        self.fakemain = FakeMainMethods(self.add_update)
 
         # write 180 bytes of data to upload
         self.datadir = os.path.join(self.basedir, 'workdir')
@@ -112,12 +112,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
 
     def test_simple(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemain.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.SubordinateFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data',
+            writer=FakeRemote(self.fakemain),
             maxsize=1000,
             blocksize=64,
             keepstamp=False,
@@ -135,12 +135,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_truncated(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemain.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.SubordinateFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data',
+            writer=FakeRemote(self.fakemain),
             maxsize=100,
             blocksize=64,
             keepstamp=False,
@@ -159,10 +159,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_missing(self):
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.SubordinateFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data-nosuch',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data-nosuch',
+            writer=FakeRemote(self.fakemain),
             maxsize=100,
             blocksize=64,
             keepstamp=False,
@@ -182,12 +182,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.delay_write = True # write veery slowly
+        self.fakemain.delay_write = True # write veery slowly
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.SubordinateFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data',
+            writer=FakeRemote(self.fakemain),
             maxsize=100,
             blocksize=2,
             keepstamp=False,
@@ -214,14 +214,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return dl
 
     def test_timestamp(self):
-        self.fakemaster.count_writes = True    # get actual byte counts
+        self.fakemain.count_writes = True    # get actual byte counts
         timestamp = ( os.path.getatime(self.datafile),
                       os.path.getmtime(self.datafile) )
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.SubordinateFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data',
+            writer=FakeRemote(self.fakemain),
             maxsize=1000,
             blocksize=64,
             keepstamp=True,
@@ -239,12 +239,12 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
+class TestSubordinateDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpCommand()
 
-        self.fakemaster = FakeMasterMethods(self.add_update)
+        self.fakemain = FakeMainMethods(self.add_update)
 
         # write a directory to upload
         self.datadir = os.path.join(self.basedir, 'workdir', 'data')
@@ -261,12 +261,12 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
 
     def test_simple(self, compress=None):
-        self.fakemaster.keep_data = True 
+        self.fakemain.keep_data = True 
 
-        self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
+        self.make_command(transfer.SubordinateDirectoryUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
-            writer=FakeRemote(self.fakemaster),
+            subordinatesrc='data',
+            writer=FakeRemote(self.fakemain),
             maxsize=None,
             blocksize=512,
             compress=compress,
@@ -283,7 +283,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
 
         def check_tarfile(_):
-            f = StringIO.StringIO(self.fakemaster.data)
+            f = StringIO.StringIO(self.fakemain.data)
             a = tarfile.open(fileobj=f, name='check.tar')
             exp_names = [ '.', 'aa', 'bb' ]
             got_names = [ n.rstrip('/') for n in a.getnames() ]
@@ -305,7 +305,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
     if sys.version_info[:2] <= (2,4):
         test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
-    # this is just a subclass of SlaveUpload, so the remaining permutations
+    # this is just a subclass of SubordinateUpload, so the remaining permutations
     # are already tested
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
@@ -313,7 +313,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def setUp(self):
         self.setUpCommand()
 
-        self.fakemaster = FakeMasterMethods(self.add_update)
+        self.fakemain = FakeMainMethods(self.add_update)
 
         # the command will write to the basedir, so make sure it exists
         if os.path.exists(self.basedir):
@@ -327,14 +327,14 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
 
     def test_simple(self):
-        self.fakemaster.count_reads = True    # get actual byte counts
-        self.fakemaster.data = test_data = '1234' * 13
-        assert(len(self.fakemaster.data) == 52)
+        self.fakemain.count_reads = True    # get actual byte counts
+        self.fakemain.data = test_data = '1234' * 13
+        assert(len(self.fakemain.data) == 52)
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.SubordinateFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
-            reader=FakeRemote(self.fakemaster),
+            subordinatedest='data',
+            reader=FakeRemote(self.fakemain),
             maxsize=None,
             blocksize=32,
             mode=0777,
@@ -356,12 +356,12 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_mkdir(self):
-        self.fakemaster.data = test_data = 'hi'
+        self.fakemain.data = test_data = 'hi'
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.SubordinateFileDownloadCommand, dict(
             workdir='workdir',
-            slavedest=os.path.join('subdir', 'data'),
-            reader=FakeRemote(self.fakemaster),
+            subordinatedest=os.path.join('subdir', 'data'),
+            reader=FakeRemote(self.fakemain),
             maxsize=None,
             blocksize=32,
             mode=0777,
@@ -381,13 +381,13 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_failure(self):
-        self.fakemaster.data = 'hi'
+        self.fakemain.data = 'hi'
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.SubordinateFileDownloadCommand, dict(
             workdir='.',
-            slavedest='dir', ## but that's a directory!
-            reader=FakeRemote(self.fakemaster),
+            subordinatedest='dir', ## but that's a directory!
+            reader=FakeRemote(self.fakemain),
             maxsize=None,
             blocksize=32,
             mode=0777,
@@ -407,12 +407,12 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
 
     def test_truncated(self):
-        self.fakemaster.data = test_data = 'tenchars--' * 10
+        self.fakemain.data = test_data = 'tenchars--' * 10
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.SubordinateFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
-            reader=FakeRemote(self.fakemaster),
+            subordinatedest='data',
+            reader=FakeRemote(self.fakemain),
             maxsize=50,
             blocksize=32,
             mode=0777,
@@ -434,13 +434,13 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.data = 'tenchars--' * 100 # 1k
-        self.fakemaster.delay_read = True # read veery slowly
+        self.fakemain.data = 'tenchars--' * 100 # 1k
+        self.fakemain.delay_read = True # read veery slowly
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.SubordinateFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
-            reader=FakeRemote(self.fakemaster),
+            subordinatedest='data',
+            reader=FakeRemote(self.fakemain),
             maxsize=100,
             blocksize=2,
             mode=0777,

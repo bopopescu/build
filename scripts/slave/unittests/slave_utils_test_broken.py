@@ -7,7 +7,7 @@ import test_env  # pylint: disable=W0403,W0611
 
 import unittest
 
-import slave.slave_utils as slave_utils
+import subordinate.subordinate_utils as subordinate_utils
 
 
 class TestGypFlags(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestGypFlags(unittest.TestCase):
 
   def test_single_gyp_flag_one(self):
     self.assertEqual(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'GYP_DEFINES' : 'chromeos=1'},
             'trigger': 'chromiumos_dbg_trigger',
             'window_manager': False,
@@ -26,7 +26,7 @@ class TestGypFlags(unittest.TestCase):
 
   def test_single_gyp_flag_zero(self):
     self.assertEqual(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'GYP_DEFINES' : 'chromeos=0'},
             'trigger': 'chromiumos_dbg_trigger',
             'window_manager': False,
@@ -34,34 +34,34 @@ class TestGypFlags(unittest.TestCase):
 
   def test_triple_gyp_flag_center(self):
     self.assertEqual(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'GYP_DEFINES' : 'bull tiger=x03 frog'},
             }}, 'tiger'), 'x03')
 
   def test_gyp_flag_not_present(self):
     self.AssertIsNone(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'GYP_DEFINES' : 'tiger=1'},
             }}, 'chromeos'))
 
   def test_triple_gyp_flag_last(self):
     self.assertTrue(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'GYP_DEFINES' : 'tiger=1 buffalo giraffe'}}},
             'giraffe'))
 
   def test_no_gyp_flags_with_other(self):
     self.AssertIsNone(
-        slave_utils.GetGypFlag({'factory_properties': {
+        subordinate_utils.GetGypFlag({'factory_properties': {
             'gclient_env': {'OTHER_DEFINES' : 'tiger=1'}}},
             'tiger'))
 
   def test_no_gyp_flags(self):
     self.AssertIsNone(
-        slave_utils.GetGypFlag({'factory_properties': {}}, 'chromeos'))
+        subordinate_utils.GetGypFlag({'factory_properties': {}}, 'chromeos'))
 
   def test_no_properties_flags(self):
-    self.AssertIsNone(slave_utils.GetGypFlag({}, 'chromeos'))
+    self.AssertIsNone(subordinate_utils.GetGypFlag({}, 'chromeos'))
 
 
 
@@ -70,10 +70,10 @@ class TestGypFlagIsOn(unittest.TestCase):
   def testSample(self):
     sample = {'factory_properties': {'gclient_env': {'GYP_DEFINES' :
         'tiger=1 buffalo=0 giraffe'}}}
-    self.assertTrue(slave_utils.GypFlagIsOn(sample, 'tiger'))
-    self.assertFalse(slave_utils.GypFlagIsOn(sample, 'buffalo'))
-    self.assertTrue(slave_utils.GypFlagIsOn(sample, 'giraffe'))
-    self.assertFalse(slave_utils.GypFlagIsOn(sample, 'monkey'))
+    self.assertTrue(subordinate_utils.GypFlagIsOn(sample, 'tiger'))
+    self.assertFalse(subordinate_utils.GypFlagIsOn(sample, 'buffalo'))
+    self.assertTrue(subordinate_utils.GypFlagIsOn(sample, 'giraffe'))
+    self.assertFalse(subordinate_utils.GypFlagIsOn(sample, 'monkey'))
 
 
 if __name__ == '__main__':

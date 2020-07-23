@@ -17,7 +17,7 @@ import os
 import mock
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot import master
+from buildbot import main
 from buildbot.util import subscription
 from buildbot.test.util import dirs
 from buildbot.test.fake import fakedb
@@ -29,10 +29,10 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def setUp(self):
         basedir = os.path.abspath('basedir')
         d = self.setUpDirs(basedir)
-        def set_master(_):
-            self.master = master.BuildMaster(basedir)
-            self.master.db_poll_interval = None
-        d.addCallback(set_master)
+        def set_main(_):
+            self.main = main.BuildMain(basedir)
+            self.main.db_poll_interval = None
+        d.addCallback(set_main)
         return d
 
     def tearDown(self):
@@ -46,7 +46,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             'branch': u'warnerdb',
             'category': u'devel',
             'comments': u'fix whitespace',
-            'files': [u'master/buildbot/__init__.py'],
+            'files': [u'main/buildbot/__init__.py'],
             'is_dir': 0,
             'links': [],
             'project': u'Buildbot',
@@ -59,30 +59,30 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         newchange = mock.Mock(name='newchange')
 
         # patch out everything we're about to call
-        self.master.db = mock.Mock()
-        self.master.db.changes.addChange.return_value = \
+        self.main.db = mock.Mock()
+        self.main.db.changes.addChange.return_value = \
             defer.succeed(changeid)
-        self.master.db.changes.getChange.return_value = \
+        self.main.db.changes.getChange.return_value = \
             defer.succeed(chdict)
         self.patch(changes.Change, 'fromChdict',
-                classmethod(lambda cls, master, chdict :
+                classmethod(lambda cls, main, chdict :
                                 defer.succeed(newchange)))
 
         cb = mock.Mock()
-        sub = self.master.subscribeToChanges(cb)
+        sub = self.main.subscribeToChanges(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        d = self.master.addChange()
+        d = self.main.addChange()
         def check(change):
-            # master called the right thing in the db component, including with
+            # main called the right thing in the db component, including with
             # appropriate default values
-            self.master.db.changes.addChange.assert_called_with(author=None,
+            self.main.db.changes.addChange.assert_called_with(author=None,
                     files=None, comments=None, is_dir=0, links=None,
                     revision=None, when_timestamp=None, branch=None,
                     category=None, revlink='', properties={}, repository='',
                     project='')
 
-            self.master.db.changes.getChange.assert_called_with(changeid)
+            self.main.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
             self.failUnless(change is newchange) # fromChdict's return value
             # and the notification sub was called correctly
@@ -100,16 +100,16 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
 
-        self.master.db = mock.Mock()
+        self.main.db = mock.Mock()
         got = []
         def db_addChange(*args, **kwargs):
             got[:] = args, kwargs
             # use an exception as a quick way to bail out of the remainder
             # of the addChange method
             return defer.fail(RuntimeError)
-        self.master.db.changes.addChange = db_addChange
+        self.main.db.changes.addChange = db_addChange
 
-        d = self.master.addChange(*args, **kwargs)
+        d = self.main.addChange(*args, **kwargs)
         d.addCallback(lambda _ : self.fail("should not succeed"))
         def check(f):
             self.assertEqual(got, [(), exp_db_kwargs])
@@ -149,25 +149,25 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
                     'a' : (('b', 'Change'), 'Change') }))
 
     def test_addChange_args_positional(self):
-        # master.addChange can take author, files, comments as positional
+        # main.addChange can take author, files, comments as positional
         # arguments
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
 
     def test_buildset_subscription(self):
-        self.master.db = mock.Mock()
-        self.master.db.buildsets.addBuildset.return_value = \
+        self.main.db = mock.Mock()
+        self.main.db.buildsets.addBuildset.return_value = \
             defer.succeed((938593, dict(a=19,b=20)))
 
         cb = mock.Mock()
-        sub = self.master.subscribeToBuildsets(cb)
+        sub = self.main.subscribeToBuildsets(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        d = self.master.addBuildset(ssid=999)
+        d = self.main.addBuildset(ssid=999)
         def check((bsid,brids)):
-            # master called the right thing in the db component
-            self.master.db.buildsets.addBuildset.assert_called_with(ssid=999)
+            # main called the right thing in the db component
+            self.main.db.buildsets.addBuildset.assert_called_with(ssid=999)
             # addBuildset returned the right value
             self.assertEqual((bsid,brids), (938593, dict(a=19,b=20)))
             # and the notification sub was called correctly
@@ -176,13 +176,13 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return d
 
     def test_buildset_completion_subscription(self):
-        self.master.db = mock.Mock()
+        self.main.db = mock.Mock()
 
         cb = mock.Mock()
-        sub = self.master.subscribeToBuildsetCompletions(cb)
+        sub = self.main.subscribeToBuildsetCompletions(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
-        self.master._buildsetComplete(938593, 999)
+        self.main._buildsetComplete(938593, 999)
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 
@@ -196,24 +196,24 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
         basedir = os.path.abspath('basedir')
         d = self.setUpDirs(basedir)
-        def set_master(_):
-            self.master = master.BuildMaster(basedir)
+        def set_main(_):
+            self.main = main.BuildMain(basedir)
 
-            self.db = self.master.db = fakedb.FakeDBConnector(self)
+            self.db = self.main.db = fakedb.FakeDBConnector(self)
 
-            self.master.db_poll_interval = 10
+            self.main.db_poll_interval = 10
 
             # overridesubscription callbacks
-            self.master._change_subs = sub = mock.Mock()
+            self.main._change_subs = sub = mock.Mock()
             sub.deliver = self.deliverChange
-            self.master._new_buildset_subs = sub = mock.Mock()
+            self.main._new_buildset_subs = sub = mock.Mock()
             sub.deliver = self.deliverBuildsetAddition
-            self.master._complete_buildset_subs = sub = mock.Mock()
+            self.main._complete_buildset_subs = sub = mock.Mock()
             sub.deliver = self.deliverBuildsetCompletion
-            self.master._new_buildrequest_subs = sub = mock.Mock()
+            self.main._new_buildrequest_subs = sub = mock.Mock()
             sub.deliver = self.deliverBuildRequestAddition
 
-        d.addCallback(set_master)
+        d.addCallback(set_main)
         return d
 
     def tearDown(self):
@@ -235,10 +235,10 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_empty(self):
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
-                          class_name='buildbot.master.BuildMaster'),
+            fakedb.Object(id=22, name='main',
+                          class_name='buildbot.main.BuildMain'),
         ])
-        d = self.master.pollDatabaseChanges()
+        d = self.main.pollDatabaseChanges()
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -251,12 +251,12 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         # with no existing state, it should catch up to the most recent change,
         # but not process anything
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
-                          class_name='buildbot.master.BuildMaster'),
+            fakedb.Object(id=22, name='main',
+                          class_name='buildbot.main.BuildMain'),
             fakedb.Change(changeid=10),
             fakedb.Change(changeid=11),
         ])
-        d = self.master.pollDatabaseChanges()
+        d = self.main.pollDatabaseChanges()
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -267,15 +267,15 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_multiple(self):
         self.db.insertTestData([
-            fakedb.Object(id=53, name='master',
-                          class_name='buildbot.master.BuildMaster'),
+            fakedb.Object(id=53, name='main',
+                          class_name='buildbot.main.BuildMain'),
             fakedb.ObjectState(objectid=53, name='last_processed_change',
                                value_json='10'),
             fakedb.Change(changeid=10),
             fakedb.Change(changeid=11),
             fakedb.Change(changeid=12),
         ])
-        d = self.master.pollDatabaseChanges()
+        d = self.main.pollDatabaseChanges()
         def check(_):
             self.assertEqual([ ch.number for ch in self.gotten_changes],
                              [ 11, 12 ]) # note 10 was already seen
@@ -287,13 +287,13 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_nothing_new(self):
         self.db.insertTestData([
-            fakedb.Object(id=53, name='master',
-                          class_name='buildbot.master.BuildMaster'),
+            fakedb.Object(id=53, name='main',
+                          class_name='buildbot.main.BuildMain'),
             fakedb.ObjectState(objectid=53, name='last_processed_change',
                                value_json='10'),
             fakedb.Change(changeid=10),
         ])
-        d = self.master.pollDatabaseChanges()
+        d = self.main.pollDatabaseChanges()
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -303,7 +303,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         return d
 
     def test_pollDatabaseBuildRequests_empty(self):
-        d = self.master.pollDatabaseBuildRequests()
+        d = self.main.pollDatabaseBuildRequests()
         def check(_):
             self.assertEqual(self.gotten_buildrequest_additions, [])
         d.addCallback(check)
@@ -316,7 +316,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
             fakedb.BuildRequest(id=19, buildsetid=99, buildername='9teen'),
             fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
         ])
-        d = self.master.pollDatabaseBuildRequests()
+        d = self.main.pollDatabaseBuildRequests()
         def check(_):
             self.assertEqual(sorted(self.gotten_buildrequest_additions),
                     sorted([dict(bsid=99, brid=19, buildername='9teen'),
@@ -334,7 +334,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
                                         buildername='eleventy'),
             ])
         d.addCallback(insert1)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _ : self.main.pollDatabaseBuildRequests())
         def insert2_and_claim(_):
             self.gotten_buildrequest_additions.append('MARK')
             self.db.insertTestData([
@@ -343,14 +343,14 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
             ])
             self.db.buildrequests.fakeClaimBuildRequest(11)
         d.addCallback(insert2_and_claim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _ : self.main.pollDatabaseBuildRequests())
         def unclaim(_):
             self.gotten_buildrequest_additions.append('MARK')
             self.db.buildrequests.fakeUnclaimBuildRequest(11)
             # note that at this point brid 20 is still unclaimed, but we do
             # not get a new notification about it
         d.addCallback(unclaim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _ : self.main.pollDatabaseBuildRequests())
         def check(_):
             self.assertEqual(self.gotten_buildrequest_additions, [
                 dict(bsid=9, brid=11, buildername='eleventy'),

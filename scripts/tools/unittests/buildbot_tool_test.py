@@ -19,23 +19,23 @@ from tools import buildbot_tool
 
 
 FAKE_MASTER_CFG_TEMPLATE = """\
-# master_classname
-%(master_classname)s
+# main_classname
+%(main_classname)s
 
 # buildbot_url
 %(buildbot_url)s
 """
 
 # This is a fake file; a real builders.pyl contains 'builders'
-# and 'slave_pools' entries, but buildbot_tool doesn't care about those.
+# and 'subordinate_pools' entries, but buildbot_tool doesn't care about those.
 FAKE_BUILDERS_PYL = """\
 {
   "git_repo_url": "git://example.com/example.git",
-  "master_base_class": "Master1",
-  "master_port": 10999,
-  "master_port_alt": 20999,
-  "master_type": "waterfall",
-  "slave_port": 30999,
+  "main_base_class": "Main1",
+  "main_port": 10999,
+  "main_port_alt": 20999,
+  "main_type": "waterfall",
+  "subordinate_port": 30999,
   "templates": ["templates"],
 }
 """
@@ -68,10 +68,10 @@ def _restore_constants(orig_values):
 
 
 class GenTest(unittest.TestCase):
-  def _run_gen(self, builders_pyl, master_cfg=FAKE_MASTER_CFG_TEMPLATE):
+  def _run_gen(self, builders_pyl, main_cfg=FAKE_MASTER_CFG_TEMPLATE):
     files = {
-      '/build/templates/master.cfg': master_cfg,
-      '/build/masters/master.test/builders.pyl': builders_pyl,
+      '/build/templates/main.cfg': main_cfg,
+      '/build/mains/main.test/builders.pyl': builders_pyl,
     }
     fs = fake_filesystem.FakeFilesystem(files=files.copy())
 
@@ -83,7 +83,7 @@ class GenTest(unittest.TestCase):
     })
 
     try:
-      ret = buildbot_tool.main(['gen', '/build/masters/master.test'], fs)
+      ret = buildbot_tool.main(['gen', '/build/mains/main.test'], fs)
     finally:
       out, err = _restore_output(orig_output)
       _restore_constants(orig_constants)
@@ -98,12 +98,12 @@ class GenTest(unittest.TestCase):
     self.assertNotEqual(out, '')
     self.assertEqual(set(fs.files.keys()),
                      set(files.keys() +
-                         ['/build/masters/master.test/master.cfg']))
+                         ['/build/mains/master.test/master.cfg']))
 
     self.assertMultiLineEqual(
-        fs.read_text_file('/build/masters/master.test/master.cfg'),
+        fs.read_text_file('/build/mains/master.test/master.cfg'),
         textwrap.dedent("""\
-            # master_classname
+            # main_classname
             Test
 
             # buildbot_url
@@ -115,12 +115,12 @@ class GenTest(unittest.TestCase):
     self.assertEqual(ret, 1)
     self.assertEqual(out, '')
     self.assertEqual(err,
-                     '/build/masters/master.test/builders.pyl not found\n')
+                     '/build/mains/main.test/builders.pyl not found\n')
 
   def test_bad_template(self):
     files = {
-      '/build/templates/master.cfg': '%(unknown_key)s',
-      '/build/masters/master.test/builders.pyl': FAKE_BUILDERS_PYL,
+      '/build/templates/main.cfg': '%(unknown_key)s',
+      '/build/mains/main.test/builders.pyl': FAKE_BUILDERS_PYL,
     }
     fs = fake_filesystem.FakeFilesystem(files=files.copy())
 
@@ -134,7 +134,7 @@ class GenTest(unittest.TestCase):
     try:
       self.assertRaises(KeyError,
                         buildbot_tool.main,
-                        ['gen', '/build/masters/master.test'],
+                        ['gen', '/build/mains/main.test'],
                         fs)
     finally:
       _restore_output(orig_output)

@@ -35,7 +35,7 @@ class BitBucketBuildBot(resource.Resource):
     """
     isLeaf = True
     bitbucket = None
-    master = None
+    main = None
     port = None
     private = False
 
@@ -97,7 +97,7 @@ class BitBucketBuildBot(resource.Resource):
         if not changes:
             logging.warning("No changes found")
             return
-        host, port = self.master.split(':')
+        host, port = self.main.split(':')
         port = int(port)
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
@@ -110,13 +110,13 @@ class BitBucketBuildBot(resource.Resource):
         """
         If connection is failed.  Logs the error.
         """
-        logging.error("Could not connect to master: %s"
+        logging.error("Could not connect to main: %s"
                 % error.getErrorMessage())
         return error
 
     def addChange(self, dummy, remote, changei):
         """
-        Sends changes from the commit to the buildmaster.
+        Sends changes from the commit to the buildmain.
         """
         logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
         try:
@@ -151,9 +151,9 @@ def main():
         help="Port the HTTP server listens to for the Bitbucket Service Hook"
         " [default: %default]", default=4000, type=int, dest="port")
     parser.add_option(
-        "-m", "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 [default:"
-        + " %default]", default="localhost:9989", dest="buildmaster")
+        "-m", "--buildmain",
+        help="Buildbot Main host and port. ie: localhost:9989 [default:"
+        + " %default]", default="localhost:9989", dest="buildmain")
     parser.add_option(
         "-l", "--log",
         help="The absolute path, including filename, to save the log to"
@@ -192,7 +192,7 @@ def main():
     # Start listener.
     bitbucket_bot = BitBucketBuildBot()
     bitbucket_bot.bitbucket = options.bitbucket
-    bitbucket_bot.master = options.buildmaster
+    bitbucket_bot.main = options.buildmain
     bitbucket_bot.private = options.private
     site = server.Site(bitbucket_bot)
     reactor.listenTCP(options.port, site)

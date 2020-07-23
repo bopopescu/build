@@ -413,7 +413,7 @@ class BuildSetStatusGrabber:
         # return a Deferred that either fires with the BuildSetStatus
         # reference or errbacks because we were unable to grab it
         self.d = defer.Deferred()
-        # wait a second before querying to give the master's maildir watcher
+        # wait a second before querying to give the main's maildir watcher
         # a chance to see the job
         reactor.callLater(1, self.go)
         return self.d
@@ -541,8 +541,8 @@ class Try(pb.Referenceable):
         if self.connect == "pb":
             user = self.getopt("username")
             passwd = self.getopt("passwd")
-            master = self.getopt("masterstatus") or self.getopt("master")
-            tryhost, tryport = master.split(":")
+            main = self.getopt("mainstatus") or self.getopt("main")
+            tryhost, tryport = main.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(user, passwd))
@@ -598,8 +598,8 @@ class Try(pb.Referenceable):
             return self.running
         # contact the status port
         # we're probably using the ssh style
-        master = self.getopt("masterstatus") or self.getopt("master")
-        host, port = master.split(":")
+        main = self.getopt("mainstatus") or self.getopt("main")
+        host, port = main.split(":")
         port = int(port)
         self.announce("contacting the status port at %s:%d" % (host, port))
         f = pb.PBClientFactory()
@@ -750,14 +750,14 @@ class Try(pb.Referenceable):
         self.running.callback(self.exitcode)
 
     def getAvailableBuilderNames(self):
-        # This logs into the master using the PB protocol to
+        # This logs into the main using the PB protocol to
         # get the names of the configured builders that can
         # be used for the --builder argument
         if self.connect == "pb":
             user = self.getopt("username")
             passwd = self.getopt("passwd")
-            master = self.getopt("master")
-            tryhost, tryport = master.split(":")
+            main = self.getopt("main")
+            tryhost, tryport = main.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(user, passwd))

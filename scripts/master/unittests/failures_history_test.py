@@ -8,7 +8,7 @@ import unittest
 
 import test_env  # pylint: disable=W0611,W0403
 
-from master.failures_history import FailuresHistory
+from main.failures_history import FailuresHistory
 
 
 class FailuresHistoryTest(unittest.TestCase):

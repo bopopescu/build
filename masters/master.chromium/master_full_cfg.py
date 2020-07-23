@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master import master_config
-from master.factory import annotator_factory
+from main import main_config
+from main.factory import annotator_factory
 
-import master_site_config
+import main_site_config
 
-ActiveMaster = master_site_config.Chromium
+ActiveMain = main_site_config.Chromium
 
 defaults = {}
 
-helper = master_config.Helper(defaults)
+helper = main_config.Helper(defaults)
 B = helper.Builder
 D = helper.Dependent
 F = helper.Factory
@@ -23,7 +23,7 @@ m_annotator = annotator_factory.AnnotatorFactory()
 defaults['category'] = '1clobber'
 
 # Global scheduler
-S('chromium', branch='master', treeStableTimer=60)
+S('chromium', branch='main', treeStableTimer=60)
 
 ################################################################################
 ## Windows
@@ -58,5 +58,5 @@ B('Android', 'f_android_clobber', None, 'chromium',
 F('f_android_clobber', m_annotator.BaseFactory('chromium'))
 
 
-def Update(_config, active_master, c):
+def Update(_config, active_main, c):
   return helper.Update(c)

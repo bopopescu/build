@@ -58,15 +58,15 @@ def Linux32_steps(api):
       'GYP_DEFINES':
       'branding=Chrome buildtype=Official component=static_library'}
   api.python("gclient runhooks wrapper", api.path["build"].join("scripts",
-    "slave", "runhooks_wrapper.py"), env=env)
+    "subordinate", "runhooks_wrapper.py"), env=env)
   # cleanup_temp step
   api.chromium.cleanup_temp()
   # chromedriver compile.py step
-  api.python("compile", api.path["build"].join("scripts", "slave",
+  api.python("compile", api.path["build"].join("scripts", "subordinate",
     "compile.py"), args=['--target', 'Release',
       'chromium_builder_chromedriver'])
   # annotated_steps step
-  api.python("annotated_steps", api.path["build"].join("scripts", "slave",
+  api.python("annotated_steps", api.path["build"].join("scripts", "subordinate",
     "chromium", "chromedriver_buildbot_run.py"),
     args=['--build-properties=%s' % api.json.dumps(build_properties,
       separators=(',', ':')), '--factory-properties={"annotated_script":'+\
@@ -121,15 +121,15 @@ def Mac_10_6_steps(api):
   env = {'CHROMIUM_GYP_SYNTAX_CHECK': '1', 'LANDMINES_VERBOSE': '1',
       'DEPOT_TOOLS_UPDATE': '0', 'GYP_DEFINES': ' component=static_library'}
   api.python("gclient runhooks wrapper", api.path["build"].join("scripts",
-    "slave", "runhooks_wrapper.py"), env=env)
+    "subordinate", "runhooks_wrapper.py"), env=env)
   # cleanup_temp step
   api.chromium.cleanup_temp()
   # chromedriver compile.py step
-  api.python("compile", api.path["build"].join("scripts", "slave",
+  api.python("compile", api.path["build"].join("scripts", "subordinate",
     "compile.py"), args=['--target', 'Release', '--', '-project',
       '../build/all.xcodeproj', '-target', 'chromium_builder_chromedriver'])
   # annotated_steps step
-  api.python("annotated_steps", api.path["build"].join("scripts", "slave",
+  api.python("annotated_steps", api.path["build"].join("scripts", "subordinate",
     "chromium", "chromedriver_buildbot_run.py"),
     args=['--build-properties=%s' % api.json.dumps(build_properties,
       separators=(',', ':')), '--factory-properties={"annotated_script":"c'+\
@@ -142,7 +142,7 @@ def Mac_10_6_steps(api):
 def Win7_steps(api):
   # update scripts step; implicitly run by recipe engine.
   # taskkill step
-  api.python("taskkill", api.path["build"].join("scripts", "slave",
+  api.python("taskkill", api.path["build"].join("scripts", "subordinate",
     "kill_processes.py"))
   # bot_update step
   src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -185,16 +185,16 @@ def Win7_steps(api):
   env = {'CHROMIUM_GYP_SYNTAX_CHECK': '1', 'LANDMINES_VERBOSE': '1',
       'DEPOT_TOOLS_UPDATE': '0','GYP_DEFINES': ' component=static_library'}
   api.python("gclient runhooks wrapper", api.path["build"].join("scripts",
-    "slave", "runhooks_wrapper.py"), env=env)
+    "subordinate", "runhooks_wrapper.py"), env=env)
   # cleanup_temp step
   api.chromium.cleanup_temp()
   # chromedriver compile.py step
-  api.step("compile", ["python_slave", api.path["build"].join("scripts",
-    "slave", "compile.py"), '--solution', 'all.sln', '--project',
+  api.step("compile", ["python_subordinate", api.path["build"].join("scripts",
+    "subordinate", "compile.py"), '--solution', 'all.sln', '--project',
     'chromium_builder_chromedriver', '--target', 'Release'])
   # annotated_steps step
-  api.step("annotated_steps", ["python_slave", api.path["build"].join("scripts",
-    "slave", "chromium", "chromedriver_buildbot_run.py"),
+  api.step("annotated_steps", ["python_subordinate", api.path["build"].join("scripts",
+    "subordinate", "chromium", "chromedriver_buildbot_run.py"),
     '--build-properties=%s' % api.json.dumps(build_properties,
       separators=(',', ':')), '--factory-properties={"annotated_script":"chro'+\
           'medriver_buildbot_run.py","blink_config":"chromium","gclient_env":'+\
@@ -247,15 +247,15 @@ def Linux_steps(api):
       'DEPOT_TOOLS_UPDATE': '0', 'GYP_DEFINES':
       'branding=Chrome buildtype=Official component=static_library'}
   api.python("gclient runhooks wrapper", api.path["build"].join("scripts",
-    "slave", "runhooks_wrapper.py"), env=env)
+    "subordinate", "runhooks_wrapper.py"), env=env)
   # cleanup_temp step
   api.chromium.cleanup_temp()
   # chromedriver compile.py step
-  api.python("compile", api.path["build"].join("scripts", "slave",
+  api.python("compile", api.path["build"].join("scripts", "subordinate",
     "compile.py"), args=['--target', 'Release',
       'chromium_builder_chromedriver'])
   # annotated_steps step
-  api.python("annotated_steps", api.path["build"].join("scripts", "slave",
+  api.python("annotated_steps", api.path["build"].join("scripts", "subordinate",
     "chromium", "chromedriver_buildbot_run.py"),
     args=['--build-properties=%s' % api.json.dumps(build_properties,
       separators=(',', ':')), '--factory-properties={"annotated_script":"chro'+\
@@ -282,27 +282,27 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('Linux32') +
-    api.properties(mastername='chromium.chromedriver') +
+    api.properties(mainname='chromium.chromedriver') +
     api.properties(buildername='Linux32') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Mac_10_6') +
-    api.properties(mastername='chromium.chromedriver') +
+    api.properties(mainname='chromium.chromedriver') +
     api.properties(buildername='Mac 10.6') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Win7') +
-    api.properties(mastername='chromium.chromedriver') +
+    api.properties(mainname='chromium.chromedriver') +
     api.properties(buildername='Win7') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Linux') +
-    api.properties(mastername='chromium.chromedriver') +
+    api.properties(mainname='chromium.chromedriver') +
     api.properties(buildername='Linux') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('builder_not_in_dispatch_directory') +
-    api.properties(mastername='chromium.chromedriver') +
+    api.properties(mainname='chromium.chromedriver') +
     api.properties(buildername='nonexistent_builder') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )

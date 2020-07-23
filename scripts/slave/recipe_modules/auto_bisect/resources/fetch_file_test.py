@@ -30,10 +30,10 @@ class CommitPositionTest(unittest.TestCase):
     mock_urlopen.return_value = file_like_object
     self.assertEqual(
         'some contents',
-        fetch_file.fetch_file('chromium/src', 'master', 'some/path'))
+        fetch_file.fetch_file('chromium/src', 'main', 'some/path'))
     mock_urlopen.assert_called_once_with(
         'https://chromium.googlesource.com'
-        '/chromium/src/+/master/some/path?format=TEXT')
+        '/chromium/src/+/main/some/path?format=TEXT')
 
 
 if __name__ == '__main__':

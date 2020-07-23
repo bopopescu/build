@@ -11,8 +11,8 @@ from buildbot.scheduler import Periodic
 from buildbot.schedulers.basic import SingleBranchScheduler as Scheduler
 from buildbot.scheduler import Triggerable
 
-from master import slaves_list
-from master.url_poller import URLPoller
+from main import subordinates_list
+from main.url_poller import URLPoller
 
 def GetGSUtilUrl(gs_bucket, root_folder):
   return 'gs://%s/%s' % (gs_bucket, root_folder)
@@ -26,7 +26,7 @@ class Helper(object):
 
   def Builder(self, name, factory, gatekeeper=None, scheduler=None,
               builddir=None, auto_reboot=True, notify_on_missing=False,
-              slavebuilddir=None, category=None):
+              subordinatebuilddir=None, category=None):
     category = category or self._defaults.get('category')
     self._builders.append({'name': name,
                            'factory': factory,
@@ -36,7 +36,7 @@ class Helper(object):
                            'category': category,
                            'auto_reboot': auto_reboot,
                            'notify_on_missing': notify_on_missing,
-                           'slavebuilddir': slavebuilddir})
+                           'subordinatebuilddir': subordinatebuilddir})
 
   def Hourly(self, name, branch, hour='*'):
     """Helper method for the Nightly scheduler."""
@@ -119,8 +119,8 @@ class Helper(object):
                      'auto_reboot': builder['auto_reboot']}
       if builder['builddir']:
         new_builder['builddir'] = builder['builddir']
-      if builder['slavebuilddir']:
-        new_builder['slavebuilddir'] = builder['slavebuilddir']
+      if builder['subordinatebuilddir']:
+        new_builder['subordinatebuilddir'] = builder['subordinatebuilddir']
       c['builders'].append(new_builder)
 
     # Process the main schedulers.

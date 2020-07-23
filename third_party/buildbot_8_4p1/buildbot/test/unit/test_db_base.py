@@ -51,7 +51,7 @@ class TestCachedDecorator(unittest.TestCase):
     def test_cached(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
-        connector.master.caches.get_cache = self.get_cache
+        connector.main.caches.get_cache = self.get_cache
 
         # build an instance
         comp = self.TestConnectorComponent(connector)
@@ -74,7 +74,7 @@ class TestCachedDecorator(unittest.TestCase):
     def test_cached_no_cache(self):
         # attach it to the connector
         connector = mock.Mock(name="connector")
-        connector.master.caches.get_cache = self.get_cache
+        connector.main.caches.get_cache = self.get_cache
         self.cache_get_raises_exception = True
 
         # build an instance

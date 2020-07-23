@@ -94,13 +94,13 @@ def is_source_file(api, filepath):
   return ext in ['.c', '.cc', '.cpp', '.h', '.java', '.mm']
 
 def _RunStepsInternal(api):
-  def _get_bot_config(mastername, buildername):
-    master_dict = api.chromium_tests.trybots.get(mastername, {})
-    return master_dict.get('builders', {}).get(buildername)
+  def _get_bot_config(mainname, buildername):
+    main_dict = api.chromium_tests.trybots.get(mainname, {})
+    return main_dict.get('builders', {}).get(buildername)
 
-  mastername = api.properties.get('mastername')
+  mainname = api.properties.get('mainname')
   buildername = api.properties.get('buildername')
-  bot_config = _get_bot_config(mastername, buildername)
+  bot_config = _get_bot_config(mainname, buildername)
 
   bot_config_object = api.chromium_tests.create_generalized_bot_config_object(
       bot_config['bot_ids'])
@@ -222,7 +222,7 @@ def _RunStepsInternal(api):
 
 
 def RunSteps(api):
-  # build/tests/masters_recipes_tests.py needs to manipulate the BUILDERS
+  # build/tests/mains_recipes_tests.py needs to manipulate the BUILDERS
   # dict, so we provide an API to dump it here.
   if api.properties.get('dump_builders'):  # pragma: no cover
     api.file.copy('Dump BUILDERS dict',
@@ -249,7 +249,7 @@ def _sanitize_nonalpha(text):
 def GenTests(api):
   canned_test = api.test_utils.canned_gtest_output
 
-  def props(config='Release', mastername='tryserver.chromium.linux',
+  def props(config='Release', mainname='tryserver.chromium.linux',
             buildername='linux_chromium_rel_ng', extra_swarmed_tests=None,
             **kwargs):
     kwargs.setdefault('revision', None)
@@ -259,7 +259,7 @@ def GenTests(api):
         swarm_hashes[test] = '[dummy hash for %s]' % test
     return api.properties.tryserver(
       build_config=config,
-      mastername=mastername,
+      mainname=mainname,
       buildername=buildername,
       swarm_hashes=swarm_hashes,
       **kwargs
@@ -281,21 +281,21 @@ def GenTests(api):
 
   # While not strictly required for coverage, record expectations for each
   # of the configs so we can see when and how they change.
-  for mastername, master_config in api.chromium_tests.trybots.iteritems():
-    for buildername, bot_config in master_config['builders'].iteritems():
-      test_name = 'full_%s_%s' % (_sanitize_nonalpha(mastername),
+  for mainname, main_config in api.chromium_tests.trybots.iteritems():
+    for buildername, bot_config in main_config['builders'].iteritems():
+      test_name = 'full_%s_%s' % (_sanitize_nonalpha(mainname),
                                   _sanitize_nonalpha(buildername))
       yield (
         api.test(test_name) +
         api.chromium_tests.platform(bot_config['bot_ids']) +
         suppress_analyze() +
-        props(mastername=mastername, buildername=buildername)
+        props(mainname=mainname, buildername=buildername)
       )
 
   yield (
     api.test('chromeos_analyze') +
     api.platform.name('linux') +
-    props(mastername='tryserver.chromium.linux',
+    props(mainname='tryserver.chromium.linux',
           buildername='chromeos_amd64-generic_chromium_compile_only_ng')
   )
 
@@ -311,7 +311,7 @@ def GenTests(api):
                                      'pass' if pass_first else 'fail')
       test = (api.test(test_name) +
               suppress_analyze() +
-              props(mastername='tryserver.blink',
+              props(mainname='tryserver.blink',
                     buildername=buildername) +
               api.chromium_tests.platform(bot_config['bot_ids']) +
               api.override_step_data('webkit_tests (with patch)',
@@ -339,7 +339,7 @@ def GenTests(api):
   # http://crbug.com/520660
   yield (
     api.test('process_dumps_failure') +
-    props(mastername='tryserver.chromium.win',
+    props(mainname='tryserver.chromium.win',
           buildername='win_chromium_rel_ng') +
     api.platform.name('win') +
     suppress_analyze() +
@@ -471,7 +471,7 @@ def GenTests(api):
   yield (
     api.test('amp_test_failure') +
     props(buildername='android_amp',
-          mastername='tryserver.chromium.android') +
+          mainname='tryserver.chromium.android') +
     api.platform.name('linux') +
     suppress_analyze() +
     api.override_step_data('[collect] base_unittests (with patch)',
@@ -481,7 +481,7 @@ def GenTests(api):
   yield (
     api.test('amp_test_local_fallback') +
     props(buildername='android_amp',
-          mastername='tryserver.chromium.android') +
+          mainname='tryserver.chromium.android') +
     api.platform.name('linux') +
     suppress_analyze() +
     api.override_step_data('[trigger] base_unittests (with patch)',
@@ -491,7 +491,7 @@ def GenTests(api):
   yield (
     api.test('amp_test_local_fallback_failure') +
     props(buildername='android_amp',
-          mastername='tryserver.chromium.android') +
+          mainname='tryserver.chromium.android') +
     api.platform.name('linux') +
     suppress_analyze() +
     api.override_step_data('[trigger] base_unittests (with patch)',
@@ -552,7 +552,7 @@ def GenTests(api):
   yield (
     api.test('runhooks_failure') +
     props(buildername='win_chromium_rel_ng',
-          mastername='tryserver.chromium.win') +
+          mainname='tryserver.chromium.win') +
     api.platform.name('win') +
     api.step_data('gclient runhooks (with patch)', retcode=1) +
     api.step_data('gclient runhooks (without patch)', retcode=1)
@@ -561,7 +561,7 @@ def GenTests(api):
   yield (
     api.test('runhooks_failure_ng') +
     api.platform('linux', 64) +
-    props(mastername='tryserver.chromium.linux',
+    props(mainname='tryserver.chromium.linux',
           buildername='linux_chromium_rel_ng') +
     api.step_data('gclient runhooks (with patch)', retcode=1)
   )
@@ -569,7 +569,7 @@ def GenTests(api):
   yield (
     api.test('compile_failure_ng') +
     api.platform('linux', 64) +
-    props(mastername='tryserver.chromium.linux',
+    props(mainname='tryserver.chromium.linux',
           buildername='linux_chromium_rel_ng') +
     suppress_analyze() +
     api.step_data('compile (with patch)', retcode=1)
@@ -580,7 +580,7 @@ def GenTests(api):
   yield (
     api.test('compile_failure_with_component_rev') +
     api.platform('linux', 64) +
-    props(mastername='tryserver.v8',
+    props(mainname='tryserver.v8',
           buildername='v8_linux_chromium_gn_rel') +
     api.properties(revision='22135') +
     api.override_step_data('read test spec', api.json.output({
@@ -596,7 +596,7 @@ def GenTests(api):
   yield (
     api.test('compile_failure_without_patch_ng') +
     api.platform('linux', 64) +
-    props(mastername='tryserver.chromium.linux',
+    props(mainname='tryserver.chromium.linux',
           buildername='linux_chromium_rel_ng') +
     suppress_analyze() +
     api.step_data('compile (with patch)', retcode=1) +
@@ -642,7 +642,7 @@ def GenTests(api):
   yield (
     api.test('recipe_config_changes_not_retried_without_patch') +
     api.properties.tryserver(
-      mastername='tryserver.chromium.linux',
+      mainname='tryserver.chromium.linux',
       buildername='linux_chromium_chromeos_rel_ng',
       swarm_hashes={}
     ) +
@@ -777,7 +777,7 @@ def GenTests(api):
   yield (
     api.test('use_v8_patch_on_chromium_trybot') +
     props(buildername='win_chromium_rel_ng',
-          mastername='tryserver.chromium.win',
+          mainname='tryserver.chromium.win',
           patch_project='v8') +
     api.platform.name('win')
   )
@@ -787,7 +787,7 @@ def GenTests(api):
   yield (
     api.test('analyze_runs_nothing_with_no_source_file_changes') +
     api.properties.tryserver(
-      mastername='tryserver.chromium.win',
+      mainname='tryserver.chromium.win',
       buildername='win_chromium_rel_ng',
       swarm_hashes={}
     ) +
@@ -802,7 +802,7 @@ def GenTests(api):
   yield (
     api.test('analyze_webkit') +
     api.properties.tryserver(
-      mastername='tryserver.chromium.win',
+      mainname='tryserver.chromium.win',
       buildername='win_chromium_rel_ng',
       swarm_hashes={}
     ) +
@@ -817,7 +817,7 @@ def GenTests(api):
   yield (
     api.test('swarming_paths') +
     api.properties.tryserver(
-      mastername='tryserver.chromium.linux',
+      mainname='tryserver.chromium.linux',
       buildername='linux_chromium_rel_ng',
       path_config='swarming',
     ) +
@@ -828,7 +828,7 @@ def GenTests(api):
   # that we fail the whole build.
   yield (
     api.test('blink_minimal_pass_continues') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='linux_blink_rel') +
     suppress_analyze() +
     api.platform.name('linux') +
@@ -840,7 +840,7 @@ def GenTests(api):
 
   yield (
     api.test('blink_compile_without_patch_fails') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='linux_blink_rel') +
     suppress_analyze() +
     api.platform.name('linux') +
@@ -856,7 +856,7 @@ def GenTests(api):
   # 255 == test_run_results.UNEXPECTED_ERROR_EXIT_STATUS in run-webkit-tests.
   yield (
     api.test('webkit_tests_unexpected_error') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='linux_blink_rel') +
     suppress_analyze() +
     api.platform.name('linux') +
@@ -871,7 +871,7 @@ def GenTests(api):
   # 130 == test_run_results.INTERRUPTED_EXIT_STATUS in run-webkit-tests.
   yield (
     api.test('webkit_tests_interrupted') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='linux_blink_rel') +
     suppress_analyze() +
     api.platform.name('linux') +
@@ -885,7 +885,7 @@ def GenTests(api):
   # and compare the lists of failing tests).
   yield (
     api.test('too_many_failures_for_retcode') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='linux_blink_rel') +
     suppress_analyze() +
     api.platform.name('linux') +
@@ -898,7 +898,7 @@ def GenTests(api):
 
   yield (
     api.test('non_cq_blink_tryjob') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='win_blink_rel',
           requester='someone@chromium.org') +
     suppress_analyze() +
@@ -909,7 +909,7 @@ def GenTests(api):
 
   yield (
     api.test('use_v8_patch_on_blink_trybot') +
-    props(mastername='tryserver.blink',
+    props(mainname='tryserver.blink',
           buildername='mac_blink_rel',
           patch_project='v8') +
     api.platform.name('mac')
@@ -917,7 +917,7 @@ def GenTests(api):
 
   yield (
     api.test('use_v8_patch_on_blink_trybot_test_failures') +
-    props(mastername='tryserver.v8',
+    props(mainname='tryserver.v8',
           buildername='v8_linux_blink_rel',
           patch_project='v8') +
     api.platform.name('linux') +

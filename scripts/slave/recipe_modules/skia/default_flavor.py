@@ -86,7 +86,7 @@ class DefaultFlavorUtils(object):
     """Path to a checkout of Chrome on this machine."""
     if self._chrome_path is None:
       if self._skia_api.running_in_swarming:
-        self._chrome_path = self._skia_api.slave_dir.join('src')
+        self._chrome_path = self._skia_api.subordinate_dir.join('src')
         return self._chrome_path
 
       toolchain_hash_file = self._skia_api.skia_dir.join(
@@ -123,7 +123,7 @@ class DefaultFlavorUtils(object):
               test_data=test_expected_version).rstrip()
         except self._skia_api.m.step.StepFailure:
           actual_hash = None
-        toolchain_dir = self._skia_api.slave_dir.join('win')
+        toolchain_dir = self._skia_api.subordinate_dir.join('win')
         toolchain_src_dir = toolchain_dir.join('src')
 
         # Download the toolchain if necessary.
@@ -164,13 +164,13 @@ class DefaultFlavorUtils(object):
     """Run bootstrapping script for the Windows toolchain."""
     bootstrap_script = self._skia_api.infrabots_dir.join(
         'bootstrap_win_toolchain_json.py')
-    win_toolchain_json = self._skia_api.slave_dir.join(
+    win_toolchain_json = self._skia_api.subordinate_dir.join(
         'src', 'build', 'win_toolchain.json')
     self._skia_api.m.python(
         'bootstrap win toolchain',
         script=bootstrap_script,
         args=['--win_toolchain_json', win_toolchain_json,
-              '--depot_tools_parent_dir', self._skia_api.slave_dir])
+              '--depot_tools_parent_dir', self._skia_api.subordinate_dir])
 
   def compile(self, target):
     """Build the given target."""
@@ -184,7 +184,7 @@ class DefaultFlavorUtils(object):
       else:
         if 'VS2015' in self._skia_api.builder_cfg.get('extra_config', ''):
           env['PATH'] = self._skia_api.m.path.pathsep.join([
-              str(self._skia_api.slave_dir.join('win', 'depot_tools')),
+              str(self._skia_api.subordinate_dir.join('win', 'depot_tools')),
               '%(PATH)s'])
           env['GYP_MSVS_VERSION'] = '2015'
     else:
@@ -257,7 +257,7 @@ class DefaultFlavorUtils(object):
     itself. For desktop bots, these are just local paths.
     """
     pardir = self._skia_api.m.path.pardir
-    join = self._skia_api.m.path['slave_build'].join
+    join = self._skia_api.m.path['subordinate_build'].join
     return DeviceDirs(
         dm_dir=self._skia_api.dm_dir,
         perf_data_dir=self._skia_api.perf_data_dir,

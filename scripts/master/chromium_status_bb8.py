@@ -24,7 +24,7 @@ import jinja2
 import re
 import urllib
 
-from master.third_party import stats_bb8 as stats
+from main.third_party import stats_bb8 as stats
 
 # A simplified version of the default 'shortrev' macro used in some jinja
 # templates.  This version isn't actually used for template processing; rather,
@@ -262,7 +262,7 @@ class ConsoleStatusResource(console.ConsoleStatusResource):
       return """
 <html><head></head><body>
 <h2>console unavailable</h2>
-<p>while buildbot master is starting up.  Please try again in a few seconds.</p>
+<p>while buildbot main is starting up.  Please try again in a few seconds.</p>
 </body></html>
 """
     # pylint: disable=E1121

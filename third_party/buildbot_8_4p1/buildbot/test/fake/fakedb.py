@@ -98,7 +98,7 @@ class Change(Row):
         author = 'frank',
         comments = 'test change',
         is_dir = 0,
-        branch = 'master',
+        branch = 'main',
         revision = 'abcd',
         revlink = 'http://vc/abcd',
         when_timestamp = 1200000,
@@ -173,7 +173,7 @@ class SourceStamp(Row):
 
     defaults = dict(
         id = None,
-        branch = 'master',
+        branch = 'main',
         revision = 'abcd',
         patchid = None,
         repository = 'repo',
@@ -778,7 +778,7 @@ class FakeStateComponent(FakeDBComponent):
 class FakeBuildRequestsComponent(FakeDBComponent):
 
     # for use in determining "my" requests
-    MASTER_NAME = "this-master"
+    MASTER_NAME = "this-main"
     MASTER_INCARNATION = "this-lifetime"
 
     # override this to set reactor.seconds
@@ -874,10 +874,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 and row.claimed_by_name is not None
                 and row.claimed_by_incarnation is not None):
             claimed = True
-            master_name = self.db.master.master_name
-            master_incarnation = self.db.master.master_incarnation
-            if (row.claimed_by_name == master_name and
-                row.claimed_by_incarnation == master_incarnation):
+            main_name = self.db.main.main_name
+            main_incarnation = self.db.main.main_incarnation
+            if (row.claimed_by_name == main_name and
+                row.claimed_by_incarnation == main_incarnation):
                mine = True
 
         def mkdt(epoch):
@@ -895,13 +895,13 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClaimBuildRequest(self, brid, claimed_at=None, master_name=None,
-                                          master_incarnation=None):
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, main_name=None,
+                                          main_incarnation=None):
         br = self.reqs[brid]
         br.claimed_at = claimed_at or self._reactor.seconds()
-        br.claimed_by_name = master_name or self.MASTER_NAME
+        br.claimed_by_name = main_name or self.MASTER_NAME
         br.claimed_by_incarnation = \
-                master_incarnation or self.MASTER_INCARNATION
+                main_incarnation or self.MASTER_INCARNATION
 
     def fakeUnclaimBuildRequest(self, brid):
         br = self.reqs[brid]
@@ -911,17 +911,17 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # assertions
 
-    def assertClaimed(self, brid, master_name=None, master_incarnation=None):
+    def assertClaimed(self, brid, main_name=None, main_incarnation=None):
         self.t.assertTrue(self.reqs[brid].claimed_at)
-        if master_name and master_incarnation:
+        if main_name and main_incarnation:
             br = self.reqs[brid]
             self.t.assertEqual(
                 [ br.claimed_by_name, br.claimed_by_incarnation ]
-                [ master_name, master_incarnation ])
+                [ main_name, main_incarnation ])
 
     def assertClaimedMine(self, brid):
-        return self.t.assertClaimed(brid, master_name=self.MASTER_NAME,
-                master_incarnation=self.MASTER_INCARNATION)
+        return self.t.assertClaimed(brid, main_name=self.MASTER_NAME,
+                main_incarnation=self.MASTER_INCARNATION)
 
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
@@ -996,7 +996,7 @@ class FakeBuildsComponent(FakeDBComponent):
 
 class FakeDBConnector(object):
     """
-    A stand-in for C{master.db} that operates without an actual database
+    A stand-in for C{main.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the
     L{buildbot.test.util.db.RealDatabaseMixin.insertTestData} method.
 

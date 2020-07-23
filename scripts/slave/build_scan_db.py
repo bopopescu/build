@@ -16,7 +16,7 @@ import os
 import sys
 
 from common import chromium_utils
-from slave import gatekeeper_ng_config
+from subordinate import gatekeeper_ng_config
 
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +28,7 @@ BUILD_DB_VERSION = 5
 
 _BuildDB = collections.namedtuple('BuildDB', [
     'build_db_version',  # An int representing the build_db version.
-    'masters',   # {mastername: {buildername: {buildnumber: BuildDBBuild}}}}
+    'mains',   # {mainname: {buildername: {buildnumber: BuildDBBuild}}}}
     'sections',  # {section_hash: human_readable_json_of_gatekeeper_section}
     'aux',       # Dictionary to keep auxiliary information such as triggered
                  # revisions.
@@ -74,7 +74,7 @@ def gen_db(**kwargs):
   """Helper function to generate a default database."""
   defaults = [
       ('build_db_version', BUILD_DB_VERSION),
-      ('masters', {}),
+      ('mains', {}),
       ('sections', {}),
       ('aux', {}),
   ]
@@ -104,18 +104,18 @@ def load_from_json(f):
     raise BadConf('file is an older db version: %r (expecting %d)' % (
         json_build_db.get('build_db_version'), BUILD_DB_VERSION))
 
-  masters = json_build_db.get('masters', {})
+  mains = json_build_db.get('mains', {})
   # Convert build dicts into BuildDBBuilds.
   build_db = gen_db()
-  for mastername, master in masters.iteritems():
-    build_db.masters.setdefault(mastername, {})
-    for buildername, builder in master.iteritems():
-      build_db.masters[mastername].setdefault(buildername, {})
+  for mainname, main in mains.iteritems():
+    build_db.mains.setdefault(mainname, {})
+    for buildername, builder in main.iteritems():
+      build_db.mains[mainname].setdefault(buildername, {})
       for buildnumber, build in builder.iteritems():
         # Note that buildnumber is forced to be an int here, and
         # we use * instead of ** -- until the serializer is recursive,
         # BuildDBBuild will be written as a value list (tuple).
-        build_db.masters[mastername][buildername][
+        build_db.mains[mainname][buildername][
             int(buildnumber)] = BuildDBBuild(*build)
 
   if 'aux' in json_build_db:
@@ -148,7 +148,7 @@ def get_build_db(filename):
 def convert_db_to_json(build_db_data, gatekeeper_config, f):
   """Converts build_db to a format suitable for JSON encoding and writes it."""
   # Remove all but the last finished build.
-  for builders in build_db_data.masters.values():
+  for builders in build_db_data.mains.values():
     for builder in builders:
       unfinished = [(k, v) for k, v in builders[builder].iteritems()
                     if not v.finished]
@@ -162,17 +162,17 @@ def convert_db_to_json(build_db_data, gatekeeper_config, f):
         max_finished = max(finished, key=lambda x: x[0])
         builders[builder][max_finished[0]] = max_finished[1]
 
-  build_db = gen_db(masters=build_db_data.masters, aux=build_db_data.aux)
+  build_db = gen_db(mains=build_db_data.mains, aux=build_db_data.aux)
 
   # Output the gatekeeper sections we're operating with, so a human reading the
   # file can debug issues. This is discarded by the parser in get_build_db.
   used_sections = set([])
-  for masters in build_db_data.masters.values():
-    for builder in masters.values():
+  for mains in build_db_data.mains.values():
+    for builder in mains.values():
       used_sections |= set(t for b in builder.values() for t in b.triggered)
 
-  for master in gatekeeper_config.values():
-    for section in master:
+  for main in gatekeeper_config.values():
+    for section in main:
       section_hash = gatekeeper_ng_config.gatekeeper_section_hash(section)
       if section_hash in used_sections:
         build_db.sections[section_hash] = section

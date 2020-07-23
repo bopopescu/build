@@ -79,7 +79,7 @@ class FinditApi(recipe_api.RecipeApi):
     step_result.presentation.logs['revisions'] = revisions
     return revisions
 
-  def existing_targets(self, targets, mb_mastername, mb_buildername):
+  def existing_targets(self, targets, mb_mainname, mb_buildername):
     """Returns a sublist of the given targets that exist in the build graph.
 
     We test whether a target exists or not by ninja.
@@ -93,12 +93,12 @@ class FinditApi(recipe_api.RecipeApi):
 
     Args:
      targets (list): A list of targets to be tested for existence.
-     mb_mastername (str): The mastername to run MB with.
+     mb_mainname (str): The mainname to run MB with.
      mb_buildername (str): The buildername to run MB with.
     """
     # Run mb to generate or update ninja build files.
     if self.m.chromium.c.project_generator.tool == 'mb':
-      self.m.chromium.run_mb(mb_mastername, mb_buildername,
+      self.m.chromium.run_mb(mb_mainname, mb_buildername,
                              name='generate_build_files')
 
     # Run ninja to check existences of targets.

@@ -1,11 +1,11 @@
 #! /usr/bin/python
 
 """
-This is an example of how to use the remote ChangeMaster interface, which is
-a port that allows a remote program to inject Changes into the buildmaster.
+This is an example of how to use the remote ChangeMain interface, which is
+a port that allows a remote program to inject Changes into the buildmain.
 
-The buildmaster can either pull changes in from external sources (see
-buildbot.changes.changes.ChangeMaster.addSource for an example), or those
+The buildmain can either pull changes in from external sources (see
+buildbot.changes.changes.ChangeMain.addSource for an example), or those
 changes can be pushed in from outside. This script shows how to do the
 pushing.
 
@@ -24,10 +24,10 @@ Each call to .addChange injects a single Change object: each Change
 represents multiple files, all changed by the same person, and all with the
 same checkin comments.
 
-The port that this script connects to is the same 'slavePort' that the
-buildslaves and other debug tools use. The ChangeMaster service will only be
+The port that this script connects to is the same 'subordinatePort' that the
+buildsubordinates and other debug tools use. The ChangeMain service will only be
 available on that port if 'change' is in the list of services passed to
-buildbot.master.makeApp (this service is turned ON by default).
+buildbot.main.makeApp (this service is turned ON by default).
 """
 
 import sys

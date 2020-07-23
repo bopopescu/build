@@ -18,15 +18,15 @@ from twisted.trial import unittest
 from mock import Mock
 
 from buildbot.process.properties import Properties
-from buildbot.steps.slave import SetPropertiesFromEnv
+from buildbot.steps.subordinate import SetPropertiesFromEnv
 
 class TestSetPropertiesFromEnv(unittest.TestCase):
     def testBasic(self):
         s = SetPropertiesFromEnv(variables = ["one", "two", "three", "five", "six"], source = "me")
         s.build = Mock()
         s.build.getProperties.return_value = props = Properties()
-        s.buildslave = Mock()
-        s.buildslave.slave_environ = { "one": 1, "two": None, "six": 6 }
+        s.buildsubordinate = Mock()
+        s.buildsubordinate.subordinate_environ = { "one": 1, "two": None, "six": 6 }
         props.setProperty("four", 4, "them")
         props.setProperty("five", 5, "them")
         props.setProperty("six", 99, "them")

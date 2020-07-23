@@ -42,13 +42,13 @@ with these keys:
   report changes via commit, changes via push, or any changes to the trunk.
   'change' is recommended.
 
-- buildbot_server: (required to send to a buildbot master) the URL of the
-  buildbot master to which you will connect (as of this writing, the same
-  server and port to which slaves connect).
+- buildbot_server: (required to send to a buildbot main) the URL of the
+  buildbot main to which you will connect (as of this writing, the same
+  server and port to which subordinates connect).
 
-- buildbot_port: (optional, defaults to 9989) the port of the buildbot master
+- buildbot_port: (optional, defaults to 9989) the port of the buildbot main
   to which you will connect (as of this writing, the same server and port to
-  which slaves connect)
+  which subordinates connect)
 
 - buildbot_pqm: (optional, defaults to not pqm) Normally, the user that
   commits the revision is the user that is responsible for the change.  When
@@ -62,13 +62,13 @@ with these keys:
   post-commit hook will attempt to communicate with the configured buildbot
   server and port. If this parameter is included and any of (case-insensitive)
   "Yes", "Y", "True", or "T", then the hook will simply print what it would
-  have sent, but not attempt to contact the buildbot master.
+  have sent, but not attempt to contact the buildbot main.
 
 - buildbot_send_branch_name: (optional, defaults to not sending the branch
   name) If your buildbot's bzr source build step uses a repourl, do
   *not* turn this on. If your buildbot's bzr build step uses a baseURL, then
   you may set this value to any of (case-insensitive) "Yes", "Y", "True", or
-  "T" to have the buildbot master append the branch name to the baseURL.
+  "T" to have the buildbot main append the branch name to the baseURL.
 
 Note: The bzr smart server (as of version 2.2.2) doesn't know how to resolve
 bzr:// urls into absolute paths so any paths in locations.conf won't match,
@@ -83,7 +83,7 @@ Poller
 ------
 
 Put this file somewhere that your buildbot configuration can import it.  Even
-in the same directory as the master.cfg should work.  Install the poller in
+in the same directory as the main.cfg should work.  Install the poller in
 the buildbot configuration as with any other change source.  Minimally,
 provide a URL that you want to poll (bzr://, bzr+ssh://, or lp:), though make
 sure the buildbot user has necessary privileges.  You may also want to specify
@@ -413,7 +413,7 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     if _is_true(config, SEND_BRANCHNAME_KEY):
         change['branch'] = branch.nick
     # as of this writing (in Buildbot 0.7.9), 9989 is the default port when
-    # you make a buildbot master.
+    # you make a buildbot main.
     port = int(config.get_user_option(PORT_KEY) or 9989)
     # if dry run, stop.
     if _is_true(config, DRYRUN_KEY):
@@ -455,14 +455,14 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     deferred.addErrback(failed)
     reactor.callLater(60, quit, None, "TIMEOUT")
     bzrlib.trace.note(
-        "bzr_buildbot: SENDING CHANGES to buildbot master %s:%d on %s",
+        "bzr_buildbot: SENDING CHANGES to buildbot main %s:%d on %s",
         server, port, hook)
     reactor.run(installSignalHandlers=False) # run in a thread when in server
 
-def post_commit(local_branch, master_branch, # branch is the master_branch
+def post_commit(local_branch, main_branch, # branch is the main_branch
                 old_revno, old_revid, new_revno, new_revid):
-    if _installed_hook(master_branch) == COMMIT_VALUE:
-        send_change(master_branch,
+    if _installed_hook(main_branch) == COMMIT_VALUE:
+        send_change(main_branch,
                      old_revid, old_revid, new_revno, new_revid, COMMIT_VALUE)
 
 def post_push(result):
@@ -479,10 +479,10 @@ def post_change_branch_tip(result):
 
 bzrlib.branch.Branch.hooks.install_named_hook(
     'post_commit', post_commit,
-    'send change to buildbot master')
+    'send change to buildbot main')
 bzrlib.branch.Branch.hooks.install_named_hook(
     'post_push', post_push,
-    'send change to buildbot master')
+    'send change to buildbot main')
 bzrlib.branch.Branch.hooks.install_named_hook(
     'post_change_branch_tip', post_change_branch_tip,
-    'send change to buildbot master')
+    'send change to buildbot main')

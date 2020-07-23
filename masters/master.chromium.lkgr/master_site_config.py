@@ -2,14 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumLKGR(Master.Master1):
+class ChromiumLKGR(Main.Main1):
   project_name = 'Chromium LKGR'
-  master_port = 8018
-  slave_port = 8118
-  master_port_alt = 8218
+  main_port = 8018
+  subordinate_port = 8118
+  main_port_alt = 8218
   poll_url = 'https://chromium-status.appspot.com/lkgr'
   buildbot_url = 'http://build.chromium.org/p/chromium.lkgr/'

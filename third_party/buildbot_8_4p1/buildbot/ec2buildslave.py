@@ -14,7 +14,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
-"""A LatentSlave that uses EC2 to instantiate the slaves on demand.
+"""A LatentSubordinate that uses EC2 to instantiate the subordinates on demand.
 
 Tested with Python boto 1.5c
 """
@@ -29,7 +29,7 @@ import boto.exception
 from twisted.internet import defer, threads
 from twisted.python import log
 
-from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot.buildsubordinate import AbstractLatentBuildSubordinate
 from buildbot import interfaces
 
 PENDING = 'pending'
@@ -37,7 +37,7 @@ RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
 
-class EC2LatentBuildSlave(AbstractLatentBuildSlave):
+class EC2LatentBuildSubordinate(AbstractLatentBuildSubordinate):
 
     instance = image = None
     _poll_resolution = 5 # hook point for tests
@@ -46,12 +46,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  valid_ami_owners=None, valid_ami_location_regex=None,
                  elastic_ip=None, identifier=None, secret_identifier=None,
                  aws_id_file_path=None, user_data=None, region=None,
-                 keypair_name='latent_buildbot_slave',
-                 security_name='latent_buildbot_slave',
+                 keypair_name='latent_buildbot_subordinate',
+                 security_name='latent_buildbot_subordinate',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None):
 
-        AbstractLatentBuildSlave.__init__(
+        AbstractLatentBuildSubordinate.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties, locks)
         if not ((ami is not None) ^
@@ -164,7 +164,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.security_group = self.conn.create_security_group(
                     security_name,
                     'Authorization to access the buildbot instance.')
-                # Authorize the master as necessary
+                # Authorize the main as necessary
                 # TODO this is where we'd open the hole to do the reverse pb
                 # connect to the buildbot
                 # ip = urllib.urlopen(
@@ -247,7 +247,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             instance_type=self.instance_type, user_data=self.user_data)
         self.instance = reservation.instances[0]
         log.msg('%s %s starting instance %s' %
-                (self.__class__.__name__, self.slavename, self.instance.id))
+                (self.__class__.__name__, self.subordinatename, self.instance.id))
         duration = 0
         interval = self._poll_resolution
         while self.instance.state == PENDING:
@@ -255,7 +255,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration//60,
+                        (self.__class__.__name__, self.subordinatename, duration//60,
                          self.instance.id))
             self.instance.update()
         if self.instance.state == RUNNING:
@@ -264,7 +264,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             seconds = duration%60
             log.msg('%s %s instance %s started on %s '
                     'in about %d minutes %d seconds (%s)' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.subordinatename,
                      self.instance.id, self.dns, minutes, seconds,
                      self.output.output))
             if self.elastic_ip is not None:
@@ -274,9 +274,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.subordinatename,
                      self.instance.id, self.instance.state))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise interfaces.LatentBuildSubordinateFailedToSubstantiate(
                 self.instance.id, self.instance.state)
 
     def stop_instance(self, fast=False):
@@ -297,7 +297,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
             instance.stop()
             log.msg('%s %s terminating instance %s' %
-                    (self.__class__.__name__, self.slavename, instance.id))
+                    (self.__class__.__name__, self.subordinatename, instance.id))
         duration = 0
         interval = self._poll_resolution
         if fast:
@@ -311,10 +311,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             if duration % 60 == 0:
                 log.msg(
                     '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.slavename, duration//60,
+                    (self.__class__.__name__, self.subordinatename, duration//60,
                      instance.id))
             instance.update()
         log.msg('%s %s instance %s %s '
                 'after about %d minutes %d seconds' %
-                (self.__class__.__name__, self.slavename,
+                (self.__class__.__name__, self.subordinatename,
                  instance.id, goal, duration//60, duration%60))

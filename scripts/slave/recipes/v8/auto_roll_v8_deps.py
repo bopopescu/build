@@ -51,7 +51,7 @@ def GetDEPS(api, name, repo):
   step_result = api.gclient(
       'get %s deps' % name,
       ['revinfo', '--deps', 'all', '--spec', spec],
-      cwd=api.path['slave_build'],
+      cwd=api.path['subordinate_build'],
       stdout=api.raw_io.output(),
   )
 
@@ -101,7 +101,7 @@ def RunSteps(api):
 
   # Enforce a clean state.
   api.git(
-      'checkout', '-f', 'origin/master',
+      'checkout', '-f', 'origin/main',
       cwd=api.path['checkout'],
   )
   api.git(
@@ -207,7 +207,7 @@ def GenTests(api):
   )
   yield (
       api.test('roll') +
-      api.properties.generic(mastername='client.v8.fyi',
+      api.properties.generic(mainname='client.v8.fyi',
                              buildername='Auto-roll - v8 deps') +
       api.override_step_data(
           'gclient get v8 deps',

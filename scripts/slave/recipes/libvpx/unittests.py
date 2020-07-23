@@ -18,7 +18,7 @@ CONFIGURE_PATH_REL = './libvpx/configure'
 
 def RunSteps(api):
   # Paths and other constants
-  build_root = api.path['slave_build']
+  build_root = api.path['subordinate_build']
 
   # libvpx paths
   libvpx_git_url = api.properties['libvpx_git_url']

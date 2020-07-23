@@ -18,8 +18,8 @@ from zope.interface import implements
 from buildbot import interfaces
 from buildbot.util.eventual import eventually
 
-class SlaveStatus:
-    implements(interfaces.ISlaveStatus)
+class SubordinateStatus:
+    implements(interfaces.ISubordinateStatus)
 
     admin = None
     host = None
@@ -105,7 +105,7 @@ class SlaveStatus:
         result['name'] = self.getName()
         result['access_uri'] = self.getAccessURI()
 
-        # Transient (since it changes when the slave reconnects)
+        # Transient (since it changes when the subordinate reconnects)
         result['host'] = self.getHost()
         result['admin'] = self.getAdmin()
         result['version'] = self.getVersion()

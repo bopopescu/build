@@ -67,9 +67,9 @@ def getAndCheckProperties(req):
     Check the names for valid strings, and return None if a problem is found.
     Return a new Properties object containing each property found in req.
     """
-    master = req.site.buildbot_service.master
-    pname_validate = master.config.validation['property_name']
-    pval_validate = master.config.validation['property_value']
+    main = req.site.buildbot_service.main
+    pname_validate = main.config.validation['property_name']
+    pval_validate = main.config.validation['property_value']
     properties = Properties()
     i = 1
     while True:
@@ -136,10 +136,10 @@ def path_to_step(request, stepstatus):
     return (path_to_build(request, stepstatus.getBuild()) +
             "/steps/%s" % urllib.quote(stepstatus.getName(), safe=''))
 
-def path_to_slave(request, slave):
+def path_to_subordinate(request, subordinate):
     return (path_to_root(request) +
-            "buildslaves/" +
-            urllib.quote(slave.getName(), safe=''))
+            "buildsubordinates/" +
+            urllib.quote(subordinate.getName(), safe=''))
 
 def path_to_change(request, change):
     return (path_to_root(request) +
@@ -184,8 +184,8 @@ class AccessorMixin(object):
     def getAuthz(self, request):
         return request.site.buildbot_service.authz
 
-    def getBuildmaster(self, request):
-        return request.site.buildbot_service.master
+    def getBuildmain(self, request):
+        return request.site.buildbot_service.main
 
 
 class ContextMixin(AccessorMixin):

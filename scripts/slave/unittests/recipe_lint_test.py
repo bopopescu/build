@@ -9,7 +9,7 @@ import sys
 MODULES_WHITELIST = [
   # TODO(luqui): Move skia modules into recipe resources
   r'common\.skia\..*',
-  r'slave\.skia\..*',
+  r'subordinate\.skia\..*',
 ]
 
 RECIPES_PY = os.path.join(

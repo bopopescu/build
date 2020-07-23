@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumWebkit(Master.Master1):
+class ChromiumWebkit(Main.Main1):
   project_name = 'Chromium Webkit'
-  master_port = 8014
-  slave_port = 8114
-  master_port_alt = 8214
+  main_port = 8014
+  subordinate_port = 8114
+  main_port_alt = 8214
   base_app_url = 'https://blink-status.appspot.com'
   tree_status_url = base_app_url + '/status'
   buildbot_url = 'http://build.chromium.org/p/chromium.webkit/'

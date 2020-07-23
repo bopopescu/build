@@ -11,7 +11,7 @@ import unittest
 import test_env  # pylint: disable=W0611,W0403
 
 import buildbot.changes.filter
-from master import chromeos_manifest_scheduler
+from main import chromeos_manifest_scheduler
 
 
 class FilterNewSpecProviderTest(unittest.TestCase):
@@ -62,16 +62,16 @@ class FilterNewSpecProviderTest(unittest.TestCase):
          '6812.62.0-rc2'))
 
     # 963c69bb1a2561f3b8e1a76688ad98c55b853acd
-    self._assertMatches('master-chromium-pfq', 'master',
-        'Automatic: Start master-chromium-pfq master 6941.0.0-rc1')
+    self._assertMatches('main-chromium-pfq', 'main',
+        'Automatic: Start main-chromium-pfq main 6941.0.0-rc1')
 
     # 963c69bb1a2561f3b8e1a76688ad98c55b853acd
-    self._assertNotMatches('lumpy-pre-flight-branch', 'master',
-        'Automatic: Start master-chromium-pfq master 6941.0.0-rc1')
+    self._assertNotMatches('lumpy-pre-flight-branch', 'main',
+        'Automatic: Start main-chromium-pfq main 6941.0.0-rc1')
 
     # 963c69bb1a2561f3b8e1a76688ad98c55b853acd
-    self._assertNotMatches('master-chromium-pfq', 'release-R42-6812.B',
-        'Automatic: Start master-chromium-pfq master 6941.0.0-rc1')
+    self._assertNotMatches('main-chromium-pfq', 'release-R42-6812.B',
+        'Automatic: Start main-chromium-pfq main 6941.0.0-rc1')
 
     self._assertNotMatches('builder', 'branch', 'Some other lines...')
 

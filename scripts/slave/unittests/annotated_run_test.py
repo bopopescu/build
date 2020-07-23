@@ -21,9 +21,9 @@ import test_env  # pylint: disable=W0403,W0611
 import mock
 from common import chromium_utils
 from common import env
-from slave import annotated_run
-from slave import gce
-from slave import infra_platform
+from subordinate import annotated_run
+from subordinate import gce
+from subordinate import infra_platform
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -50,8 +50,8 @@ class AnnotatedRunTest(unittest.TestCase):
         '--build-properties=%s' % json.dumps(build_properties)])
     self.assertEqual(exit_code, 0)
 
-  @mock.patch('slave.annotated_run._run_command')
-  @mock.patch('slave.annotated_run.main')
+  @mock.patch('subordinate.annotated_run._run_command')
+  @mock.patch('subordinate.annotated_run.main')
   @mock.patch('sys.platform', return_value='win')
   @mock.patch('tempfile.mkstemp', side_effect=Exception('failure'))
   @mock.patch('os.environ', {})
@@ -79,8 +79,8 @@ class _AnnotatedRunExecTestBase(unittest.TestCase):
     self.maxDiff = None
     self._patchers = []
     map(self._patch, (
-        mock.patch('slave.annotated_run._run_command'),
-        mock.patch('slave.infra_platform.get'),
+        mock.patch('subordinate.annotated_run._run_command'),
+        mock.patch('subordinate.infra_platform.get'),
         mock.patch('os.path.exists'),
         mock.patch('os.getcwd'),
         mock.patch('os.environ', {}),
@@ -100,11 +100,11 @@ class _AnnotatedRunExecTestBase(unittest.TestCase):
         logdog_host=None)
     self.properties = {
       'recipe': 'example/recipe',
-      'mastername': 'master.random',
+      'mainname': 'main.random',
       'buildername': 'builder',
     }
     self.cwd = os.path.join('home', 'user')
-    self.rpy_path = os.path.join(env.Build, 'scripts', 'slave', 'recipes.py')
+    self.rpy_path = os.path.join(env.Build, 'scripts', 'subordinate', 'recipes.py')
     self.recipe_args = [
         sys.executable, '-u', self.rpy_path, '--verbose', 'run',
         '--workdir=%s' % (self.cwd,),
@@ -164,17 +164,17 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
     super(AnnotatedRunLogDogExecTest, self).setUp()
     self._orig_whitelist = annotated_run.LOGDOG_WHITELIST_MASTER_BUILDERS
     annotated_run.LOGDOG_WHITELIST_MASTER_BUILDERS = {
-      'master.some': [
+      'main.some': [
         'yesbuilder',
       ],
 
-      'master.all': [
+      'main.all': [
         annotated_run.WHITELIST_ALL,
         'blacklisted',
       ],
     }
     self.properties.update({
-      'mastername': 'master.some',
+      'mainname': 'main.some',
       'buildername': 'nobuilder',
       'buildnumber': 1337,
     })
@@ -182,7 +182,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
 
     def is_gce():
       return self.is_gce
-    is_gce_patch = mock.patch('slave.gce.Authenticator.is_gce',
+    is_gce_patch = mock.patch('subordinate.gce.Authenticator.is_gce',
                               side_effect=is_gce)
     is_gce_patch.start()
     self._patchers.append(is_gce_patch)
@@ -199,18 +199,18 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
 
   def test_should_run_logdog(self):
     self.assertFalse(annotated_run._should_run_logdog({
-      'mastername': 'master.undefined', 'buildername': 'any'}))
+      'mainname': 'main.undefined', 'buildername': 'any'}))
     self.assertFalse(annotated_run._should_run_logdog({
-      'mastername': 'master.some', 'buildername': 'nobuilder'}))
+      'mainname': 'main.some', 'buildername': 'nobuilder'}))
     self.assertTrue(annotated_run._should_run_logdog({
-      'mastername': 'master.some', 'buildername': 'yesbuilder'}))
+      'mainname': 'main.some', 'buildername': 'yesbuilder'}))
     self.assertTrue(annotated_run._should_run_logdog({
-      'mastername': 'master.all', 'buildername': 'anybuilder'}))
+      'mainname': 'main.all', 'buildername': 'anybuilder'}))
     self.assertFalse(annotated_run._should_run_logdog({
-      'mastername': 'master.all', 'buildername': 'blacklisted'}))
+      'mainname': 'main.all', 'buildername': 'blacklisted'}))
 
   @mock.patch('os.path.isfile')
-  @mock.patch('slave.annotated_run._get_service_account_json')
+  @mock.patch('subordinate.annotated_run._get_service_account_json')
   def test_exec_with_whitelist_builder_runs_logdog(self, service_account,
                                                    isfile):
     self.properties['buildername'] = 'yesbuilder'
@@ -233,7 +233,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
     annotated_run._run_command.assert_called_with(
         [butler_path,
             '-log-level', 'warning',
-            '-prefix', 'bb/master.some/yesbuilder/1337',
+            '-prefix', 'bb/main.some/yesbuilder/1337',
             '-output', 'pubsub,topic="projects/luci-logdog/topics/logs"',
             '-service-account-json', 'creds.json',
             '-output-max-buffer-age', '15s',
@@ -256,7 +256,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
     self._assertRecipeProperties(self.properties)
     self._assertAnnoteeCommand(self.recipe_args)
 
-  @mock.patch('slave.annotated_run._logdog_bootstrap', return_value=0)
+  @mock.patch('subordinate.annotated_run._logdog_bootstrap', return_value=0)
   def test_runs_bootstrap_when_forced(self, lb):
     opts = self.opts._replace(logdog_force=True)
     rv = annotated_run._exec_recipe(self.rt, opts, self.basedir, self.tdir,
@@ -265,7 +265,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
     lb.assert_called_once()
     annotated_run._run_command.assert_called_once()
 
-  @mock.patch('slave.annotated_run._logdog_bootstrap', return_value=2)
+  @mock.patch('subordinate.annotated_run._logdog_bootstrap', return_value=2)
   def test_forwards_error_code(self, lb):
     opts = self.opts._replace(
         logdog_force=True)
@@ -274,7 +274,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
     self.assertEqual(rv, 2)
     lb.assert_called_once()
 
-  @mock.patch('slave.annotated_run._logdog_bootstrap',
+  @mock.patch('subordinate.annotated_run._logdog_bootstrap',
               side_effect=Exception('Unhandled situation.'))
   def test_runs_directly_if_bootstrap_fails(self, lb):
     annotated_run._run_command.return_value = (123, '')
@@ -288,8 +288,8 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
                                                        dry_run=False)
 
   @mock.patch('os.path.isfile')
-  @mock.patch('slave.annotated_run._logdog_install_cipd')
-  @mock.patch('slave.annotated_run._get_service_account_json')
+  @mock.patch('subordinate.annotated_run._logdog_install_cipd')
+  @mock.patch('subordinate.annotated_run._get_service_account_json')
   def test_runs_directly_if_logdog_error(self, service_account, cipd, isfile):
     self.properties['buildername'] = 'yesbuilder'
 
@@ -319,7 +319,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
         mock.call([
             'logdog_butler.exe',
             '-log-level', 'warning',
-            '-prefix', 'bb/master.some/yesbuilder/1337',
+            '-prefix', 'bb/main.some/yesbuilder/1337',
             '-output', 'pubsub,topic="projects/luci-logdog/topics/logs"',
             '-service-account-json', 'creds.json',
             '-output-max-buffer-age', '15s',
@@ -366,7 +366,7 @@ class AnnotatedRunLogDogExecTest(_AnnotatedRunExecTestBase):
 
     annotated_run._run_command.assert_called_once_with([
       sys.executable,
-       os.path.join(env.Build, 'scripts', 'slave', 'cipd.py'),
+       os.path.join(env.Build, 'scripts', 'subordinate', 'cipd.py'),
        '--dest-directory', self.basedir,
        '--json-output', os.path.join(self.basedir, 'packages.json'),
        '-P', 'infra/foo@v0',

@@ -9,23 +9,23 @@ SAMPLE USAGE:
 Simple case:
   poller = GitBranchPoller(
     'https://chromium.googlesource.com/chromium/src.git',
-    ['master', 'lkcr', 'lkgr'],
+    ['main', 'lkcr', 'lkgr'],
   )
 
   c['change_sources'] = [poller]
 
-  This poller will poll the Chromium src repository for changes on the master,
-  lkcr, and lkgr branches. New changes will be sent to the buildbot master.
+  This poller will poll the Chromium src repository for changes on the main,
+  lkcr, and lkgr branches. New changes will be sent to the buildbot main.
 
 Tag comparator:
   poller = GitBranchPoller(
     'https://chromium.googlesource.com/chromium/src.git',
-    ['master', 'lkcr', 'lkgr'],
+    ['main', 'lkcr', 'lkgr'],
   )
 
   c['change_sources'] = [poller]
 
-  master_utils.AutoSetupMaster(c, ActiveMaster, tagComparator=poller.comparator)
+  main_utils.AutoSetupMain(c, ActiveMain, tagComparator=poller.comparator)
 
   This is the same as above, except the console view will sort revisions using
   the same logic as the poller, which allows for a consistent revision ordering.
@@ -42,15 +42,15 @@ Excluded refs:
 
   poller = GitBranchPoller(
     'https://chromium.googlesource.com/my_chromium_fork/src.git',
-    ['master', '2062', '1985'],
-    excluded_refs=['upstream/master', 'upstream/2062', 'upstream/1985'],
+    ['main', '2062', '1985'],
+    excluded_refs=['upstream/main', 'upstream/2062', 'upstream/1985'],
     additional_remotes=[remote],
   )
 
   c['change_sources'] = [poller]
 
   This poller can be used to poll My Chromium Fork's src repository for changes
-  on the master, as well as the 2062 and 1985 release branches, while ignoring
+  on the main, as well as the 2062 and 1985 release branches, while ignoring
   any revision history from the original Chromium src repository. This is useful
   for polling for changes that are unique to the fork.
 """
@@ -262,7 +262,7 @@ class GitBranchPoller(PollingChangeSource):
     # Don't exclude the specified excluded_refs here so the
     # comparator has the complete picture. Only exclude in
     # the polling operation, so those refs don't get passed
-    # to the master.
+    # to the main.
     out, err, ret = yield self._git(
       'rev-list',
       '--date-order',
@@ -377,7 +377,7 @@ class GitBranchPoller(PollingChangeSource):
         continue
 
       try:
-        yield self.master.addChange(
+        yield self.main.addChange(
           author=change_data[revision]['author'],
           branch=revision_branch_map[revision],
           comments=change_data[revision]['description'],
@@ -419,7 +419,7 @@ class GitBranchPoller(PollingChangeSource):
   def describe(self):
     return '%s%s: polling: %s, watching branches: %s' % (
       self.__class__.__name__,
-      '' if self.master else '[STOPPED (refer to log)]',
+      '' if self.main else '[STOPPED (refer to log)]',
       self.repo_url,
       ', '.join(self.branches),
     )

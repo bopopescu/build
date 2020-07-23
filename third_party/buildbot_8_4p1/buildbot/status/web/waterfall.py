@@ -111,7 +111,7 @@ class CurrentBox(components.Adapter):
         # instead. The only times it should show up in "current activity" is
         # when the builder is otherwise idle.
 
-        # are any builds pending? (waiting for a slave to be free)
+        # are any builds pending? (waiting for a subordinate to be free)
         brcount = brcounts[builderName]
         if brcount:
             text.append("%d pending" % brcount)
@@ -396,7 +396,7 @@ class WaterfallStatusResource(HtmlResource):
 
     def content(self, request, ctx):
         status = self.getStatus(request)
-        master = request.site.buildbot_service.master
+        main = request.site.buildbot_service.main
 
         # before calling content_with_db_data, make a bunch of database
         # queries.  This is a sick hack, but beats rewriting the entire
@@ -405,10 +405,10 @@ class WaterfallStatusResource(HtmlResource):
         results = {}
 
         # recent changes
-        changes_d = master.db.changes.getRecentChanges(40)
+        changes_d = main.db.changes.getRecentChanges(40)
         def to_changes(chdicts):
             return defer.gatherResults([
-                changes.Change.fromChdict(master, chdict)
+                changes.Change.fromChdict(main, chdict)
                 for chdict in chdicts ])
         changes_d.addCallback(to_changes)
         def keep_changes(changes):
@@ -537,8 +537,8 @@ class WaterfallStatusResource(HtmlResource):
             ctx['no_reload_page'] = with_args(request, remove_args=["reload"])
 
         template = request.site.buildbot_service.templates.get_template("waterfall.html")
-        ctx['mastername'] = (
-            request.site.buildbot_service.master.properties['mastername'])
+        ctx['mainname'] = (
+            request.site.buildbot_service.main.properties['mainname'])
         data = template.render(**ctx)
         return data
 

@@ -2,20 +2,20 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Utility class to build the pagespeed master BuildFactory's.
+"""Utility class to build the pagespeed main BuildFactory's.
 
 Based on gclient_factory.py and adds pagespeed-specific steps."""
 
-from master.factory import gclient_factory
-from master.factory import pagespeed_commands
+from main.factory import gclient_factory
+from main.factory import pagespeed_commands
 
 import config
 
 
 class PageSpeedFactory(gclient_factory.GClientFactory):
-  """Encapsulates data and methods common to the pagespeed master.cfg file."""
+  """Encapsulates data and methods common to the pagespeed main.cfg file."""
 
-  DEFAULT_TARGET_PLATFORM = config.Master.default_platform
+  DEFAULT_TARGET_PLATFORM = config.Main.default_platform
   REL_SRC_ROOT = 'src'
   TEST_ARG_LIST = ['--srcroot', REL_SRC_ROOT]
 
@@ -55,13 +55,13 @@ class PageSpeedFactory(gclient_factory.GClientFactory):
 
 
   def PageSpeedFactory(self, target='Release', clobber=False, tests=None,
-                       mode=None, slave_type='BuilderTester', options=None,
+                       mode=None, subordinate_type='BuilderTester', options=None,
                        compile_timeout=1200, build_url=None, project=None,
                        factory_properties=None):
     factory_properties = factory_properties or {}
     tests = tests or []
 
-    factory = self.BuildFactory(target, clobber, tests, mode, slave_type,
+    factory = self.BuildFactory(target, clobber, tests, mode, subordinate_type,
                                 options, compile_timeout, build_url, project,
                                 factory_properties)
 
@@ -78,36 +78,36 @@ class PageSpeedFactory(gclient_factory.GClientFactory):
     return factory
 
   def FirefoxAddOnFactory(self, target='Release', clobber=False,
-                          tests=None, mode=None, slave_type='BuilderTester',
+                          tests=None, mode=None, subordinate_type='BuilderTester',
                           options=None, compile_timeout=1200, build_url=None,
                           project=None, factory_properties=None):
     # For firefox addon we don't use the default DEPS file.
     self._solutions[0] = gclient_factory.GClientSolution(
         "http://page-speed.googlecode.com/svn/firefox_addon/trunk/src")
-    return self.PageSpeedFactory(target, clobber, tests, mode, slave_type,
+    return self.PageSpeedFactory(target, clobber, tests, mode, subordinate_type,
                                  options, compile_timeout, build_url, project,
                                  factory_properties)
 
   def ChromiumExtensionFactory(self, target='Release', clobber=False,
                                tests=None, mode=None,
-                               slave_type='BuilderTester', options=None,
+                               subordinate_type='BuilderTester', options=None,
                                compile_timeout=1200, build_url=None,
                                project=None, factory_properties=None):
     # For chromium extension we don't use the default DEPS file.
     self._solutions[0] = gclient_factory.GClientSolution(
         "http://page-speed.googlecode.com/svn/chromium_extension/trunk/src")
-    return self.PageSpeedFactory(target, clobber, tests, mode, slave_type,
+    return self.PageSpeedFactory(target, clobber, tests, mode, subordinate_type,
                                  options, compile_timeout, build_url, project,
                                  factory_properties)
 
   def ModPageSpeedFactory(self, target='Release', clobber=False,
                           tests=None, mode=None,
-                          slave_type='BuilderTester', options=None,
+                          subordinate_type='BuilderTester', options=None,
                           compile_timeout=1200, build_url=None,
                           project=None, factory_properties=None):
     # For mod_pagespeed we don't use the default DEPS file.
     self._solutions[0] = gclient_factory.GClientSolution(
         "http://modpagespeed.googlecode.com/svn/trunk/src")
-    return self.PageSpeedFactory(target, clobber, tests, mode, slave_type,
+    return self.PageSpeedFactory(target, clobber, tests, mode, subordinate_type,
                                  options, compile_timeout, build_url, project,
                                  factory_properties)

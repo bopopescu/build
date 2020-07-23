@@ -11,7 +11,7 @@
   For a list of command-line options, call this script with '--help'.
 
   Example command line:
-      python ../../../scripts/slave/chromium/archive_coverage.py
+      python ../../../scripts/subordinate/chromium/archive_coverage.py
       --target Debug --perf-subdir linux-debug
 """
 
@@ -24,8 +24,8 @@ import sys
 from common import archive_utils
 from common import chromium_utils
 
-from slave import slave_utils
-from slave import build_directory
+from subordinate import subordinate_utils
+from subordinate import build_directory
 
 
 def MakeSourceWorldReadable(from_dir):
@@ -58,18 +58,18 @@ class ArchiveCoverage(object):
       print 'Unknown/unsupported platform.'
       sys.exit(1)
 
-    # Extract the build name of this slave (e.g., 'chrome-release') from its
+    # Extract the build name of this subordinate (e.g., 'chrome-release') from its
     # configuration file.
     chrome_dir = os.path.abspath(options.build_dir)
     print 'chrome_dir: %s' % chrome_dir
-    build_name = slave_utils.SlaveBuildName(chrome_dir)
+    build_name = subordinate_utils.SubordinateBuildName(chrome_dir)
     print 'build name: %s' % build_name
 
     # The 'last change:' line MUST appear for the buildbot output-parser to
     # construct the 'view coverage' link.  (See
-    # scripts/master/log_parser/archive_command.py)
+    # scripts/main/log_parser/archive_command.py)
     wc_dir = os.path.dirname(chrome_dir)
-    self.last_change = str(slave_utils.SubversionRevision(wc_dir))
+    self.last_change = str(subordinate_utils.SubversionRevision(wc_dir))
     print 'last change: %s' % self.last_change
 
     host_name = socket.gethostname()
@@ -105,7 +105,7 @@ class ArchiveCoverage(object):
                             archive_folder, 'coverage_croc_html')
     if not os.path.exists(from_dir):
       print '%s directory does not exist' % from_dir
-      return slave_utils.WARNING_EXIT_CODE
+      return subordinate_utils.WARNING_EXIT_CODE
 
     archive_path = os.path.join(self.archive_path, archive_folder,
                                 self.last_change)

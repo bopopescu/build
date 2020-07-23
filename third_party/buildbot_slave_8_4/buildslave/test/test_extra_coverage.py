@@ -19,5 +19,5 @@
 
 modules = [] # for the benefit of pyflakes
 
-from buildslave.scripts import logwatcher, runner, startup
+from buildsubordinate.scripts import logwatcher, runner, startup
 modules.extend([logwatcher, runner, startup])

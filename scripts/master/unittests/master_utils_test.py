@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Source file for master_utils testcases."""
+"""Source file for main_utils testcases."""
 
 
 import unittest
@@ -11,13 +11,13 @@ import unittest
 import test_env  # pylint: disable=W0611,W0403
 
 from buildbot.process.properties import Properties
-from master import master_utils
+from main import main_utils
 
 
-class MasterUtilsTest(unittest.TestCase):
+class MainUtilsTest(unittest.TestCase):
 
   def testPartition(self):
-    partitions = master_utils.Partition([(1, 'a'),
+    partitions = main_utils.Partition([(1, 'a'),
                                          (2, 'b'),
                                          (3, 'c'),
                                          ], 2)
@@ -28,48 +28,48 @@ class MockBuilder(object):
   def __init__(self, name):
     self.name = name
 
-class MockSlave(object):
+class MockSubordinate(object):
   def __init__(self, name, properties):
     self.properties = Properties()
-    self.properties.update(properties, "BuildSlave")
-    self.properties.setProperty("slavename", name, "BuildSlave")
+    self.properties.update(properties, "BuildSubordinate")
+    self.properties.setProperty("subordinatename", name, "BuildSubordinate")
 
-class MockSlaveBuilder(object):
+class MockSubordinateBuilder(object):
   def __init__(self, name, properties):
     self.name = name
-    self.slave = MockSlave(name, properties)
+    self.subordinate = MockSubordinate(name, properties)
 
-class PreferredBuilderNextSlaveFuncTest(unittest.TestCase):
-  def testNextSlave(self):
+class PreferredBuilderNextSubordinateFuncTest(unittest.TestCase):
+  def testNextSubordinate(self):
     builder1 = MockBuilder('builder1')
     builder2 = MockBuilder('builder2')
     builder3 = MockBuilder('builder3')
 
-    slaves = [
-        MockSlaveBuilder('slave1', {'preferred_builder': 'builder1'}),
-        MockSlaveBuilder('slave2', {'preferred_builder': 'builder2'}),
-        MockSlaveBuilder('slave3', {'preferred_builder': 'builder3'}),
+    subordinates = [
+        MockSubordinateBuilder('subordinate1', {'preferred_builder': 'builder1'}),
+        MockSubordinateBuilder('subordinate2', {'preferred_builder': 'builder2'}),
+        MockSubordinateBuilder('subordinate3', {'preferred_builder': 'builder3'}),
     ]
 
-    f = master_utils.PreferredBuilderNextSlaveFunc()
-    self.assertEqual('slave1', f(builder1, slaves).name)
-    self.assertEqual('slave2', f(builder2, slaves).name)
-    self.assertEqual('slave3', f(builder3, slaves).name)
+    f = main_utils.PreferredBuilderNextSubordinateFunc()
+    self.assertEqual('subordinate1', f(builder1, subordinates).name)
+    self.assertEqual('subordinate2', f(builder2, subordinates).name)
+    self.assertEqual('subordinate3', f(builder3, subordinates).name)
 
-    # Remove slave 3.
-    del slaves[2]
+    # Remove subordinate 3.
+    del subordinates[2]
 
-    # When there is no slave that matches preferred_builder,
-    # any slave builder might be chosen.
-    self.assertTrue(f(builder3, slaves).name in ['slave1', 'slave2'])
+    # When there is no subordinate that matches preferred_builder,
+    # any subordinate builder might be chosen.
+    self.assertTrue(f(builder3, subordinates).name in ['subordinate1', 'subordinate2'])
 
-  def testNextSlaveEmpty(self):
+  def testNextSubordinateEmpty(self):
     builder = MockBuilder('builder')
-    slaves = []
+    subordinates = []
 
-    f = master_utils.PreferredBuilderNextSlaveFunc()
+    f = main_utils.PreferredBuilderNextSubordinateFunc()
 
-    self.assertIsNone(f(builder, slaves))
+    self.assertIsNone(f(builder, subordinates))
 
 
 if __name__ == '__main__':

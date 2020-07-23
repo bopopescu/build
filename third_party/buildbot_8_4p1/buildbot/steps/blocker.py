@@ -108,13 +108,13 @@ class Blocker(BuildStep):
             "abstract method: you must subclass Blocker "
             "and implement buildsMatch()")
 
-    def _getBuildStatus(self, botmaster, builderName):
+    def _getBuildStatus(self, botmain, builderName):
         try:
             # Get the buildbot.process.builder.Builder object for the
             # requested upstream builder: this is a long-lived object
             # that exists and has useful info in it whether or not a
             # build is currently running under it.
-            builder = botmaster.builders[builderName]
+            builder = botmain.builders[builderName]
         except KeyError:
             raise BadStepError(
                 "no builder named %r" % builderName)
@@ -202,12 +202,12 @@ class Blocker(BuildStep):
             self._timer = reactor.callLater(self.timeout, self._timeoutExpired)
 
         self._log("searching for upstream build steps")
-        botmaster = self.build.slavebuilder.slave.parent
+        botmain = self.build.subordinatebuilder.subordinate.parent
         errors = []                     # list of strings
         for (builderName, stepName) in self.upstreamSteps:
             buildStatus = stepStatus = None
             try:
-                buildStatus = self._getBuildStatus(botmaster, builderName)
+                buildStatus = self._getBuildStatus(botmain, builderName)
                 if buildStatus is not None:
                     stepStatus = self._getStepStatus(buildStatus, stepName)
             except BadStepError, err:

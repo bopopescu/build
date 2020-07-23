@@ -20,7 +20,7 @@ def Win8_Tests__2__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -52,7 +52,7 @@ def Win8_Tests__2__steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -60,21 +60,21 @@ def Win8_Tests__2__steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
                              separators=(',', ':'))])
     # start crash handler step
     api.python("start crash handler",
-               api.path["build"].join("scripts", "slave", "chromium",
+               api.path["build"].join("scripts", "subordinate", "chromium",
                                       "run_crash_handler.py"),
                args=["--target", "Release"])
     with api.step.defer_results():
       # runtest step
       api.python(
           "browser_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -89,7 +89,7 @@ def Win8_Tests__2__steps(api):
       # runtest step
       api.python(
           "content_browsertests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -103,7 +103,7 @@ def Win8_Tests__2__steps(api):
            'content_browsertests.exe', '--gtest_print_time'])
       # process dumps step
       api.python("process dumps",
-                 api.path["build"].join("scripts", "slave", "process_dumps.py"),
+                 api.path["build"].join("scripts", "subordinate", "process_dumps.py"),
                  args=["--target", "Release"])
 
 
@@ -112,7 +112,7 @@ def Chromium_Builder_steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -144,7 +144,7 @@ def Chromium_Builder_steps(api):
            'GYP_DEFINES': 'fastbuild=1 component=static_library',
            'GYP_MSVS_VERSION': '2015'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -155,12 +155,12 @@ def Chromium_Builder_steps(api):
     if "clobber" in api.properties:
         args.append("--clobber")
     api.python("compile",
-               api.path["build"].join("scripts", "slave", "compile.py"),
+               api.path["build"].join("scripts", "subordinate", "compile.py"),
                args=args)
     # zip_build step
     step_result = api.python(
         "zip build",
-        api.path["build"].join("scripts", "slave", "zip_build.py"),
+        api.path["build"].join("scripts", "subordinate", "zip_build.py"),
         args=
         ["--json-urls", api.json.output(),
           "--target", "Release", '--build-url',
@@ -192,7 +192,7 @@ def Chromium_Builder_steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -214,7 +214,7 @@ def Chromium_Builder_steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
         {'builder_name': 'Win8 Tests (1)',
          "properties":
@@ -229,7 +229,7 @@ def Chromium_Builder_steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -251,7 +251,7 @@ def Chromium_Builder_steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
         {'builder_name': 'Win8 Tests (2)',
          "properties":
@@ -266,7 +266,7 @@ def Chromium_Builder_steps(api):
           "parent_build_archive_url":
           build_properties.get("build_archive_url", ""),
           "parent_revision": build_properties.get("revision", ""),
-          "parent_slavename": build_properties.get("slavename", ""),
+          "parent_subordinatename": build_properties.get("subordinatename", ""),
           "parent_scheduler": build_properties.get("scheduler", ""),
           "parentname": build_properties.get("builderna", ""),
           "parent_buildnumber": build_properties.get("buildnumber", ""),
@@ -288,7 +288,7 @@ def Chromium_Builder_steps(api):
           "parent_got_revision": build_properties.get("got_revision", ""),
           "patch_url": build_properties.get("patch_url", ""),
           "parent_git_number": build_properties.get("git_number", ""),
-          "parentslavename": build_properties.get("slavename", ""),
+          "parentsubordinatename": build_properties.get("subordinatename", ""),
           "root": build_properties.get("root", ""), }},
     ]
     api.trigger(*trigger_spec)
@@ -299,7 +299,7 @@ def Chromium_Win_MiniInstaller_Tests_steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -331,7 +331,7 @@ def Chromium_Win_MiniInstaller_Tests_steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -339,25 +339,25 @@ def Chromium_Win_MiniInstaller_Tests_steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
                              separators=(',', ':'))])
     # start crash handler step
     api.python("start crash handler",
-               api.path["build"].join("scripts", "slave", "chromium",
+               api.path["build"].join("scripts", "subordinate", "chromium",
                                       "run_crash_handler.py"),
                args=["--target", "Release"])
     with api.step.defer_results():
       # test mini installer wrapper step
       api.python("test installer",
-                 api.path["build"].join("scripts", "slave", "chromium",
+                 api.path["build"].join("scripts", "subordinate", "chromium",
                                         "test_mini_installer_wrapper.py"),
                  args=["--target", "Release"])
       # process dumps step
       api.python("process dumps",
-                 api.path["build"].join("scripts", "slave", "process_dumps.py"),
+                 api.path["build"].join("scripts", "subordinate", "process_dumps.py"),
                  args=["--target", "Release"])
 
 
@@ -366,7 +366,7 @@ def Win8_Tests__1__steps(api):
     # svnkill step; not necessary in recipes
     # update scripts step; implicitly run by recipe engine.
     # taskkill step
-    api.python("taskkill", api.path["build"].join("scripts", "slave",
+    api.python("taskkill", api.path["build"].join("scripts", "subordinate",
                                                   "kill_processes.py"))
     # bot_update step
     src_cfg = api.gclient.make_config(GIT_MODE=True)
@@ -398,7 +398,7 @@ def Win8_Tests__1__steps(api):
            'DEPOT_TOOLS_UPDATE': '0',
            'GYP_DEFINES': ' component=static_library'}
     api.python("gclient runhooks wrapper",
-               api.path["build"].join("scripts", "slave",
+               api.path["build"].join("scripts", "subordinate",
                                       "runhooks_wrapper.py"),
                env=env)
     # cleanup_temp step
@@ -406,21 +406,21 @@ def Win8_Tests__1__steps(api):
     # extract build step
     api.python(
         "extract build",
-        api.path["build"].join("scripts", "slave", "extract_build.py"),
+        api.path["build"].join("scripts", "subordinate", "extract_build.py"),
         args=["--target", "Release", "--build-archive-url", build_properties[
             "parent_build_archive_url"], '--build-properties=%s' %
               api.json.dumps(build_properties,
                              separators=(',', ':'))])
     # start crash handler step
     api.python("start crash handler",
-               api.path["build"].join("scripts", "slave", "chromium",
+               api.path["build"].join("scripts", "subordinate", "chromium",
                                       "run_crash_handler.py"),
                args=["--target", "Release"])
     with api.step.defer_results():
       # runtest step
       api.python(
           "base_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -435,7 +435,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "cacheinvalidation_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -450,7 +450,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "chrome_elf_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -465,7 +465,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "components_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -480,7 +480,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "courgette_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -495,7 +495,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "crypto_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -510,7 +510,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "extensions_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -525,7 +525,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "gcm_unit_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -540,7 +540,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "google_apis_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -555,7 +555,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "gpu_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -570,7 +570,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "url_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -585,7 +585,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "jingle_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -600,7 +600,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "device_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -615,7 +615,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "media_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -630,7 +630,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "net_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -645,7 +645,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "ppapi_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -660,7 +660,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "printing_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -675,7 +675,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "remoting_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -690,7 +690,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "sbox_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -705,7 +705,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "sbox_integration_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -720,7 +720,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "sbox_validation_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -735,7 +735,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "ipc_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -750,7 +750,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "sync_unit_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -765,7 +765,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "unit_tests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -780,7 +780,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "skia_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -795,7 +795,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "sql_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -810,7 +810,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "ui_base_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -825,7 +825,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "content_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -840,7 +840,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "views_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -855,7 +855,7 @@ def Win8_Tests__1__steps(api):
       # runtest step
       api.python(
           "installer_util_unittests",
-          api.path["build"].join("scripts", "slave", "runtest.py"),
+          api.path["build"].join("scripts", "subordinate", "runtest.py"),
           args=
           ['--target', 'Release', "--build-properties=%s" %
            api.json.dumps(build_properties,
@@ -869,7 +869,7 @@ def Win8_Tests__1__steps(api):
            'installer_util_unittests.exe', '--gtest_print_time'])
       # process dumps step
       api.python("process dumps",
-                 api.path["build"].join("scripts", "slave", "process_dumps.py"),
+                 api.path["build"].join("scripts", "subordinate", "process_dumps.py"),
                  args=["--target", "Release"])
 
 
@@ -890,26 +890,26 @@ def RunSteps(api):
 
 def GenTests(api):
   yield (api.test('Win8_Tests__2_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Win8 Tests (2)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Chromium_Builder') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Chromium Builder') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.step_data('zip build', api.json.output({'storage_url': 'abc',
       'zip_url': 'abc'})) +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Chromium_Builder_clobber') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Chromium Builder') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
@@ -917,28 +917,28 @@ def GenTests(api):
     api.properties(clobber='') +
     api.step_data('zip build', api.json.output({'storage_url': 'abc',
       'zip_url': 'abc'})) +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Chromium_Win_MiniInstaller_Tests') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Chromium Win MiniInstaller Tests') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('Win8_Tests__1_') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='Win8 Tests (1)') +
     api.properties(revision='123456789abcdef') +
     api.properties(got_revision='123456789abcdef') +
     api.properties(buildnumber='42') +
     api.properties(parent_build_archive_url='abc') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )
   yield (api.test('builder_not_in_dispatch_directory') +
-    api.properties(mastername='chromium.fyi') +
+    api.properties(mainname='chromium.fyi') +
     api.properties(buildername='nonexistent_builder') +
-    api.properties(slavename='TestSlave')
+    api.properties(subordinatename='TestSubordinate')
         )

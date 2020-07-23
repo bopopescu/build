@@ -16,10 +16,10 @@
 from buildbot.util import safeTranslate
 
 
-class MasterConfig(object):
+class MainConfig(object):
     """
-    Namespace for master configuration values.  An instance of this class is
-    available at C{master.config}.
+    Namespace for main configuration values.  An instance of this class is
+    available at C{main.config}.
 
     @ivar changeHorizon: the current change horizon
     @ivar validation: regexes for preventing invalid inputs
@@ -32,21 +32,21 @@ class BuilderConfig:
 
     Used in config files to specify a builder - this can be subclassed by users
     to add extra config args, set defaults, or whatever.  It is converted to a
-    dictionary for consumption by the buildmaster at config time.
+    dictionary for consumption by the buildmain at config time.
 
     """
 
     def __init__(self,
                 name=None,
-                slavename=None,
-                slavenames=None,
+                subordinatename=None,
+                subordinatenames=None,
                 builddir=None,
-                slavebuilddir=None,
+                subordinatebuilddir=None,
                 factory=None,
                 category=None,
-                nextSlave=None,
+                nextSubordinate=None,
                 nextBuild=None,
-                nextSlaveAndBuild=None,
+                nextSubordinateAndBuild=None,
                 locks=None,
                 env=None,
                 properties=None,
@@ -65,39 +65,39 @@ class BuilderConfig:
             raise ValueError("builder's factory is required")
         self.factory = factory
 
-        # slavenames can be a single slave name or a list, and should also
-        # include slavename, if given
-        if type(slavenames) is str:
-            slavenames = [ slavenames ]
-        if slavenames:
-            if type(slavenames) is not list:
-                raise TypeError("slavenames must be a list or a string")
+        # subordinatenames can be a single subordinate name or a list, and should also
+        # include subordinatename, if given
+        if type(subordinatenames) is str:
+            subordinatenames = [ subordinatenames ]
+        if subordinatenames:
+            if type(subordinatenames) is not list:
+                raise TypeError("subordinatenames must be a list or a string")
         else:
-            slavenames = []
-        if slavename:
-            if type(slavename) != str:
-                raise TypeError("slavename must be a string")
-            slavenames = slavenames + [ slavename ]
-        if not slavenames:
-            raise ValueError("at least one slavename is required")
-        self.slavenames = slavenames
+            subordinatenames = []
+        if subordinatename:
+            if type(subordinatename) != str:
+                raise TypeError("subordinatename must be a string")
+            subordinatenames = subordinatenames + [ subordinatename ]
+        if not subordinatenames:
+            raise ValueError("at least one subordinatename is required")
+        self.subordinatenames = subordinatenames
 
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
         self.builddir = builddir
 
-        # slavebuilddir defaults to builddir
-        if slavebuilddir is None:
-            slavebuilddir = builddir
-        self.slavebuilddir = slavebuilddir
+        # subordinatebuilddir defaults to builddir
+        if subordinatebuilddir is None:
+            subordinatebuilddir = builddir
+        self.subordinatebuilddir = subordinatebuilddir
 
         # remainder are optional
         assert category is None or isinstance(category, str)
         self.category = category
-        self.nextSlave = nextSlave
+        self.nextSubordinate = nextSubordinate
         self.nextBuild = nextBuild
-        self.nextSlaveAndBuild = nextSlaveAndBuild
+        self.nextSubordinateAndBuild = nextSubordinateAndBuild
         self.locks = locks
         self.env = env
         self.properties = properties
@@ -106,19 +106,19 @@ class BuilderConfig:
     def getConfigDict(self):
         rv = {
             'name': self.name,
-            'slavenames': self.slavenames,
+            'subordinatenames': self.subordinatenames,
             'factory': self.factory,
             'builddir': self.builddir,
-            'slavebuilddir': self.slavebuilddir,
+            'subordinatebuilddir': self.subordinatebuilddir,
         }
         if self.category:
             rv['category'] = self.category
-        if self.nextSlave:
-            rv['nextSlave'] = self.nextSlave
+        if self.nextSubordinate:
+            rv['nextSubordinate'] = self.nextSubordinate
         if self.nextBuild:
             rv['nextBuild'] = self.nextBuild
-        if self.nextSlaveAndBuild:
-            rv['nextSlaveAndBuild'] = self.nextSlaveAndBuild
+        if self.nextSubordinateAndBuild:
+            rv['nextSubordinateAndBuild'] = self.nextSubordinateAndBuild
         if self.locks:
             rv['locks'] = self.locks
         if self.env:

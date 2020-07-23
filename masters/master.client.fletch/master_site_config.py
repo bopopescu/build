@@ -2,17 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Dartino(Master.Master3):
+class Dartino(Main.Main3):
   base_app_url = 'https://dart-status.appspot.com'
   tree_status_url = base_app_url + '/status'
   store_revisions_url = base_app_url + '/revisions'
   project_name = 'Dart'
-  master_port = 20316
-  slave_port = 30316
+  main_port = 20316
+  subordinate_port = 30316
   # Enable when there's a public waterfall.
-  master_port_alt = 25316
+  main_port_alt = 25316
   buildbot_url = 'http://build.chromium.org/p/client.fletch/'

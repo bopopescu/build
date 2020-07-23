@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Pdfium(Master.Master3):
+class Pdfium(Main.Main3):
   project_name = 'Pdfium'
-  master_port = 20310
-  slave_port = 30310
-  master_port_alt = 25310
+  main_port = 20310
+  subordinate_port = 30310
+  main_port_alt = 25310
   buildbot_url = 'https://build.chromium.org/p/client.pdfium/'
   buildbucket_bucket = None
   service_account_file = None

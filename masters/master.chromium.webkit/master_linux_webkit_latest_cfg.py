@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-from master import master_config
-from master.factory import annotator_factory
+from main import main_config
+from main.factory import annotator_factory
 
-import master_site_config
+import main_site_config
 
-ActiveMaster = master_site_config.ChromiumWebkit
+ActiveMain = main_site_config.ChromiumWebkit
 
 defaults = {}
 
-helper = master_config.Helper(defaults)
+helper = main_config.Helper(defaults)
 B = helper.Builder
 F = helper.Factory
 T = helper.Triggerable
@@ -63,5 +63,5 @@ B('WebKit Linux (dbg)', 'f_webkit_dbg_tests', scheduler='global_scheduler',
 F('f_webkit_dbg_tests', m_annotator.BaseFactory('chromium'))
 
 
-def Update(_config, _active_master, c):
+def Update(_config, _active_main, c):
   return helper.Update(c)

@@ -83,12 +83,12 @@ class MemStorage(object):
   """An in-memory storage, used for testing."""
   # TODO(pgervais) This class should be dropped while refactoring for better
   # testability.
-  def __init__(self, master_name):
-    self._master_name = master_name
+  def __init__(self, main_name):
+    self._main_name = main_name
     self._refs = set()
 
   def _get_ref(self, builder_name, build_num=None, log_file=''):
-    return ('%s/%s/%.7d/%s' % (self._master_name,
+    return ('%s/%s/%.7d/%s' % (self._main_name,
                                builder_name,
                                build_num or -1,
                                log_file))
@@ -130,10 +130,10 @@ class GCStorage(object):
   """Google Cloud Storage backend.
 
   This is specific to buildbot. As such, it understands the notion of
-  master, builder, build num and log file name.
+  main, builder, build num and log file name.
 
   What is called a reference in the following is the tuple
-  (master_name, builder_name, build_num, log_file), with master_name being
+  (main_name, builder_name, build_num, log_file), with main_name being
   implicit, and log_file optional. So (builder_name, build_num) is also a
   reference.
   """
@@ -144,11 +144,11 @@ class GCStorage(object):
   LOG_PREFIX = 'logs'
   re_number = re.compile('[0-9]+$')
 
-  def __init__(self, master_name, bucket, chunk_size=CHUNK_SIZE, dry_run=False):
-    if master_name.startswith('master.'):
-      self._master_name = master_name[7:]
+  def __init__(self, main_name, bucket, chunk_size=CHUNK_SIZE, dry_run=False):
+    if main_name.startswith('main.'):
+      self._main_name = main_name[7:]
     else:
-      self._master_name = master_name
+      self._main_name = main_name
 
     self._bucket = bucket.rstrip('/')
     # chunk to use when uncompressing files.
@@ -161,7 +161,7 @@ class GCStorage(object):
 
   def _get_ref(self, builder_name, build_num=None, log_file=None,
                prefix=LOG_PREFIX):
-    ref = '/'.join((prefix, self._master_name, builder_name))
+    ref = '/'.join((prefix, self._main_name, builder_name))
     if build_num is not None:  # can be zero
       ref += '/%.7d' % build_num
     if log_file is not None:
@@ -365,40 +365,40 @@ class GCStorage(object):
     return partial_uploads
 
 
-def get_master_directory(master_name):
-  """Given a master name, returns the full path to the corresponding directory.
+def get_main_directory(main_name):
+  """Given a main name, returns the full path to the corresponding directory.
 
   This function either returns a path to an existing directory, or None.
   """
-  if master_name.startswith('master.'):
-    master_name = master_name[7:]
+  if main_name.startswith('main.'):
+    main_name = main_name[7:]
 
-  # Look for the master directory
+  # Look for the main directory
   for build_name in ('build', 'build_internal'):
-    master_path = os.path.join(ROOT_DIR,
+    main_path = os.path.join(ROOT_DIR,
                                build_name,
-                               'masters',
-                               'master.' + master_name)
+                               'mains',
+                               'main.' + main_name)
 
-    if os.path.isdir(master_path):
-      return master_path
+    if os.path.isdir(main_path):
+      return main_path
   return None
 
 
 class Waterfall(object):
-  def __init__(self, master_name, url=None):
+  def __init__(self, main_name, url=None):
     logger.debug('Instantiating Waterfall object')
 
-    if master_name.startswith('master.'):
-      master_name = master_name[7:]
-    self._master_name = master_name
-    self._master_path = get_master_directory(self._master_name)
+    if main_name.startswith('main.'):
+      main_name = main_name[7:]
+    self._main_name = main_name
+    self._main_path = get_main_directory(self._main_name)
 
-    if not self._master_path:
-      logger.error('Cannot find master directory for %s', self._master_name)
-      raise ValueError('Cannot find master directory')
+    if not self._main_path:
+      logger.error('Cannot find main directory for %s', self._main_name)
+      raise ValueError('Cannot find main directory')
 
-    logger.info('Found master directory: %s', self._master_path)
+    logger.info('Found main directory: %s', self._main_path)
 
     # Compute URL
     self._url = None
@@ -407,37 +407,37 @@ class Waterfall(object):
       parsed_url = urlparse.urlparse(self._url)
       if parsed_url.scheme not in ('http', 'https'):
         raise ValueError('url should use an http(s) protocol')
-    else:  # url not provided, relying on master_site_config.py
-      master_site_config_path = os.path.join(self._master_path,
-                                             'master_site_config.py')
+    else:  # url not provided, relying on main_site_config.py
+      main_site_config_path = os.path.join(self._main_path,
+                                             'main_site_config.py')
 
-      if not os.path.isfile(master_site_config_path):
-        logger.error('No master_site_config.py file found: %s',
-                     master_site_config_path)
-        raise OSError('%s not found', master_site_config_path)
+      if not os.path.isfile(main_site_config_path):
+        logger.error('No main_site_config.py file found: %s',
+                     main_site_config_path)
+        raise OSError('%s not found', main_site_config_path)
 
       local_vars = {}
       try:
-        execfile(master_site_config_path, local_vars)
+        execfile(main_site_config_path, local_vars)
       # pylint: disable=W0703
       except Exception:
         # Naked exceptions are banned by the style guide but we are
         # trying to be resilient here.
         logger.error('Failure during execution of %s',
-                     master_site_config_path)
+                     main_site_config_path)
         raise
       for _, symbol in local_vars.iteritems():
         if inspect.isclass(symbol):
-          if not hasattr(symbol, 'master_port'):
+          if not hasattr(symbol, 'main_port'):
             continue
-          self._master_port = symbol.master_port
-          self._url = 'http://localhost:%d' % self._master_port
+          self._main_port = symbol.main_port
+          self._url = 'http://localhost:%d' % self._main_port
           logger.info('Using URL: %s', self._url)
           break
 
       if not self._url:
         logger.error('No URL could be determined, this can be caused by '
-                      'master_site_config.py not having the expected '
+                      'main_site_config.py not having the expected '
                       'structure.')
         raise OSError('No URL could be determined')
 
@@ -478,7 +478,7 @@ class Waterfall(object):
       # From buildbot, in  status/build.py:generateLogfileName
       basename = '%d-log-%s-%s' % (build_number, step_name, log_name)
       basename = re.sub(r'[^\w\.\-]', '_', basename)
-      filename = os.path.join(self._master_path, basedir, basename)
+      filename = os.path.join(self._main_path, basedir, basename)
       ref = (build_properties['builderName'],
              build_number,
              re.sub(r'[/\[\]*+?]', '_', step_name) + '.' + log_name)
@@ -504,11 +504,11 @@ def get_options():
                       help='Do not write anything.')
   parser.add_argument('--waterfall-url',
                       help='waterfall main URL. Usually http://localhost:XXXX')
-  parser.add_argument('--master-name', required=True,
-                      help='name of the master to query. e.g. "chromium"')
+  parser.add_argument('--main-name', required=True,
+                      help='name of the main to query. e.g. "chromium"')
   parser.add_argument('--builder-name',
                       help='name of the builder to query. e.g. "Linux"'
-                           'Must be under specified master. If unspecified, '
+                           'Must be under specified main. If unspecified, '
                            'all builders are considered.')
   parser.add_argument('--bucket', default=None,
                       help='name of the bucket to use to upload logs, '
@@ -594,24 +594,24 @@ def main():
     return 2
 
   options = get_options()
-  set_logging(options.verbose, get_master_directory(options.master_name))
+  set_logging(options.verbose, get_main_directory(options.main_name))
   logger.info('-- uploader starting --')
   os.nice(options.nice)
 
-  w = Waterfall(options.master_name, url=options.waterfall_url)
+  w = Waterfall(options.main_name, url=options.waterfall_url)
   builders = w.get_builder_properties()
 
   if options.bucket:
-    storage = GCStorage(options.master_name,
+    storage = GCStorage(options.main_name,
                         options.bucket,
                         dry_run=options.dry_run)
   else:
-    storage = MemStorage(options.master_name)
+    storage = MemStorage(options.main_name)
 
   builder_names = builders.keys()
   if options.builder_name:
     if options.builder_name not in builder_names:
-      logger.error("Specified builder (%s) doesn't exist on master",
+      logger.error("Specified builder (%s) doesn't exist on main",
                    options.builder_name)
       return 1
     builder_names = [options.builder_name]

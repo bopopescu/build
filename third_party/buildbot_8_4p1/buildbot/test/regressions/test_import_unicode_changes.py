@@ -16,14 +16,14 @@
 from twisted.trial import unittest
 from buildbot.db.connector import DBConnector
 from buildbot.test.util import change_import
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemain
 
 class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
         def make_dbc(_):
-            master = fakemaster.make_master()
-            self.db = DBConnector(master, self.db_url, self.basedir)
+            main = fakemain.make_main()
+            self.db = DBConnector(main, self.db_url, self.basedir)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d

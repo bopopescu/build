@@ -6,8 +6,8 @@ from buildbot.changes import svnpoller
 
 from common import chromium_utils
 
-from master import build_utils
-from master import gitiles_poller
+from main import build_utils
+from main import gitiles_poller
 
 import config
 
@@ -31,7 +31,7 @@ class _ChromiumSvnPoller(svnpoller.SVNPoller):
                pollinterval=None, revlinktmpl=None,
                *args, **kwargs):
     if svnurl is None:
-      svnurl = config.Master.trunk_url
+      svnurl = config.Main.trunk_url
 
     if svnbin is None:
       svnbin = chromium_utils.SVN_BIN
@@ -66,11 +66,11 @@ def ChromiumSvnPoller(svnurl=None, *args, **kwargs):
   pollInterval = kwargs.pop('pollinterval', 10)
   project = kwargs.pop('project', None)
   if svnurl is None:
-    svnurl = config.Master.trunk_url
-  if svnurl == config.Master.trunk_url and not args and not kwargs:
+    svnurl = config.Main.trunk_url
+  if svnurl == config.Main.trunk_url and not args and not kwargs:
     poller_kwargs = {
-        'repo_url': config.Master.git_server_url + '/chromium/src',
-        'branches': ['master'],
+        'repo_url': config.Main.git_server_url + '/chromium/src',
+        'branches': ['main'],
         'revlinktmpl':
             'http://src.chromium.org/viewvc/chrome?view=rev&revision=%s',
         'pollInterval': pollInterval,

@@ -100,19 +100,19 @@ def GenTests(api):
           stdout=api.raw_io.output(''))
     return test_data
 
-  for mastername, slaves in TEST_BUILDERS.iteritems():
-    for slavename, builders_by_slave in slaves.iteritems():
-      for builder in builders_by_slave:
+  for mainname, subordinates in TEST_BUILDERS.iteritems():
+    for subordinatename, builders_by_subordinate in subordinates.iteritems():
+      for builder in builders_by_subordinate:
         test = (
           api.test(builder) +
           api.properties(buildername=builder,
-                         mastername=mastername,
-                         slavename=slavename,
+                         mainname=mainname,
+                         subordinatename=subordinatename,
                          buildnumber=5,
                          revision='abc123') +
           api.path.exists(
-              api.path['slave_build'].join('skia'),
-              api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+              api.path['subordinate_build'].join('skia'),
+              api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
           )
         )
         if 'Android' in builder:
@@ -136,7 +136,7 @@ def GenTests(api):
           test += api.platform('win', 64)
           if builder == 'Build-Win-MSVC-x86-Debug-VS2015':
             test += api.path.exists(
-                api.path['slave_build'].join('skia', 'infra', 'bots',
+                api.path['subordinate_build'].join('skia', 'infra', 'bots',
                                              'win_toolchain_hash.json'))
             test += api.step_data('Get downloaded WIN_TOOLCHAIN_HASH',
                                   retcode=1)
@@ -147,8 +147,8 @@ def GenTests(api):
   yield (
     api.test('failed_dm') +
     api.properties(buildername=builder,
-                   mastername='client.skia',
-                   slavename='skiabot-linux-tester-000',
+                   mainname='client.skia',
+                   subordinatename='skiabot-linux-tester-000',
                    buildnumber=6) +
     api.step_data('dm', retcode=1)
   )
@@ -156,21 +156,21 @@ def GenTests(api):
   yield (
     api.test('has_ccache_android') +
     api.properties(buildername='Build-Ubuntu-GCC-Arm7-Debug-Android',
-                   mastername='client.skia.compile',
-                   slavename='skiabot-linux-compile-000') +
+                   mainname='client.skia.compile',
+                   subordinatename='skiabot-linux-compile-000') +
     api.step_data(
                 'has ccache?',
                 stdout=api.json.output({'ccache':'/usr/bin/ccache'}))
   )
 
   builder = 'Test-Android-GCC-Nexus7-GPU-Tegra3-Arm7-Debug'
-  master = 'client.skia.android'
-  slave = 'skiabot-shuttle-ubuntu12-nexus7-001'
+  main = 'client.skia.android'
+  subordinate = 'skiabot-shuttle-ubuntu12-nexus7-001'
   yield (
     api.test('failed_get_hashes') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123') +
     api.step_data(
@@ -183,16 +183,16 @@ def GenTests(api):
                   stdout=api.raw_io.output('42')) +
     api.step_data('get uninteresting hashes', retcode=1) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   yield (
     api.test('download_and_push_skps') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123',
                    test_downloaded_skp_version='2') +
@@ -208,16 +208,16 @@ def GenTests(api):
         'exists skps',
         stdout=api.raw_io.output('')) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   yield (
     api.test('missing_SKP_VERSION_device') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123') +
     api.step_data(
@@ -232,16 +232,16 @@ def GenTests(api):
         'exists skps',
         stdout=api.raw_io.output('')) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   yield (
     api.test('download_and_push_skimage') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123',
                    test_downloaded_sk_image_version='2') +
@@ -257,16 +257,16 @@ def GenTests(api):
         'exists skia_images',
         stdout=api.raw_io.output('')) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   yield (
     api.test('missing_SK_IMAGE_VERSION_device') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123') +
     api.step_data(
@@ -281,38 +281,38 @@ def GenTests(api):
         'exists skia_images',
         stdout=api.raw_io.output('')) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   builder = 'Test-Ubuntu-GCC-GCE-CPU-AVX2-x86_64-Debug'
-  master = 'client.skia'
-  slave = 'skiabot-linux-test-000'
+  main = 'client.skia'
+  subordinate = 'skiabot-linux-test-000'
   yield (
     api.test('missing_SKP_VERSION_host') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123') +
     api.step_data('Get downloaded SKP_VERSION', retcode=1) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )
 
   yield (
     api.test('missing_SK_IMAGE_VERSION_host') +
     api.properties(buildername=builder,
-                   mastername=master,
-                   slavename=slave,
+                   mainname=main,
+                   subordinatename=subordinate,
                    buildnumber=6,
                    revision='abc123') +
     api.step_data('Get downloaded SK_IMAGE_VERSION', retcode=1) +
     api.path.exists(
-        api.path['slave_build'].join('skia'),
-        api.path['slave_build'].join('tmp', 'uninteresting_hashes.txt')
+        api.path['subordinate_build'].join('skia'),
+        api.path['subordinate_build'].join('tmp', 'uninteresting_hashes.txt')
     )
   )

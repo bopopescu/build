@@ -59,7 +59,7 @@ class MaildirService(service.MultiService):
     def setBasedir(self, basedir):
         # some users of MaildirService (scheduler.Try_Jobdir, in particular)
         # don't know their basedir until setServiceParent, since it is
-        # relative to the buildmaster's basedir. So let them set it late. We
+        # relative to the buildmain's basedir. So let them set it late. We
         # don't actually need it until our own startService.
         self.basedir = basedir
         self.newdir = os.path.join(self.basedir, "new")
@@ -147,7 +147,7 @@ class MaildirService(service.MultiService):
         elif runtime.platformType == "win32":
             # do this backwards under windows, because you can't move a file
             # that somebody is holding open. This was causing a Permission
-            # Denied error on bear's win32-twisted1.3 buildslave.
+            # Denied error on bear's win32-twisted1.3 buildsubordinate.
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)

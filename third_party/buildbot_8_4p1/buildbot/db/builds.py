@@ -24,7 +24,7 @@ from buildbot.util import epoch2datetime
 class BuildsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle a little bit of information about builds.
-    Avaialble at C{master.db.buildrequests}.
+    Avaialble at C{main.db.buildrequests}.
 
     NOTE: The interface for this module will change - the builds table
     duplicates some information available in pickles, without including all
@@ -35,7 +35,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     Builds are represented as dictionaries with keys C{bid} (the build ID,
     globally unique), C{number} (the build number, unique only within this
-    master and builder), C{brid} (the ID of the build request that caused this
+    main and builder), C{brid} (the ID of the build request that caused this
     build), C{start_time}, and C{finish_time} (datetime objects, or None).
     """
 

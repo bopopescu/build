@@ -23,7 +23,7 @@ BASIC_CONFIG = {
     'repeat_count': '2',
     'max_time_minutes': '5',
     'gs_bucket': 'chrome-perf',
-    'builder_host': 'master4.golo.chromium.org',
+    'builder_host': 'main4.golo.chromium.org',
     'builder_port': '8341',
     'dummy_builds': 'True',
     'dummy_job_names': 'True',
@@ -90,12 +90,12 @@ def set_attributes(target, attributes):
 
 def add_revision_mapping(api, test, pos, sha):
   step_name = ('Resolving reference range.crrev get commit hash for ' +
-               'refs/heads/master@{#%s}' % pos)
+               'refs/heads/main@{#%s}' % pos)
   stdout = api.json.output({'git_sha': sha})
   test += api.step_data(step_name, stdout=stdout)
 
   step_name = 'Resolving reference range.resolving hash ' + sha
-  pos = 'refs/heads/master@{#%s}' % pos
+  pos = 'refs/heads/main@{#%s}' % pos
   stdout = api.raw_io.output(pos)
   return test
 

@@ -19,7 +19,7 @@ from api import BuildBotSystem
 class TracBuildBotWatcher(Component):
 	implements(ITimelineEventProvider, IRequestHandler, ITemplateProvider,
 		INavigationContributor)
-	buildbot_url = Option('bbwatcher', 'buildmaster', '127.0.0.1:8010',
+	buildbot_url = Option('bbwatcher', 'buildmain', '127.0.0.1:8010',
 		'The location of the BuildBot webserver. Do not include the /xmlrpc')
 
 	BUILDER_REGEX = r'/buildbot/builder(?:/(.+))?$'
@@ -44,12 +44,12 @@ class TracBuildBotWatcher(Component):
 		#if not 'bbwatcher' in filters:
 		#	return
 		try:
-			master = BuildBotSystem(self.buildbot_url)
+			main = BuildBotSystem(self.buildbot_url)
 		except Exception, e:
 			print 'Error hitting BuildBot', e
 			return
 		# This was a comprehension: the loop is clearer
-		for build in master.getAllBuildsInInterval(to_timestamp(start), to_timestamp(stop)):
+		for build in main.getAllBuildsInInterval(to_timestamp(start), to_timestamp(stop)):
 			# BuildBot builds are reported as
 			# (builder_name, num, end, branch, rev, results, text)
 			print 'Reporting build', build
@@ -72,9 +72,9 @@ class TracBuildBotWatcher(Component):
 			builder = m.group(1) or None
 		except Exception, e:
 			builder = None
-		master = BuildBotSystem(self.buildbot_url)
+		main = BuildBotSystem(self.buildbot_url)
 		if builder is None:
-			data = { 'names': master.getAllBuilders() }
+			data = { 'names': main.getAllBuilders() }
 			return 'bbw_allbuilders.html', data, 'text/html'
 		else:
 			class Foo:
@@ -83,11 +83,11 @@ class TracBuildBotWatcher(Component):
 			b.name = str(builder)
 			b.current = 'CURRENT-TEXT'
 			b.recent = []
-			b.slaves = []
+			b.subordinates = []
 			data = { 'builder': b }
 			try:
-				master = BuildBotSystem(self.buildbot_url)
-				data = { 'builder': master.getBuilder(builder) }
+				main = BuildBotSystem(self.buildbot_url)
+				data = { 'builder': main.getBuilder(builder) }
 			except Exception, e:
 				print 'Error fetching builder stats', e
 			data['context'] = Context.from_request(req, ('buildbot', builder))

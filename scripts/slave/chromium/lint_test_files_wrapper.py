@@ -10,8 +10,8 @@ import os
 import sys
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 
 def layout_test(options, args):
@@ -21,7 +21,7 @@ def layout_test(options, args):
     'third_party', 'WebKit', 'Tools', 'Scripts')
   lint_tests_script = os.path.join(blink_scripts_dir, 'lint-test-expectations')
 
-  return slave_utils.RunPythonCommandInBuildDir(build_dir, options.target,
+  return subordinate_utils.RunPythonCommandInBuildDir(build_dir, options.target,
                                                 [lint_tests_script])
 
 def main():

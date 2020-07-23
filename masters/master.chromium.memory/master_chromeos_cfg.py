@@ -5,15 +5,15 @@
 from buildbot.scheduler import Triggerable
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
-def Update(_config, active_master, c):
+def Update(_config, active_main, c):
   c['schedulers'].extend([
       SingleBranchScheduler(
           name='chromeos_asan_rel',
-          branch='master',
+          branch='main',
           treeStableTimer=60,
           builderNames=['Linux Chromium OS ASan LSan Builder']),
       Triggerable(

@@ -29,7 +29,7 @@ class BsDict(dict):
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     """
     A DBConnectorComponent to handle getting buildsets into and out of the
-    database.  An instance is available at C{master.db.buildsets}.
+    database.  An instance is available at C{main.db.buildsets}.
     """
 
     def addBuildset(self, ssid, reason, properties, builderNames,

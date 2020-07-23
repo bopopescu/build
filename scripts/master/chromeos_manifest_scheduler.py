@@ -35,11 +35,11 @@ class FilterNewSpecProvider(object):
       repo: The repository to watch.
       builder (str/regex): The name of the cbuildbot config to watch.
       branch (str/regex): The branch that the specified builder is building on.
-          If None, use 'master'.
+          If None, use 'main'.
     """
     self._repo = repo
     self._builder = self._ToRegex(builder)
-    self._branch = self._ToRegex(branch or 'master')
+    self._branch = self._ToRegex(branch or 'main')
 
   @classmethod
   def _ToRegex(cls, value):
@@ -81,7 +81,7 @@ class _AddBuildIdMixin(object):
   BUILD_ID_RE = re.compile(r'CrOS-Build-Id: (.+)')
 
   @staticmethod
-  def _cleanMasterBuildId(value):
+  def _cleanMainBuildId(value):
     try:
       return int(value.strip())
     except ValueError, e:
@@ -89,25 +89,25 @@ class _AddBuildIdMixin(object):
     return None
 
   @classmethod
-  def _getMasterBuildId(cls, change):
+  def _getMainBuildId(cls, change):
     for line in change.get('comments', '').splitlines():
       match = cls.BUILD_ID_RE.match(line)
       if match:
-        return cls._cleanMasterBuildId(match.group(1))
+        return cls._cleanMainBuildId(match.group(1))
     return None
 
   @defer.inlineCallbacks
   def _addBuildIdProperty(self, changeids, properties=None):
-    """Adds the 'master_build_id' property if specified in the change log."""
+    """Adds the 'main_build_id' property if specified in the change log."""
     if not properties:
       properties = Properties()
 
     if len(changeids) == 1:
-      change = yield self.master.db.changes.getChange(changeids[0])
+      change = yield self.main.db.changes.getChange(changeids[0])
 
-      master_build_id = self._getMasterBuildId(change)
-      if master_build_id:
-        properties.setProperty('master_build_id', master_build_id,
+      main_build_id = self._getMainBuildId(change)
+      if main_build_id:
+        properties.setProperty('main_build_id', main_build_id,
                                'Scheduler')
     defer.returnValue(properties)
 

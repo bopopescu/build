@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""This recipe module allows triggering builds within the same master.
+"""This recipe module allows triggering builds within the same main.
 
 See README.md.
 """
@@ -72,7 +72,7 @@ class TriggerApi(recipe_api.RecipeApi):
       Using BuildBucket:
         api.trigger({
             'builder_name': 'Release',
-            'bucket': 'master.tryserver.chromium.linux',
+            'bucket': 'main.tryserver.chromium.linux',
             'properties': {
                 'my_prop': 123,
             },
@@ -83,7 +83,7 @@ class TriggerApi(recipe_api.RecipeApi):
             'builder_name': 'Release',
             'buildbot_changes': [{
                 'author': 'someone@chromium.org',
-                'branch': 'master',
+                'branch': 'main',
                 'files': ['a.txt.'],
                 'comments': 'Refactoring',
                 'revision': 'deadbeef',

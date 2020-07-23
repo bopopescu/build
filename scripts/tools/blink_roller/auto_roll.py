@@ -262,7 +262,7 @@ class AutoRoller(object):
 
   def _current_revision(self):
     git_revparse_cmd = ['git', '--git-dir', self._project_git_dir,
-                        'rev-parse', 'origin/master']
+                        'rev-parse', 'origin/main']
     return subprocess2.check_output(git_revparse_cmd).rstrip()
 
   def _emails_to_cc_on_rolls(self):
@@ -274,10 +274,10 @@ class AutoRoller(object):
     subprocess2.check_call(['git', 'clean', '-d', '-f'], **cwd_kwargs)
     subprocess2.call(['git', 'rebase', '--abort'], **cwd_kwargs)
     subprocess2.call(['git', 'branch', '-D', roll_branch], **cwd_kwargs)
-    subprocess2.check_call(['git', 'checkout', 'origin/master', '-f'],
+    subprocess2.check_call(['git', 'checkout', 'origin/main', '-f'],
                            **cwd_kwargs)
     subprocess2.check_call(['git', 'checkout', '-b', roll_branch,
-                            '-t', 'origin/master', '-f'], **cwd_kwargs)
+                            '-t', 'origin/main', '-f'], **cwd_kwargs)
     try:
       subprocess2.check_call(['roll-dep-svn', self._path_to_project,
                               new_roll_revision], **cwd_kwargs)
@@ -313,7 +313,7 @@ class AutoRoller(object):
       upload_cmd.extend(['-m', commit_msg])
       subprocess2.check_call(upload_cmd, **cwd_kwargs)
     finally:
-      subprocess2.check_call(['git', 'checkout', 'origin/master', '-f'],
+      subprocess2.check_call(['git', 'checkout', 'origin/main', '-f'],
                              **cwd_kwargs)
       subprocess2.check_call(
           ['git', 'branch', '-D', roll_branch], **cwd_kwargs)

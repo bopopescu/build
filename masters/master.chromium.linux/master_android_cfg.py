@@ -4,14 +4,14 @@
 
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master import master_config
-from master.factory import annotator_factory
+from main import main_config
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
 defaults = {}
 
-helper = master_config.Helper(defaults)
+helper = main_config.Helper(defaults)
 B = helper.Builder
 F = helper.Factory
 S = helper.Scheduler
@@ -19,16 +19,16 @@ T = helper.Triggerable
 
 defaults['category'] = '5android'
 
-android_dbg_archive = master_config.GetGSUtilUrl(
+android_dbg_archive = main_config.GetGSUtilUrl(
     'chromium-android', 'android_main_dbg')
 
-android_rel_archive = master_config.GetGSUtilUrl(
+android_rel_archive = main_config.GetGSUtilUrl(
     'chromium-android', 'android_main_rel')
 
 #
 # Main release scheduler for src/
 #
-S('android', branch='master', treeStableTimer=60)
+S('android', branch='main', treeStableTimer=60)
 
 #
 # Triggerable scheduler for the builder
@@ -69,7 +69,7 @@ B('Android Clang Builder (dbg)', 'f_android_clang_dbg', 'android', 'android',
 F('f_android_clang_dbg',
   m_annotator.BaseFactory('chromium'))
 
-def Update(_config_arg, _active_master, c):
+def Update(_config_arg, _active_main, c):
   helper.Update(c)
 
   specs = [
@@ -80,7 +80,7 @@ def Update(_config_arg, _active_master, c):
 
   c['schedulers'].extend([
       SingleBranchScheduler(name='android_gn',
-                            branch='master',
+                            branch='main',
                             treeStableTimer=60,
                             builderNames=[s['name'] for s in specs]),
   ])

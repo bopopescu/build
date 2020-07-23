@@ -78,8 +78,8 @@ class Try_Jobdir(TryBase):
         self.watcher.setServiceParent(self)
 
     def startService(self):
-        # set the watcher's basedir now that we have a master
-        self.watcher.setBasedir(os.path.join(self.master.basedir, self.jobdir))
+        # set the watcher's basedir now that we have a main
+        self.watcher.setBasedir(os.path.join(self.main.basedir, self.jobdir))
         TryBase.startService(self)
 
     def parseJob(self, f):
@@ -157,7 +157,7 @@ class Try_Jobdir(TryBase):
             log.msg("incoming Try job did not specify any allowed builder names")
             return defer.succeed(None)
 
-        d = self.master.db.sourcestamps.addSourceStamp(
+        d = self.main.db.sourcestamps.addSourceStamp(
                 branch=parsed_job['branch'],
                 revision=parsed_job['baserev'],
                 patch_body=parsed_job['patch_body'],
@@ -184,7 +184,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     @defer.deferredGenerator
     def perspective_try(self, branch, revision, patch, repository, project,
                         builderNames, who='', properties={} ):
-        db = self.scheduler.master.db
+        db = self.scheduler.main.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
 
@@ -220,7 +220,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         yield wfd
         bsdict = wfd.getResult()
 
-        bss = BuildSetStatus(bsdict, self.scheduler.master.status)
+        bss = BuildSetStatus(bsdict, self.scheduler.main.status)
         from buildbot.status.client import makeRemote
         r = makeRemote(bss)
         yield r # return value
@@ -251,7 +251,7 @@ class Try_Userpass(TryBase):
         self.registrations = []
         for user, passwd in self.userpass:
             self.registrations.append(
-                    self.master.pbmanager.register(self.port, user, passwd, factory))
+                    self.main.pbmanager.register(self.port, user, passwd, factory))
 
     def stopService(self):
         d = defer.maybeDeferred(TryBase.stopService, self)

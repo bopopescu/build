@@ -16,12 +16,12 @@ from buildbot.steps import trigger
 from buildbot.steps.transfer import FileUpload
 
 import config
-from master import chromium_step
-from master.factory import commands
+from main import chromium_step
+from main.factory import commands
 
-from master.log_parser import archive_command
-from master.log_parser import retcode_command
-from master.log_parser import webkit_test_command
+from main.log_parser import archive_command
+from main.log_parser import retcode_command
+from main.log_parser import webkit_test_command
 
 
 class ChromiumCommands(commands.FactoryCommands):
@@ -35,11 +35,11 @@ class ChromiumCommands(commands.FactoryCommands):
 
     self._target_os = target_os
 
-    # Where the chromium slave scripts are.
+    # Where the chromium subordinate scripts are.
     self._chromium_script_dir = self.PathJoin(self._script_dir, 'chromium')
     self._private_script_dir = self.PathJoin(self._script_dir, '..', '..', '..',
                                              'build_internal', 'scripts',
-                                             'slave')
+                                             'subordinate')
     self._bb_dir = self.PathJoin('src', 'build', 'android', 'buildbot')
 
     # Create smaller name for the functions and vars to simplify the code below.
@@ -115,18 +115,18 @@ class ChromiumCommands(commands.FactoryCommands):
   # TODO(stip): not sure if this is relevant for new perf dashboard.
   def AddUploadPerfExpectations(self, factory_properties=None):
     """Adds a step to the factory to upload perf_expectations.json to the
-    master.
+    main.
     """
     perf_id = factory_properties.get('perf_id')
     if not perf_id:
       logging.error('Error: cannot upload perf expectations: perf_id is unset')
       return
-    slavesrc = 'src/tools/perf_expectations/perf_expectations.json'
-    masterdest = ('../../scripts/master/log_parser/perf_expectations/%s.json' %
+    subordinatesrc = 'src/tools/perf_expectations/perf_expectations.json'
+    maindest = ('../../scripts/main/log_parser/perf_expectations/%s.json' %
                   perf_id)
 
-    self._factory.addStep(FileUpload(slavesrc=slavesrc,
-                                     masterdest=masterdest))
+    self._factory.addStep(FileUpload(subordinatesrc=subordinatesrc,
+                                     maindest=maindest))
 
   def AddWindowsSyzyASanStep(self):
     """Adds a step to run syzyASan over the output directory."""
@@ -187,7 +187,7 @@ class ChromiumCommands(commands.FactoryCommands):
                           py_script=False, dashboard_url=None):
     """Return a runtest command suitable for most perf test steps."""
 
-    dashboard_url = dashboard_url or config.Master.dashboard_upload_url
+    dashboard_url = dashboard_url or config.Main.dashboard_upload_url
 
     tool_options = ['--annotate=' + log_type]
     tool_options.extend(tool_opts or [])
@@ -603,7 +603,7 @@ class ChromiumCommands(commands.FactoryCommands):
     args = args or []
     J = self.PathJoin
     if self._target_platform == 'win32':
-      py26 = J('src', 'third_party', 'python_26', 'python_slave.exe')
+      py26 = J('src', 'third_party', 'python_26', 'python_subordinate.exe')
       test_cmd = ['cmd', '/C'] + [py26, script] + args
     elif self._target_platform == 'darwin':
       test_cmd = ['python2.6', script] + args
@@ -911,7 +911,7 @@ class ChromiumCommands(commands.FactoryCommands):
                           command=cmd)
 
   def AddAnnotationStep(self, name, cmd, factory_properties=None, env=None,
-                        timeout=6000, maxTime=8*60*60, active_master=None):
+                        timeout=6000, maxTime=8*60*60, active_main=None):
     """Add an @@@BUILD_STEP step@@@ annotation script build command.
 
     This function allows the caller to specify the name of the
@@ -939,7 +939,7 @@ class ChromiumCommands(commands.FactoryCommands):
                           env=env,
                           maxTime=maxTime,
                           factory_properties=factory_properties,
-                          active_master=active_master)
+                          active_main=active_main)
 
   def AddMiniInstallerTestStep(self, factory_properties):
     cmd = [self._python, self._mini_installer_tests_tool,
@@ -1049,7 +1049,7 @@ class ChromiumCommands(commands.FactoryCommands):
 def _GetArchiveUrl(archive_type, builder_name='%(build_name)s'):
   # The default builder name is dynamically filled in by
   # ArchiveCommand.createSummary.
-  return '%s/%s/%s' % (config.Master.archive_url, archive_type, builder_name)
+  return '%s/%s/%s' % (config.Main.archive_url, archive_type, builder_name)
 
 
 def _GetSnapshotUrl(factory_properties=None, builder_name='%(build_name)s'):

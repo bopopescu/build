@@ -32,7 +32,7 @@ def main():
   parser = argparse.ArgumentParser(
       description='Run a REINDEX TABLE command on postgres.')
   parser.add_argument('directory',
-      help='location of the master to reindex.')
+      help='location of the main to reindex.')
   parser.add_argument('--dbconfig-filename', default='.dbconfig',
       help='name of the dbconfig, defaults to %(default)s.')
   parser.add_argument('--prod', action='store_true',

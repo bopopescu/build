@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class WebRTCTryServer(Master.Master4):
+class WebRTCTryServer(Main.Main4):
   project_name = 'WebRTC Try Server'
-  master_port = 8070
-  slave_port = 8170
-  master_port_alt = 8270
+  main_port = 8070
+  subordinate_port = 8170
+  main_port_alt = 8270
   try_job_port = 8370
   from_address = 'tryserver@webrtc.org'
   reply_to = 'chrome-troopers+tryserver@google.com'
@@ -22,4 +22,4 @@ class WebRTCTryServer(Master.Master4):
   code_review_site = 'https://codereview.webrtc.org'
   buildbot_url = 'http://build.chromium.org/p/tryserver.webrtc/'
   service_account_file = 'service-account-webrtc.json'
-  buildbucket_bucket = 'master.tryserver.webrtc'
+  buildbucket_bucket = 'main.tryserver.webrtc'

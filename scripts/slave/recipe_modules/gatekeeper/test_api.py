@@ -12,7 +12,7 @@ class GatekeeperTestApi(recipe_test_api.RecipeTestApi):
     return self.m.json.output({
       'blink': {
         'build-db': 'blink_build_db.json',
-        'masters': [
+        'mains': [
           'https://build.chromium.org/p/chromium.webkit',
         ],
         'filter-domain': 'google.com',

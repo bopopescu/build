@@ -74,7 +74,7 @@ class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
     like.
 
     Instead, this subclass looks for keys in a single file, given as an
-    argument. This file is typically kept in the buildmaster's basedir. The
+    argument. This file is typically kept in the buildmain's basedir. The
     file should have 'ssh-dss ....' lines in it, just like authorized_keys.
     """
 
@@ -97,8 +97,8 @@ class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
 
 class _BaseManhole(service.MultiService):
     """This provides remote access to a python interpreter (a read/exec/print
-    loop) embedded in the buildmaster via an internal SSH server. This allows
-    detailed inspection of the buildmaster state. It is of most use to
+    loop) embedded in the buildmain via an internal SSH server. This allows
+    detailed inspection of the buildmain state. It is of most use to
     buildbot developers. Connect to this by running an ssh client.
     """
 
@@ -139,10 +139,10 @@ class _BaseManhole(service.MultiService):
 
         def makeNamespace():
             # close over 'self' so we can get access to .parent later
-            master = self.parent
+            main = self.parent
             namespace = {
-                'master': master,
-                'status': master.getStatus(),
+                'main': main,
+                'status': main.getStatus(),
                 'show': show,
                 }
             return namespace
@@ -248,13 +248,13 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
         'tcp:12345:interface=127.0.0.1'. Bare integers are treated as a
         simple tcp port.
 
-        @param keyfile: the name of a file (relative to the buildmaster's
+        @param keyfile: the name of a file (relative to the buildmain's
                         basedir) that contains SSH public keys of authorized
                         users, one per line. This is the exact same format
                         as used by sshd in ~/.ssh/authorized_keys .
         """
 
-        # TODO: expanduser this, and make it relative to the buildmaster's
+        # TODO: expanduser this, and make it relative to the buildmain's
         # basedir
         self.keyfile = keyfile
         c = AuthorizedKeysChecker(keyfile)

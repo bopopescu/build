@@ -224,7 +224,7 @@ class LogFile:
         self.filename = logfilename
         fn = self.getFilename()
         if os.path.exists(fn):
-            # the buildmaster was probably stopped abruptly, before the
+            # the buildmain was probably stopped abruptly, before the
             # BuilderStatus could be saved, so BuilderStatus.nextBuildNumber
             # is out of date, and we're overlapping with earlier builds now.
             # Warn about it, but then overwrite the old pickle file

@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ChromiumGoma(Master.Master1):
+class ChromiumGoma(Main.Main1):
   project_name = 'ChromiumGoma'
-  master_port = 20104
-  slave_port = 30104
-  master_port_alt = 25104
+  main_port = 20104
+  subordinate_port = 30104
+  main_port_alt = 25104
   buildbot_url = 'https://build.chromium.org/p/chromium.goma/'
   buildbucket_bucket = None
   service_account_file = None

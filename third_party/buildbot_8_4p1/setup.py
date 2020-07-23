@@ -39,7 +39,7 @@ def include(d, e):
 
 class _SetupBuildCommand(Command):
     """
-    Master setup build command to subclass from.
+    Main setup build command to subclass from.
     """
 
     user_options = []
@@ -182,7 +182,7 @@ improve.
 """
 
 scripts = ["bin/buildbot"]
-# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+# sdist is usually run on a non-Windows platform, but the buildsubordinate.bat file
 # still needs to get packaged.
 if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildbot.bat")

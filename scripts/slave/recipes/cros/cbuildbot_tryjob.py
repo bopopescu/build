@@ -13,10 +13,10 @@ DEPS = [
   'recipe_engine/properties',
 ]
 
-# Map master name to 'chromite' configuration name.
+# Map main name to 'chromite' configuration name.
 _MASTER_CONFIG_MAP = {
     'chromiumos.tryserver': {
-      'master_config': 'chromiumos_tryserver',
+      'main_config': 'chromiumos_tryserver',
     },
 }
 
@@ -100,20 +100,20 @@ def RunSteps(api):
   # We have two checkout options: internal and external. By default we will
   # infer which to use based on the Chromite config. However, the pinned
   # Chromite config may not be up to date. If the value cannot be inferred, we
-  # will "quarantine" the build by running it in a separate "etc_master"
+  # will "quarantine" the build by running it in a separate "etc_main"
   # build root and instructing `cbuildbot` to clobber beforehand.
   #
   # TODO: As the configuration owner, Chromite should be the entity to make the
   # internal/external buildroot decision. A future iteration should add flags
-  # to Chromite to inform it of the internal/external build roots on the slave
+  # to Chromite to inform it of the internal/external build roots on the subordinate
   # and defer to it to decide which to use based on the config that it is
   # executing.
   if not api.chromite.c.cbb.builddir:
     if cbb_config:
       namebase = 'internal' if cbb_config.get('internal') else 'external'
-      api.chromite.c.cbb.builddir = '%s_master' % (namebase,)
+      api.chromite.c.cbb.builddir = '%s_main' % (namebase,)
     else:
-      api.chromite.c.cbb.builddir = 'etc_master'
+      api.chromite.c.cbb.builddir = 'etc_main'
       api.chromite.c.cbb.clobber = True
 
   # Run our 'cbuildbot'.
@@ -125,9 +125,9 @@ def GenTests(api):
   yield (
       api.test('external')
       + api.properties(
-          mastername='chromiumos.tryserver',
+          mainname='chromiumos.tryserver',
           buildername='full',
-          slavename='test',
+          subordinatename='test',
           repository='https://chromium.googlesource.com/chromiumos/tryjobs.git',
           revision=api.gitiles.make_hash('test'),
           cbb_config='x86-generic-full',
@@ -140,9 +140,9 @@ def GenTests(api):
   yield (
       api.test('internal')
       + api.properties(
-          mastername='chromiumos.tryserver',
+          mainname='chromiumos.tryserver',
           buildername='paladin',
-          slavename='test',
+          subordinatename='test',
           repository='https://chromium.googlesource.com/chromiumos/tryjobs.git',
           revision=api.gitiles.make_hash('test'),
           cbb_config='internal-paladin',
@@ -156,9 +156,9 @@ def GenTests(api):
   yield (
       api.test('basic_compressed')
       + api.properties(
-          mastername='chromiumos.tryserver',
+          mainname='chromiumos.tryserver',
           buildername='full',
-          slavename='test',
+          subordinatename='test',
           repository='https://chromium.googlesource.com/chromiumos/tryjobs.git',
           revision=api.gitiles.make_hash('test'),
           cbb_config='x86-generic-full',
@@ -173,9 +173,9 @@ def GenTests(api):
   yield (
       api.test('unknown_config')
       + api.properties(
-          mastername='chromiumos.tryserver',
+          mainname='chromiumos.tryserver',
           buildername='etc',
-          slavename='test',
+          subordinatename='test',
           repository='https://chromium.googlesource.com/chromiumos/tryjobs.git',
           revision=api.gitiles.make_hash('test'),
           cbb_config='xxx-fakeboard-fakebuild',

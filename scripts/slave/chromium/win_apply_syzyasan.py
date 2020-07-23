@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 
-from slave import build_directory
+from subordinate import build_directory
 
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))

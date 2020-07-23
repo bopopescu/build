@@ -19,9 +19,9 @@ from twisted.python import log
 from buildbot.util import bbcollections, deferredLocked
 
 class SchedulerManager(service.MultiService):
-    def __init__(self, master):
+    def __init__(self, main):
         service.MultiService.__init__(self)
-        self.master = master
+        self.main = main
         self.upstream_subscribers = bbcollections.defaultdict(list)
         self._updateLock = defer.DeferredLock()
 
@@ -80,9 +80,9 @@ class SchedulerManager(service.MultiService):
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
             class_name = new_class_names.get(class_name, class_name)
-            d = self.master.db.schedulers.getSchedulerId(sch.name, class_name)
+            d = self.main.db.schedulers.getSchedulerId(sch.name, class_name)
             d.addCallback(lambda schedulerid :
-                    sch._setUpScheduler(schedulerid, self.master, self))
+                    sch._setUpScheduler(schedulerid, self.main, self))
             d.addCallback(lambda _ :
                     sch.setServiceParent(self))
             return d

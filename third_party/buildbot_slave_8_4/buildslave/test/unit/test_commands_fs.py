@@ -17,8 +17,8 @@ import os
 
 from twisted.trial import unittest
 
-from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands import fs
+from buildsubordinate.test.util.command import CommandTestMixin
+from buildsubordinate.commands import fs
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 

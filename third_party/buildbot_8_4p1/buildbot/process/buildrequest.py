@@ -56,7 +56,7 @@ class BuildRequest(object):
 
     @ivar submittedAt: a timestamp (seconds since epoch) when this request was
     submitted to the Builder. This is used by the CVS step to compute a
-    checkout timestamp, as well as by the master to prioritize build requests
+    checkout timestamp, as well as by the main to prioritize build requests
     from oldest to newest.
 
     @ivar buildername: name of the requested builder
@@ -72,7 +72,7 @@ class BuildRequest(object):
     submittedAt = None
 
     @classmethod
-    def fromBrdict(cls, master, brdict):
+    def fromBrdict(cls, main, brdict):
         """
         Construct a new L{BuildRequest} from a dictionary as returned by
         L{BuildRequestsConnectorComponent.getBuildRequest}.
@@ -81,17 +81,17 @@ class BuildRequest(object):
         for the most up-to-date information, use the database connector
         methods.
 
-        @param master: current build master
+        @param main: current build main
         @param brdict: build request dictionary
 
         @returns: L{BuildRequest}, via Deferred
         """
-        cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['brid'], brdict=brdict, master=master)
+        cache = main.caches.get_cache("BuildRequests", cls._make_br)
+        return cache.get(brdict['brid'], brdict=brdict, main=main)
 
     @classmethod
     @defer.deferredGenerator
-    def _make_br(cls, brid, brdict, master):
+    def _make_br(cls, brid, brdict, main):
         buildrequest = cls()
         buildrequest.id = brid
         buildrequest.bsid = brdict['buildsetid']
@@ -99,11 +99,11 @@ class BuildRequest(object):
         buildrequest.priority = brdict['priority']
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
-        buildrequest.master = master
+        buildrequest.main = main
 
         # fetch the buildset to get the reason
         wfd = defer.waitForDeferred(
-            master.db.buildsets.getBuildset(brdict['buildsetid']))
+            main.db.buildsets.getBuildset(brdict['buildsetid']))
         yield wfd
         buildset = wfd.getResult()
         assert buildset # schema should guarantee this
@@ -111,7 +111,7 @@ class BuildRequest(object):
 
         # fetch the buildset properties, and convert to Properties
         wfd = defer.waitForDeferred(
-            master.db.buildsets.getBuildsetProperties(brdict['buildsetid']))
+            main.db.buildsets.getBuildsetProperties(brdict['buildsetid']))
         yield wfd
         buildset_properties = wfd.getResult()
 
@@ -122,14 +122,14 @@ class BuildRequest(object):
 
         # fetch the sourcestamp dictionary
         wfd = defer.waitForDeferred(
-            master.db.sourcestamps.getSourceStamp(buildset['sourcestampid']))
+            main.db.sourcestamps.getSourceStamp(buildset['sourcestampid']))
         yield wfd
         ssdict = wfd.getResult()
         assert ssdict # db schema should enforce this anyway
 
         # and turn it into a SourceStamp
         wfd = defer.waitForDeferred(
-            sourcestamp.SourceStamp.fromSsdict(master, ssdict))
+            sourcestamp.SourceStamp.fromSsdict(main, ssdict))
         yield wfd
         buildrequest.source = wfd.getResult()
 
@@ -158,7 +158,7 @@ class BuildRequest(object):
         # cancel the build anyway
         try:
             wfd = defer.waitForDeferred(
-                self.master.db.buildrequests.claimBuildRequests([self.id]))
+                self.main.db.buildrequests.claimBuildRequests([self.id]))
             yield wfd
             wfd.getResult()
         except buildrequests.AlreadyClaimedError:
@@ -169,14 +169,14 @@ class BuildRequest(object):
         # cancelling a request without running into trouble with dangling
         # references.
         wfd = defer.waitForDeferred(
-            self.master.db.buildrequests.completeBuildRequests([self.id],
+            self.main.db.buildrequests.completeBuildRequests([self.id],
                                                                 FAILURE))
         yield wfd
         wfd.getResult()
 
-        # and let the master know that the enclosing buildset may be complete
+        # and let the main know that the enclosing buildset may be complete
         wfd = defer.waitForDeferred(
-                self.master.maybeBuildsetComplete(self.bsid))
+                self.main.maybeBuildsetComplete(self.bsid))
         yield wfd
         wfd.getResult()
 

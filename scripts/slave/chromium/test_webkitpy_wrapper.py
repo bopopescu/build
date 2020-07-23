@@ -10,8 +10,8 @@ import os
 import sys
 
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
                                                'third_party', 'WebKit',
                                                'Tools', 'Scripts')
   command = [os.path.join(webkit_tests_dir, 'test-webkitpy')]
-  return slave_utils.RunPythonCommandInBuildDir(build_dir, options.target,
+  return subordinate_utils.RunPythonCommandInBuildDir(build_dir, options.target,
                                                 command)
 
 if '__main__' == __name__:

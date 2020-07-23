@@ -42,7 +42,7 @@ class CIPDApi(recipe_api.RecipeApi):
         script=self.resource('bootstrap.py'),
         args=[
           '--platform', self.platform_suffix(),
-          '--dest-directory', self.m.path['slave_build'].join('cipd'),
+          '--dest-directory', self.m.path['subordinate_build'].join('cipd'),
           '--json-output', self.m.json.output(),
         ] +
         (['--version', version] if version else []),
@@ -113,7 +113,7 @@ class CIPDApi(recipe_api.RecipeApi):
     package_list = ['%s %s' % (name, version)
                     for name, version in sorted(packages.items())]
     list_data = self.m.raw_io.input('\n'.join(package_list))
-    bin_path = self.m.path['slave_build'].join('cipd')
+    bin_path = self.m.path['subordinate_build'].join('cipd')
     cmd = [
       self._cipd_executable,
       'ensure',

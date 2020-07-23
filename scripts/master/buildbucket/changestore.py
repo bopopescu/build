@@ -4,7 +4,7 @@
 
 """ChangeStore maps buildbucket changes to Buildbot changes."""
 
-from master.buildbucket import common
+from main.buildbucket import common
 from twisted.internet import defer
 
 

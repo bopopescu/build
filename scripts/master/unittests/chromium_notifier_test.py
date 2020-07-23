@@ -12,7 +12,7 @@ import test_env  # pylint: disable=W0611,W0403
 from buildbot.status.builder import FAILURE
 import mock
 
-from master import chromium_notifier
+from main import chromium_notifier
 
 
 class ChromiumNotifierTest(unittest.TestCase):

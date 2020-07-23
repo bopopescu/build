@@ -105,7 +105,7 @@ class MainFuncTest(auto_stub.TestCase):
       spawn_device_monitor.main([
           '/some/adb/path',
           '["device_serial_1", "device_serial_2"]',
-          'some_master_name',
+          'some_main_name',
           'some_builder_name'])
     except SimulatedSigterm:
       pass
@@ -116,27 +116,27 @@ class MainFuncTest(auto_stub.TestCase):
         '--ts-mon-device-role',
         'temperature_monitor',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/cpu/temperature", '
         '"value": 12, "device_id": "device_serial_1"}',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/battery/temperature", '
         '"value": 456, "device_id": "device_serial_1"}',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/battery/charge", '
         '"value": 96, "device_id": "device_serial_1"}',
         '--float',
         '{"builder": "some_builder_name", '
-        '"master": "some_master_name", "name": "dev/cpu/temperature", '
+        '"main": "some_main_name", "name": "dev/cpu/temperature", '
         '"value": 56, "device_id": "device_serial_2"}',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/battery/temperature", '
         '"value": 987, "device_id": "device_serial_2"}',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/battery/charge", '
         '"value": 11, "device_id": "device_serial_2"}',
     ]
@@ -166,7 +166,7 @@ class MainFuncTest(auto_stub.TestCase):
       spawn_device_monitor.main([
           '/some/adb/path',
           '["device_serial_1"]',
-          'some_master_name',
+          'some_main_name',
           'some_builder_name'])
     except SimulatedSigterm:
       pass
@@ -225,7 +225,7 @@ class MainFuncTest(auto_stub.TestCase):
       spawn_device_monitor.main([
           '/some/adb/path',
           '["device_serial_1"]',
-          'some_master_name',
+          'some_main_name',
           'some_builder_name'])
     except SimulatedSigterm:
       pass
@@ -236,7 +236,7 @@ class MainFuncTest(auto_stub.TestCase):
         '--ts-mon-device-role',
         'temperature_monitor',
         '--float',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/cpu/temperature", '
         '"value": 12, "device_id": "device_serial_1"}'
     ]
@@ -273,7 +273,7 @@ class MainFuncTest(auto_stub.TestCase):
           spawn_device_monitor.main([
               '/some/adb/path',
               '["good_serial1", "bad_serial1"]',
-              'some_master_name',
+              'some_main_name',
               'some_builder_name',
               '--blacklist-file',
               '/some/blacklist/file/path'])
@@ -285,15 +285,15 @@ class MainFuncTest(auto_stub.TestCase):
         '--ts-mon-device-role',
         'temperature_monitor',
         '--string',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/status", '
         '"value": "good", "device_id": "good_serial1"}',
         '--string',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/status", '
         '"value": "oom", "device_id": "bad_serial1"}',
         '--string',
-        '{"builder": "some_builder_name", "master": "some_master_name", '
+        '{"builder": "some_builder_name", "main": "some_main_name", '
         '"name": "dev/status", '
         '"value": "no_juice", "device_id": "bad_serial2"}',
     ]

@@ -15,7 +15,7 @@ Usage:
     (...)
 
   from printable import AutoString as A
-  print A(master)
+  print A(main)
 """
 
 # Hack to quickly display 'set'.

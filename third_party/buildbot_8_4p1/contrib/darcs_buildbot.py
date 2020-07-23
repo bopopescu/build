@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-# This is a script which delivers Change events from Darcs to the buildmaster
+# This is a script which delivers Change events from Darcs to the buildmain
 # each time a patch is pushed into a repository. Add it to the 'apply' hook
 # on your canonical "central" repository, by putting something like the
 # following in the _darcs/prefs/defaults file of that repository:
@@ -68,7 +68,7 @@ def makeChange(p):
 
     change = {
         # note: this is more likely to be a full email address, which would
-        # make the left-hand "Changes" column kind of wide. The buildmaster
+        # make the left-hand "Changes" column kind of wide. The buildmain
         # should probably be improved to display an abbreviation of the
         # username.
         'username': author,
@@ -135,9 +135,9 @@ def findNewChanges():
         lookback = 2*lookback
 
 
-def sendChanges(master):
+def sendChanges(main):
     changes = findNewChanges()
-    s = sendchange.Sender(master)
+    s = sendchange.Sender(main)
 
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
@@ -146,9 +146,9 @@ def sendChanges(master):
         print "darcs_buildbot.py: weird, no changes to send"
         return
     elif len(changes) == 1:
-        print "sending 1 change to buildmaster:"
+        print "sending 1 change to buildmain:"
     else:
-        print "sending %d changes to buildmaster:" % len(changes)
+        print "sending %d changes to buildmain:" % len(changes)
 
     # the Darcs Source class expects revision to be a context, not a
     # hash of a patch (which is what we have in c['revision']).  For

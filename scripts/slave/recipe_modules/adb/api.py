@@ -23,7 +23,7 @@ class AdbApi(recipe_api.RecipeApi):
   def adb_path(self):
     if self._custom_adb_path:
       return self._custom_adb_path
-    return self.m.path['slave_build'].join(
+    return self.m.path['subordinate_build'].join(
         'src', 'third_party', 'android_tools', 'sdk', 'platform-tools', 'adb')
 
   def adb_dir(self):

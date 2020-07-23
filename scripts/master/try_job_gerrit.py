@@ -16,7 +16,7 @@ from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import Results
 
 from common.gerrit_agent import GerritAgent
-from master.gerrit_poller import GerritPoller
+from main.gerrit_poller import GerritPoller
 
 
 class JobDefinition(object):
@@ -126,7 +126,7 @@ class TryJobGerritScheduler(BaseScheduler):
 
   def setServiceParent(self, parent):
     BaseScheduler.setServiceParent(self, parent)
-    self.poller.master = self.master
+    self.poller.main = self.main
     self.poller.setServiceParent(self)
 
   def gotChange(self, *args, **kwargs):

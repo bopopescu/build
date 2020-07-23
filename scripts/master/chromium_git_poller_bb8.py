@@ -55,17 +55,17 @@ class ChromiumGitPoller(gitpoller.GitPoller):
   track of the commit order of git tags."""
 
   def __init__(self, *args, **kwargs):
-    """Do not use /tmp as the default work dir, use the master checkout
+    """Do not use /tmp as the default work dir, use the main checkout
     directory.
     """
     # In 'dry_run' mode poller won't fetch the repository.
-    # Used when running master smoke tests.
+    # Used when running main smoke tests.
     if 'dry_run' in kwargs:
       self.dry_run = kwargs.pop('dry_run')
     else:
       self.dry_run = 'POLLER_DRY_RUN' in os.environ
     if not kwargs.get('workdir'):
-      # Make it non-absolute so it's set relative to the master's directory.
+      # Make it non-absolute so it's set relative to the main's directory.
       kwargs['workdir'] = 'git_poller_%s' % os.path.basename(kwargs['repourl'])
     gitpoller.GitPoller.__init__(self, *args, **kwargs)
     self.comparator = GitTagComparator()

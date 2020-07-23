@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Gatekeeper(Master.Master1):
+class Gatekeeper(Main.Main1):
   project_name = 'Chromium Gatekeeper'
-  master_port = 8008
-  slave_port = 8108
-  master_port_alt = 8208
+  main_port = 8008
+  subordinate_port = 8108
+  main_port_alt = 8208
   buildbot_url = 'http://build.chromium.org/p/chromium.gatekeeper/'

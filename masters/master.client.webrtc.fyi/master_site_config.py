@@ -2,18 +2,18 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class WebRTCFYI(Master.Master3):
+class WebRTCFYI(Main.Main3):
   project_name = 'WebRTC FYI'
-  master_port = 8072
-  slave_port = 8172
-  master_port_alt = 8272
+  main_port = 8072
+  subordinate_port = 8172
+  main_port_alt = 8272
   server_url = 'http://webrtc.googlecode.com'
   project_url = 'http://webrtc.googlecode.com'
   from_address = 'webrtc-cb-fyi-watchlist@google.com'
   buildbot_url = 'http://build.chromium.org/p/client.webrtc.fyi/'
   service_account_file = 'service-account-webrtc.json'
-  buildbucket_bucket = 'master.client.webrtc.fyi'
+  buildbucket_bucket = 'main.client.webrtc.fyi'

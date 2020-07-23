@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-# compatibility wrapper. This is currently the preferred place for master.cfg
+# compatibility wrapper. This is currently the preferred place for main.cfg
 # to import from.
 
 from buildbot.status.web.baseweb import WebStatus

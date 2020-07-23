@@ -11,22 +11,22 @@ import sys
 
 from common import gtest_utils
 from xml.dom import minidom
-from slave.gtest.json_results_generator import JSONResultsGenerator
-from slave.gtest.test_result import canonical_name
-from slave.gtest.test_result import TestResult
+from subordinate.gtest.json_results_generator import JSONResultsGenerator
+from subordinate.gtest.test_result import canonical_name
+from subordinate.gtest.test_result import TestResult
 
 
 GENERATE_JSON_RESULTS_OPTIONS = [
     'builder_name', 'build_name', 'build_number', 'results_directory',
     'builder_base_url', 'webkit_revision', 'chrome_revision',
-    'test_results_server', 'test_type', 'master_name']
+    'test_results_server', 'test_type', 'main_name']
 
 FULL_RESULTS_FILENAME = 'full_results.json'
 TIMES_MS_FILENAME = 'times_ms.json'
 
 
 # Note: GTestUnexpectedDeathTracker is being deprecated in favor of
-# common.gtest_utils.GTestLogParser. See scripts/slave/runtest.py for details.
+# common.gtest_utils.GTestLogParser. See scripts/subordinate/runtest.py for details.
 class GTestUnexpectedDeathTracker(object):
   """A lightweight version of log parser that keeps track of running tests
   for unexpected timeout or crash."""
@@ -176,12 +176,12 @@ def GenerateJSONResults(test_results_map, options):
         'builder_name:%s, build_name:%s, build_number:%s, '
         'results_directory:%s, builder_base_url:%s, '
         'webkit_revision:%s, chrome_revision:%s '
-        'test_results_server:%s, test_type:%s, master_name:%s' %
+        'test_results_server:%s, test_type:%s, main_name:%s' %
         (options.builder_name, options.build_name, options.build_number,
          options.results_directory, options.builder_base_url,
          options.webkit_revision, options.chrome_revision,
          options.test_results_server, options.test_type,
-         options.master_name))
+         options.main_name))
 
   generator = JSONResultsGenerator(
       options.builder_name, options.build_name, options.build_number,
@@ -191,7 +191,7 @@ def GenerateJSONResults(test_results_map, options):
                      ('chromium', options.chrome_revision)),
       test_results_server=options.test_results_server,
       test_type=options.test_type,
-      master_name=options.master_name)
+      main_name=options.main_name)
   generator.generate_json_output()
   generator.generate_times_ms_file()
   return generator
@@ -237,9 +237,9 @@ def main():
                            default='',
                            help='The test results server to upload the '
                                 'results.')
-  option_parser.add_option('--master-name', default='',
-                           help='The name of the buildbot master. '
-                                'Both test-results-server and master-name '
+  option_parser.add_option('--main-name', default='',
+                           help='The name of the buildbot main. '
+                                'Both test-results-server and main-name '
                                 'need to be specified to upload the results '
                                 'to the server.')
   option_parser.add_option('--webkit-revision', default='0',
@@ -259,9 +259,9 @@ def main():
     logging.error('--input-results-xml needs to be specified.')
     sys.exit(1)
 
-  if options.test_results_server and not options.master_name:
+  if options.test_results_server and not options.main_name:
     logging.warn('--test-results-server is given but '
-                 '--master-name is not specified; the results won\'t be '
+                 '--main-name is not specified; the results won\'t be '
                  'uploaded to the server.')
 
   results_map = GetResultsMapFromXML(options.input_results_xml)

@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class InfraCron(Master.Master1):
+class InfraCron(Main.Main1):
   project_name = 'InfraCron'
-  master_port_id = 12
+  main_port_id = 12
   buildbot_url = 'https://build.chromium.org/p/chromium.infra.cron/'
   service_account_file = 'service-account-infra-cron.json'
-  buildbucket_bucket = 'master.chromium.infra.cron'
+  buildbucket_bucket = 'main.chromium.infra.cron'

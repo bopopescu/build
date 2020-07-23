@@ -139,7 +139,7 @@ class GerritChangeSource(base.ChangeSource):
             else:
                 return defer.succeed(None) # this shouldn't happen anyway
 
-            d = self.master.addChange(**chdict)
+            d = self.main.addChange(**chdict)
             # eat failures..
             d.addErrback(log.err, 'error adding change from GerritChangeSource')
             return d

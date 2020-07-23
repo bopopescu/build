@@ -30,7 +30,7 @@ class DiskApi(recipe_api.RecipeApi):
         * capacity (float): disk capacity, in MiB.
         * used (float): disk usage, in MiB.
     """
-    path = path or self.m.path['slave_build']
+    path = path or self.m.path['subordinate_build']
     name = name or 'disk space usage'
     warning_level = warning_level or 0.9
     kwargs.setdefault(

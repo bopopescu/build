@@ -2,16 +2,16 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class TryServerANGLE(Master.Master4a):
+class TryServerANGLE(Main.Main4a):
   project_name = 'ANGLE Try Server'
-  master_port = 21403
-  slave_port = 31403
-  master_port_alt = 26403
+  main_port = 21403
+  subordinate_port = 31403
+  main_port_alt = 26403
   buildbot_url = 'http://build.chromium.org/p/tryserver.chromium.angle/'
   gerrit_host = 'https://chromium-review.googlesource.com'
   service_account_file = 'service-account-chromium-tryserver.json'
-  buildbucket_bucket = 'master.tryserver.chromium.angle'
+  buildbucket_bucket = 'main.tryserver.chromium.angle'

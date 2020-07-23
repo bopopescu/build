@@ -26,7 +26,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
     A DBConnectorComponent to handle maintaining arbitrary key/value state for
     Buildbot objects.  Objects are identified by their (user-visible) name and
     their class.  This allows e.g., a 'nightly_smoketest' object of class
-    NightlyScheduler to maintain its state even if it moves between masters,
+    NightlyScheduler to maintain its state even if it moves between mains,
     but avoids cross-contaminating state between different classes.
 
     Note that the class is not interpreted literally, and can be any string

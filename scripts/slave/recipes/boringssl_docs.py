@@ -36,6 +36,6 @@ def RunSteps(api):
 
 def GenTests(api):
   yield api.test('boringssl-docs') + \
-        api.properties.generic(mastername='client.boringssl',
+        api.properties.generic(mainname='client.boringssl',
                                buildername='docs',
-                               slavename='slavename')
+                               subordinatename='subordinatename')

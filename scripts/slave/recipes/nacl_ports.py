@@ -25,11 +25,11 @@ def _CheckoutSteps(api):
 def _AnnotatedStepsSteps(api, got_revision):
   # Default environemnt; required by all builders.
   env = {
-      'BUILDBOT_MASTERNAME': api.properties['mastername'],
+      'BUILDBOT_MASTERNAME': api.properties['mainname'],
       'BUILDBOT_BUILDERNAME': api.properties['buildername'],
       'BUILDBOT_REVISION': api.properties['revision'],
       'BUILDBOT_GOT_REVISION': got_revision,
-      'BUILDBOT_SLAVE_TYPE': api.properties['slavetype'],
+      'BUILDBOT_SLAVE_TYPE': api.properties['subordinatetype'],
   }
   api.step('annotated steps',
       [api.path['checkout'].join('build_tools',
@@ -47,8 +47,8 @@ def RunSteps(api):
 def GenTests(api):
   yield api.test('linux') +\
     api.platform('linux', 64) +\
-    api.properties(mastername = 'client.nacl.ports') +\
+    api.properties(mainname = 'client.nacl.ports') +\
     api.properties(buildername = 'linux-glibc-0') +\
     api.properties(revision = 'abcd') +\
-    api.properties(slavename = 'TestSlave') +\
-    api.properties(slavetype = 'BuilderTester')
+    api.properties(subordinatename = 'TestSubordinate') +\
+    api.properties(subordinatetype = 'BuilderTester')

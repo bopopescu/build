@@ -33,7 +33,7 @@ def hack_subprocess():
 
 
 def send_log(path, last_lines):
-  """Sends the relevant master log to the breakpad server."""
+  """Sends the relevant main log to the breakpad server."""
   url = 'https://chromium-status.appspot.com/breakpad'
   logging.warn('Sending crash report')
   try:
@@ -55,9 +55,9 @@ def send_log(path, last_lines):
             str(e))
 
 
-def process(master_path, maxlines):
-  """Processes one master's twistd.log."""
-  twistdlog = os.path.join(master_path, 'twistd.log')
+def process(main_path, maxlines):
+  """Processes one main's twistd.log."""
+  twistdlog = os.path.join(main_path, 'twistd.log')
   if not os.path.isfile(twistdlog):
     logging.info('No twistd.log file')
     return 1
@@ -85,7 +85,7 @@ def process(master_path, maxlines):
         logging.info('Had an exception')
         flag = True
       elif not line.strip() and flag:
-        send_log(master_path, last_lines[:-1])
+        send_log(main_path, last_lines[:-1])
         flag = False
       line = ''
     else:
@@ -129,13 +129,13 @@ def main(argv):
       format='%(asctime)s %(levelname)-7s %(threadName)-11s %(message)s',
       datefmt='%m/%d %H:%M:%S')
 
-  masters_path = chromium_utils.ListMasters()
-  # Starts tail for each master.
+  mains_path = chromium_utils.ListMains()
+  # Starts tail for each main.
   threads = []
-  for master_path in masters_path:
-    name = os.path.basename(master_path)
+  for main_path in mains_path:
+    name = os.path.basename(main_path)
     name = (name
-        .replace('master.', '')
+        .replace('main.', '')
         .replace('client.', '')
         .replace('experimental', 'experi')
         .replace('chromiumos', 'cros')
@@ -144,7 +144,7 @@ def main(argv):
         .replace('chromium', 'c'))
     thread = threading.Thread(
         target=process,
-        args=(master_path, options.maxlines),
+        args=(main_path, options.maxlines),
         name=name)
     thread.daemon = True
     threads.append(thread)

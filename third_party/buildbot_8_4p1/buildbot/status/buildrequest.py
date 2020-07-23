@@ -26,7 +26,7 @@ class BuildRequestStatus:
         self.buildername = buildername
         self.brid = brid
         self.status = status
-        self.master = status.master
+        self.main = status.main
 
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
@@ -54,12 +54,12 @@ class BuildRequestStatus:
         try:
             if not self._buildrequest:
                 wfd = defer.waitForDeferred(
-                    self.master.db.buildrequests.getBuildRequest(self.brid))
+                    self.main.db.buildrequests.getBuildRequest(self.brid))
                 yield wfd
                 brd = wfd.getResult()
 
                 wfd = defer.waitForDeferred(
-                    buildrequest.BuildRequest.fromBrdict(self.master, brd))
+                    buildrequest.BuildRequest.fromBrdict(self.main, brd))
                 yield wfd
                 self._buildrequest = wfd.getResult()
         except: # try/finally isn't allowed in generators in older Pythons
@@ -89,7 +89,7 @@ class BuildRequestStatus:
         builds = []
 
         wfd = defer.waitForDeferred(
-                self.master.db.builds.getBuildsForRequest(self.brid))
+                self.main.db.builds.getBuildsForRequest(self.brid))
         yield wfd
         buildnums = wfd.getResult()
 

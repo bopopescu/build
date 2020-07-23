@@ -47,7 +47,7 @@ class CrrevClientTest(unittest.TestCase):
     mock_get.return_value = mock_response
     params = [
         ('number', '375953'),
-        ('numbering_identifier', 'refs/heads/master'),
+        ('numbering_identifier', 'refs/heads/main'),
         ('numbering_type', 'COMMIT_POSITION'),
         ('project', 'chromium'),
         ('repo', 'chromium/src'),
@@ -59,7 +59,7 @@ class CrrevClientTest(unittest.TestCase):
     mock_get.assert_called_once_with(
         'https://cr-rev.appspot.com/_ah/api/crrev/v1/get_numbering'
         '?number=375953'
-        '&numbering_identifier=refs%2Fheads%2Fmaster'
+        '&numbering_identifier=refs%2Fheads%2Fmain'
         '&numbering_type=COMMIT_POSITION'
         '&project=chromium'
         '&repo=chromium%2Fsrc'

@@ -84,7 +84,7 @@ class AndroidApi(recipe_api.RecipeApi):
     self.m.python(
       step_name,
       str(self.package_repo_resource(
-          'scripts', 'slave', 'android', 'archive_build.py')),
+          'scripts', 'subordinate', 'android', 'archive_build.py')),
       archive_args,
       infra_step=True,
       **kwargs
@@ -119,7 +119,7 @@ class AndroidApi(recipe_api.RecipeApi):
     # TODO(sivachandra): Manufacture gclient spec such that it contains "src"
     # solution + repo_name solution. Then checkout will be automatically
     # correctly set by gclient.checkout
-    self.m.path['checkout'] = self.m.path['slave_build'].join('src')
+    self.m.path['checkout'] = self.m.path['subordinate_build'].join('src')
 
     self.clean_local_files()
 
@@ -261,7 +261,7 @@ class AndroidApi(recipe_api.RecipeApi):
         # We send None as the path so that zip_build.py gets it from factory
         # properties.
         build_url=None,
-        src_dir=self.m.path['slave_build'].join('src'),
+        src_dir=self.m.path['subordinate_build'].join('src'),
         exclude_files='lib.target,gen,android_webview,jingle_unittests')
 
   def create_adb_symlink(self):
@@ -275,28 +275,28 @@ class AndroidApi(recipe_api.RecipeApi):
   def spawn_logcat_monitor(self):
     self.m.step(
         'spawn_logcat_monitor',
-        [self.package_repo_resource('scripts', 'slave', 'daemonizer.py'),
+        [self.package_repo_resource('scripts', 'subordinate', 'daemonizer.py'),
          '--', self.c.cr_build_android.join('adb_logcat_monitor.py'),
          self.m.chromium.c.build_dir.join('logcat')],
         env=self.m.chromium.get_env(),
         infra_step=True)
 
   def spawn_device_monitor(self):
-    script = self.package_repo_resource('scripts', 'slave', 'daemonizer.py')
+    script = self.package_repo_resource('scripts', 'subordinate', 'daemonizer.py')
     args = [
         '--action', 'restart',
         '--pid-file-path', '/tmp/device_monitor.pid',
         '--', self.resource('spawn_device_monitor.py'),
         self.m.adb.adb_path(),
         json.dumps(self._devices),
-        self.m.properties['mastername'],
+        self.m.properties['mainname'],
         self.m.properties['buildername'],
         '--blacklist-file', self.blacklist_file
     ]
     self.m.python('spawn_device_monitor', script, args, infra_step=True)
 
   def shutdown_device_monitor(self):
-    script = self.package_repo_resource('scripts', 'slave', 'daemonizer.py')
+    script = self.package_repo_resource('scripts', 'subordinate', 'daemonizer.py')
     args = [
         '--action', 'stop',
         '--pid-file-path', '/tmp/device_monitor.pid',
@@ -305,7 +305,7 @@ class AndroidApi(recipe_api.RecipeApi):
 
   def authorize_adb_devices(self):
     script = self.package_repo_resource(
-        'scripts', 'slave', 'android', 'authorize_adb_devices.py')
+        'scripts', 'subordinate', 'android', 'authorize_adb_devices.py')
     args = ['--verbose', '--adb-path', self.m.adb.adb_path()]
     return self.m.python('authorize_adb_devices', script, args, infra_step=True,
                          env=self.m.chromium.get_env())
@@ -413,7 +413,7 @@ class AndroidApi(recipe_api.RecipeApi):
     except self.m.step.InfraFailure as f:
       params = {
         'summary': ('Device Offline on %s %s' %
-          (self.m.properties['mastername'], self.m.properties['slavename'])),
+          (self.m.properties['mainname'], self.m.properties['subordinatename'])),
         'comment': ('Buildbot: %s\n(Please do not change any labels)' %
           self.m.properties['buildername']),
         'labels': 'Restrict-View-Google,OS-Android,Infra,Infra-Labs',
@@ -735,7 +735,7 @@ class AndroidApi(recipe_api.RecipeApi):
   def launch_gce_instances(self, snapshot='clean-17-l-phone-image-no-popups',
                            count=6):
     args = [
-        self.m.properties['slavename'],
+        self.m.properties['subordinatename'],
         self.m.adb.adb_path(),
         '--n', count,
         'launch',
@@ -750,7 +750,7 @@ class AndroidApi(recipe_api.RecipeApi):
 
   def shutdown_gce_instances(self, count=6):
     args = [
-        self.m.properties['slavename'],
+        self.m.properties['subordinatename'],
         self.m.adb.adb_path(),
         '--n', count,
         'shutdown',
@@ -789,7 +789,7 @@ class AndroidApi(recipe_api.RecipeApi):
     else:
       self.m.python(
           'logcat_dump',
-          self.package_repo_resource('scripts', 'slave', 'tee.py'),
+          self.package_repo_resource('scripts', 'subordinate', 'tee.py'),
           [self.m.chromium.output_dir.join('full_log'),
            '--',
            self.m.path['checkout'].join('build', 'android',
@@ -893,7 +893,7 @@ class AndroidApi(recipe_api.RecipeApi):
     self.m.step('prepare bisect perf regression',
         [self.m.path['checkout'].join('tools',
                                       'prepare-bisect-perf-regression.py'),
-         '-w', self.m.path['slave_build']])
+         '-w', self.m.path['subordinate_build']])
 
     args = []
     if extra_src:
@@ -903,7 +903,7 @@ class AndroidApi(recipe_api.RecipeApi):
     self.m.step('run bisect perf regression',
         [self.m.path['checkout'].join('tools',
                                       'run-bisect-perf-regression.py'),
-         '-w', self.m.path['slave_build']] + args, **kwargs)
+         '-w', self.m.path['subordinate_build']] + args, **kwargs)
 
   def run_test_suite(self, suite, verbose=True, isolate_file_path=None,
                      gtest_filter=None, tool=None, flakiness_dashboard=None,

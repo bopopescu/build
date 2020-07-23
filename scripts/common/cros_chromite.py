@@ -31,7 +31,7 @@ except ImportError:
   # TODO(dnj): Remove me.
   #
   # crbug.com/452528: Inconsistent PYTHONPATH environments sometimes cause
-  # slaves.cfg (and thus this file) to be parsed without 'third_party/requests'
+  # subordinates.cfg (and thus this file) to be parsed without 'third_party/requests'
   # present. We will add logic to gracefully become read-only when 'requests'
   # is missing so bots don't show errors.
   requests = None
@@ -40,7 +40,7 @@ except ImportError:
 from common import configcache, env
 
 # The name of the branch associated with tip-of-tree.
-TOT_BRANCH = 'master'
+TOT_BRANCH = 'main'
 
 
 # Configure our pin locations. Because repository availability is dependent
@@ -59,10 +59,10 @@ class ChromiteError(RuntimeError):
   pass
 
 
-# Slave pool allocation types. This mirrors the VALID_BUILD_SLAVE_TYPES in:
+# Subordinate pool allocation types. This mirrors the VALID_BUILD_SLAVE_TYPES in:
 # https://chromium.googlesource.com/chromiumos/chromite/+/master/cbuildbot/constants.py
-class SlaveType(object):
-  """Slave configuration expression enumeration."""
+class SubordinateType(object):
+  """Subordinate configuration expression enumeration."""
   BAREMETAL = 'baremetal'
   VM = 'vm'
   GCE = 'gce'
@@ -191,14 +191,14 @@ class ChromiteTarget(object):
     return self._category
 
   @property
-  def is_master(self):
-    return self['master']
+  def is_main(self):
+    return self['main']
 
   @property
   def is_public(self):
     return (
         self.get('prebuilts') == 'public' and
-        not self.is_master)
+        not self.is_main)
 
   @property
   def children(self):

@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-# apply the same patches the buildmaster does when it starts
+# apply the same patches the buildmain does when it starts
 from buildbot import monkeypatches
 monkeypatches.patch_all()
 

@@ -17,9 +17,9 @@ import os, re
 
 from twisted.python import log, runtime
 
-from buildslave.commands.base import SourceBaseCommand, AbandonChain
-from buildslave import runprocess
-from buildslave.util import remove_userpassword
+from buildsubordinate.commands.base import SourceBaseCommand, AbandonChain
+from buildsubordinate import runprocess
+from buildsubordinate.util import remove_userpassword
 
 
 class Mercurial(SourceBaseCommand):

@@ -9,7 +9,7 @@ DEPS = [
 
 def RunSteps(api):
   # Code coverage for these methods.
-  api.swarming_client.checkout('master')
+  api.swarming_client.checkout('main')
   api.swarming_client.query_script_version('swarming.py')
   api.swarming_client.ensure_script_version('swarming.py', (0, 4, 4))
 
@@ -17,7 +17,7 @@ def RunSteps(api):
   api.swarming_client.query_script_version(
       'isolate.py', step_test_data=(0, 3, 1))
 
-  # 'master' had swarming.py at v0.4.4 at the moment of writing this example.
+  # 'main' had swarming.py at v0.4.4 at the moment of writing this example.
   assert api.swarming_client.get_script_version('swarming.py') >= (0, 4, 4)
 
   # Coverage for 'fail' path of ensure_script_version.

@@ -7,7 +7,7 @@ import test_env  # pylint: disable=W0403,W0611
 
 import unittest
 
-from slave import chromium_commands
+from subordinate import chromium_commands
 
 
 class ChromiumCommandsTest(unittest.TestCase):

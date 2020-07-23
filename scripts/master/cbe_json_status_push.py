@@ -10,8 +10,8 @@ import json
 import os
 
 from buildbot.status.base import StatusReceiverMultiService
-from master import auth
-from master.deferred_resource import DeferredResource
+from main import auth
+from main.deferred_resource import DeferredResource
 from twisted.internet import defer, reactor
 from twisted.python import log
 
@@ -72,41 +72,41 @@ class StatusPush(StatusReceiverMultiService):
   # Perform verbose logging.
   verbose = False
 
-  def __init__(self, activeMaster, server=None, master=None,
+  def __init__(self, activeMain, server=None, main=None,
                discoveryUrlTemplate=None,
                pushInterval=None):
     """
     Instantiates a new StatusPush service.
 
-    The server and master values are used to form the BuildBot URL that a given
+    The server and main values are used to form the BuildBot URL that a given
     build references. For example:
       - server: http://build.chromium.org/p
-      - master: chromium
+      - main: chromium
 
     Args:
-      activeMaster: The current Master instance.
+      activeMain: The current Main instance.
       server: (str) The server URL value for the status pushes.
-      master: (str) The master name.
+      main: (str) The main name.
       discoveryUrlTemplate: (str) If not None, the discovery URL template to use
           for 'chrome-build-extract' cloud endpoint API service discovery.
       pushInterval: (number/timedelta) The data push interval. If a number is
           supplied, it is the number of seconds.
     """
-    assert activeMaster, 'An active master must be supplied.'
+    assert activeMain, 'An active main must be supplied.'
     StatusReceiverMultiService.__init__(self)
 
-    # Infer server/master from 'buildbot_url' master configuration property,
+    # Infer server/main from 'buildbot_url' main configuration property,
     # if possible.
-    if hasattr(activeMaster, 'buildbot_url') and not (server and master):
-      inf_server, inf_master = self.inferServerMaster(activeMaster.buildbot_url)
+    if hasattr(activeMain, 'buildbot_url') and not (server and main):
+      inf_server, inf_main = self.inferServerMain(activeMain.buildbot_url)
       server = server or inf_server
-      master = master or inf_master
-    assert server and master, 'A server and master value must be supplied.'
+      main = main or inf_main
+    assert server and main, 'A server and main value must be supplied.'
 
     # Parameters.
-    self.activeMaster = activeMaster
+    self.activeMain = activeMain
     self.server = server
-    self.master = master
+    self.main = main
     self.discoveryUrlTemplate = (discoveryUrlTemplate or
                                  CBE_DISCOVERY_SERVICE_URL)
     self.pushInterval = self._getTimeDelta(pushInterval or
@@ -119,7 +119,7 @@ class StatusPush(StatusReceiverMultiService):
     self._sequence = 0
 
   @classmethod
-  def load(cls, activeMaster, config=None, **kwargs):
+  def load(cls, activeMain, config=None, **kwargs):
     """Returns: (StatusPush) A configured StatusPush instance, or None.
 
     This method loads a StatusPush from a configuration file, returning the
@@ -136,11 +136,11 @@ class StatusPush(StatusReceiverMultiService):
     # CBE_DISCOVERY_SERVICE_URL.
     discovery_url = <URL>
 
-    # The server URL. Defaults to inferring from the master's URL.
+    # The server URL. Defaults to inferring from the main's URL.
     server = <URL>
 
-    # The master name. Defaults to inferring from the master's URL.
-    master = <NAME>
+    # The main name. Defaults to inferring from the main's URL.
+    main = <NAME>
 
     # The number of seconds in between status pushes. Defaults to
     # DEFAULT_PUSH_INTERVAL_SEC.
@@ -151,7 +151,7 @@ class StatusPush(StatusReceiverMultiService):
     service_account_json_path = <PATH>
 
     Args:
-      activeMaster: The active master instance.
+      activeMain: The active main instance.
       config: (str/None) The path of the configuration file. If None, the
           default configuration file path will be used.
       kwargs: Keyword arguments to forward to the StatusPush constructor.
@@ -177,16 +177,16 @@ class StatusPush(StatusReceiverMultiService):
 
     getprop('discovery_url', 'discoveryUrlTemplate')
     getprop('server', 'server')
-    getprop('master', 'master')
+    getprop('main', 'main')
     getprop('push_interval_sec', 'pushInterval',
             typ=lambda v: datetime.timedelta(seconds=int(v)))
 
-    return cls(activeMaster, **kwargs)
+    return cls(activeMain, **kwargs)
 
   @classmethod
-  def inferServerMaster(cls, url):
-    """Returns: (server, master) tuple inferred from 'url'."""
-    # Assume the master is the last component of the URL.
+  def inferServerMain(cls, url):
+    """Returns: (server, main) tuple inferred from 'url'."""
+    # Assume the main is the last component of the URL.
     return url.rstrip('/').rsplit('/', 1)
 
   @staticmethod
@@ -208,7 +208,7 @@ class StatusPush(StatusReceiverMultiService):
 
     @defer.inlineCallbacks
     def start_loop():
-      # Load and start our master push resource.
+      # Load and start our main push resource.
       self._res = yield self._loadResource()
       self._res.start()
 
@@ -231,12 +231,12 @@ class StatusPush(StatusReceiverMultiService):
 
   @defer.inlineCallbacks
   def _loadResource(self):
-    """Loads and instantiates a cloud endpoints resource to CBE master push."""
+    """Loads and instantiates a cloud endpoints resource to CBE main push."""
     # Construct our DeferredResource.
     service = yield DeferredResource.build(
-        'master_push',
+        'main_push',
         'v0',
-        credentials=auth.create_credentials_for_master(self.activeMaster),
+        credentials=auth.create_credentials_for_main(self.activeMain),
         discoveryServiceUrl=self.discoveryUrlTemplate,
         verbose=self.verbose,
         log_prefix='CBEStatusPush')
@@ -284,7 +284,7 @@ class StatusPush(StatusReceiverMultiService):
     yield api_call(
         self._res.api.pushBuilds,
         server=self.server,
-        master=self.master,
+        main=self.main,
         seq=sequence,
         build_json=[json.dumps(build) for build in send_builds])
 

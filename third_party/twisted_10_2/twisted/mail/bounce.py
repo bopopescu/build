@@ -14,7 +14,7 @@ import os
 from twisted.mail import smtp
 
 BOUNCE_FORMAT = """\
-From: postmaster@%(failedDomain)s
+From: postmain@%(failedDomain)s
 To: %(failedFrom)s
 Subject: Returned Mail: see transcript for details
 Message-ID: %(messageID)s

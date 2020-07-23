@@ -155,10 +155,10 @@ class PerformanceLogProcessor(object):
     """Load the expectations data.
 
     All keys in perf_expectations have 4 components:
-      slave/test/graph/trace
+      subordinate/test/graph/trace
 
     LoadPerformanceExpectationsData finds all keys that match the initial
-    portion of the string ("slave/test") and adds the graph and result
+    portion of the string ("subordinate/test") and adds the graph and result
     portions to the expected performance structure.
     """
 
@@ -406,7 +406,7 @@ class GraphingLogProcessor(PerformanceLogProcessor):
 
   # The file into which the GraphingLogProcessor will save a list of graph
   # names for use by the JS doing the plotting.
-  GRAPH_LIST = config.Master.perf_graph_list
+  GRAPH_LIST = config.Main.perf_graph_list
 
   RESULTS_REGEX = re.compile(r'(?P<IMPORTANT>\*)?RESULT '
                              r'(?P<GRAPH>[^:]*): (?P<TRACE>[^=]*)= '
@@ -689,7 +689,7 @@ class GraphingLogProcessor(PerformanceLogProcessor):
   def _GenerateGraphInfo(self):
     """Outputs a list of graphs viewed this session, for use by the plotter.
 
-    These will be collated and sorted on the master side.
+    These will be collated and sorted on the main side.
     """
     graphs = {}
     for name, graph in self._graphs.iteritems():

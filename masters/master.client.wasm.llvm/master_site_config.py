@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class WasmLlvm(Master.Master3):
+class WasmLlvm(Main.Main3):
   project_name = 'WasmLlvm'
-  master_port = 20305
-  slave_port = 30305
-  master_port_alt = 25305
+  main_port = 20305
+  subordinate_port = 30305
+  main_port_alt = 25305
   buildbot_url = 'https://build.chromium.org/p/client.wasm.llvm/'
   buildbucket_bucket = None
   service_account_file = None

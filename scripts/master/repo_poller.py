@@ -14,7 +14,7 @@ from twisted.python import log
 from buildbot.changes.base import PollingChangeSource
 from buildbot.util import deferredLocked
 
-from master.chromium_git_poller_bb8 import GitTagComparator
+from main.chromium_git_poller_bb8 import GitTagComparator
 
 
 class RepoTagComparator(GitTagComparator):
@@ -32,7 +32,7 @@ class RepoPoller(PollingChangeSource):
 
   repo is a layer over git that provides support for projects that span multiple
   git repositories.  This poller discovers changes in all of the underlying git
-  repositories, and turns them into buildbot master changes.
+  repositories, and turns them into buildbot main changes.
 
   Buildbot doesn't provide very good support out of the box for displaying
   changes from multiple git repositories on a single console.  The biggest
@@ -51,7 +51,7 @@ class RepoPoller(PollingChangeSource):
                from_addr=None, to_addrs=None, smtp_host=None,
                manifest='manifest'):
     # In 'dry_run' mode poller won't fetch the repository.
-    # Used when running master smoke tests.
+    # Used when running main smoke tests.
     self.dry_run = 'POLLER_DRY_RUN' in os.environ
 
     if not workdir:
@@ -59,7 +59,7 @@ class RepoPoller(PollingChangeSource):
       log.msg('RepoPoller: using new working dir %s' % workdir)
 
     self.repo_url = repo_url
-    self.repo_branches = repo_branches or ['master']
+    self.repo_branches = repo_branches or ['main']
     # transition assertion, repo_branch (string) became repo_branches (list)
     assert issubclass(type(self.repo_branches), list), \
       'repo_branches must be a list'
@@ -85,7 +85,7 @@ class RepoPoller(PollingChangeSource):
       return
 
     if not os.path.isabs(self.workdir):
-      self.workdir = os.path.join(self.master.basedir, self.workdir)
+      self.workdir = os.path.join(self.main.basedir, self.workdir)
       log.msg('RepoPoller: using workdir "%s"' % self.workdir)
 
     if not os.path.exists(os.path.join(self.workdir, '.repo')):
@@ -334,7 +334,7 @@ class RepoPoller(PollingChangeSource):
               urllib.quote_plus(project), urllib.quote_plus(rev))
 
         name, files, comments = [r[1] for r in results]
-        d = self.master.addChange(
+        d = self.main.addChange(
             author=name,
             revision=rev,
             files=files,

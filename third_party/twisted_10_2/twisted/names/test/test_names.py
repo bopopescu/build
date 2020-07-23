@@ -58,7 +58,7 @@ reverse_soa = dns.Record_SOA(
 
 my_soa = dns.Record_SOA(
     mname = 'my-domain.com',
-    rname = 'postmaster.test-domain.com',
+    rname = 'postmain.test-domain.com',
     serial = 130,
     refresh = 12345,
     minimum = 1,

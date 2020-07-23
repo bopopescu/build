@@ -19,9 +19,9 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import git
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.sourcecommand import SourceCommandTestMixin
+from buildsubordinate.commands import git
 
 class TestGit(SourceCommandTestMixin, unittest.TestCase):
 
@@ -63,7 +63,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -72,7 +72,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -88,7 +88,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
 
@@ -104,7 +104,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             repourl='git://github.com/djmitche/buildbot.git',
             progress=True, # added here for better coverage
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
@@ -113,7 +113,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master',
+                     'git://github.com/djmitche/buildbot.git', '+main',
                      '--progress' ],
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
@@ -123,7 +123,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -139,7 +139,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_mode_copy_nonexistant_ref(self):
@@ -233,7 +233,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -246,7 +246,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -255,7 +255,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -268,7 +268,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_mode_update_existing(self):
@@ -280,13 +280,13 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -295,7 +295,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -308,7 +308,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_mode_update_existing_known_rev(self):
@@ -320,7 +320,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision='abcdef01',
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
@@ -338,7 +338,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_mode_update_existing_unknown_rev(self):
@@ -350,7 +350,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision='abcdef01',
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
@@ -360,7 +360,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 1,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -369,7 +369,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -382,7 +382,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_with_reference(self):
@@ -395,7 +395,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             reference='/other/repo',
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -414,7 +414,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -423,7 +423,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -436,7 +436,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_with_shallow_and_rev(self):
@@ -449,7 +449,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             shallow=True,
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -474,7 +474,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_with_shallow(self):
@@ -487,7 +487,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             shallow=True,
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -502,7 +502,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -511,7 +511,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -524,7 +524,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_with_shallow_and_reference(self):
@@ -538,7 +538,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             reference="/some/repo",
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -560,7 +560,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -569,7 +569,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -582,7 +582,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_run_with_submodules(self):
@@ -595,7 +595,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             submodules=True,
             repourl='git://github.com/djmitche/buildbot.git',
           ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            initial_sourcedata = "git://github.com/djmitche/buildbot.git main\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
@@ -608,7 +608,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
+                     'git://github.com/djmitche/buildbot.git', '+main' ],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False, keepStderr=True)
                 + { 'stderr' : '' }
@@ -617,7 +617,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
-            Expect(['path/to/git', 'branch', '-M', 'master'],
+            Expect(['path/to/git', 'branch', '-M', 'main'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
@@ -643,7 +643,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
+        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git main\n")
         return d
 
     def test_sourcedataMatches_no_file(self):

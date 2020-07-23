@@ -16,7 +16,7 @@ import mock
 import os
 import unittest
 
-from slave.ios import utils
+from subordinate.ios import utils
 
 
 class GetLinesTest(unittest.TestCase):

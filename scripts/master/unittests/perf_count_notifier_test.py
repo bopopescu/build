@@ -10,9 +10,9 @@ import re
 
 from buildbot.status.builder import FAILURE, SUCCESS
 
-from master import build_utils
-from master.chromium_notifier import ChromiumNotifier
-from master.perf_count_notifier import PerfCountNotifier
+from main import build_utils
+from main.chromium_notifier import ChromiumNotifier
+from main.perf_count_notifier import PerfCountNotifier
 
 
 # Sample test status results.
@@ -84,8 +84,8 @@ class PerfCountNotifierTest(unittest.TestCase):
     ChromiumNotifier.getName = self.getNameMock
     self.notifier.GenStepBox = lambda x, y, z: ''
     self.notifier.BuildEmailObject = lambda a, b, c, d, e: b
-    self.notifier.master_status = mock.Mock()
-    self.notifier.master_status.getBuildbotURL.return_value = ''
+    self.notifier.main_status = mock.Mock()
+    self.notifier.main_status.getBuildbotURL.return_value = ''
     build_utils.EmailableBuildTable = mock.Mock(return_value='')
 
   def resetMockDefaultFunctions(self):

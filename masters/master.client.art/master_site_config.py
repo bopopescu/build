@@ -2,13 +2,13 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class ART(Master.Master3):
+class ART(Main.Main3):
   project_name = 'ART'
-  master_port = 8200
-  slave_port = 8300
-  master_port_alt = 8400
+  main_port = 8200
+  subordinate_port = 8300
+  main_port_alt = 8400
   buildbot_url = 'http://build.chromium.org/p/client.art/'

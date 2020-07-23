@@ -139,45 +139,45 @@ class BaseLock:
         return (owner, access) in self.owners
 
 
-class RealMasterLock(BaseLock):
+class RealMainLock(BaseLock):
     def __init__(self, lockid):
         BaseLock.__init__(self, lockid.name, lockid.maxCount)
-        self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
+        self.description = "<MainLock(%s, %s)>" % (self.name, self.maxCount)
 
-    def getLock(self, slave):
+    def getLock(self, subordinate):
         return self
 
-class RealSlaveLock:
+class RealSubordinateLock:
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount
-        self.maxCountForSlave = lockid.maxCountForSlave
-        self.description = "<SlaveLock(%s, %s, %s)>" % (self.name,
+        self.maxCountForSubordinate = lockid.maxCountForSubordinate
+        self.description = "<SubordinateLock(%s, %s, %s)>" % (self.name,
                                                         self.maxCount,
-                                                        self.maxCountForSlave)
+                                                        self.maxCountForSubordinate)
         self.locks = {}
 
     def __repr__(self):
         return self.description
 
-    def getLock(self, slavebuilder):
-        slavename = slavebuilder.slave.slavename
-        if not self.locks.has_key(slavename):
-            maxCount = self.maxCountForSlave.get(slavename,
+    def getLock(self, subordinatebuilder):
+        subordinatename = subordinatebuilder.subordinate.subordinatename
+        if not self.locks.has_key(subordinatename):
+            maxCount = self.maxCountForSubordinate.get(subordinatename,
                                                  self.maxCount)
-            lock = self.locks[slavename] = BaseLock(self.name, maxCount)
-            desc = "<SlaveLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                   slavename, id(lock))
+            lock = self.locks[subordinatename] = BaseLock(self.name, maxCount)
+            desc = "<SubordinateLock(%s, %s)[%s] %d>" % (self.name, maxCount,
+                                                   subordinatename, id(lock))
             lock.description = desc
-            self.locks[slavename] = lock
-        return self.locks[slavename]
+            self.locks[subordinatename] = lock
+        return self.locks[subordinatename]
 
 
 class LockAccess(util.ComparableMixin):
     """ I am an object representing a way to access a lock.
 
     @param lockid: LockId instance that should be accessed.
-    @type  lockid: A MasterLock or SlaveLock instance.
+    @type  lockid: A MainLock or SubordinateLock instance.
 
     @param mode: Mode of accessing the lock.
     @type  mode: A string, either 'counting' or 'exclusive'.
@@ -188,7 +188,7 @@ class LockAccess(util.ComparableMixin):
         self.lockid = lockid
         self.mode = mode
 
-        assert isinstance(lockid, (MasterLock, SlaveLock))
+        assert isinstance(lockid, (MainLock, SubordinateLock))
         assert mode in ['counting', 'exclusive']
 
 
@@ -196,7 +196,7 @@ class BaseLockId(util.ComparableMixin):
     """ Abstract base class for LockId classes.
 
     Sets up the 'access()' function for the LockId's available to the user
-    (MasterLock and SlaveLock classes).
+    (MainLock and SubordinateLock classes).
     Derived classes should add
     - Comparison with the L{util.ComparableMixin} via the L{compare_attrs}
       class variable.
@@ -216,11 +216,11 @@ class BaseLockId(util.ComparableMixin):
 
 
 
-# master.cfg should only reference the following MasterLock and SlaveLock
+# main.cfg should only reference the following MainLock and SubordinateLock
 # classes. They are identifiers that will be turned into real Locks later,
-# via the BotMaster.getLockByID method.
+# via the BotMain.getLockByID method.
 
-class MasterLock(BaseLockId):
+class MainLock(BaseLockId):
     """I am a semaphore that limits the number of simultaneous actions.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
@@ -230,43 +230,43 @@ class MasterLock(BaseLockId):
     same time.
 
     Use this to protect a resource that is shared among all builders and all
-    slaves, for example to limit the load on a common SVN repository.
+    subordinates, for example to limit the load on a common SVN repository.
     """
 
     compare_attrs = ['name', 'maxCount']
-    lockClass = RealMasterLock
+    lockClass = RealMainLock
     def __init__(self, name, maxCount=1):
         self.name = name
         self.maxCount = maxCount
 
-class SlaveLock(BaseLockId):
-    """I am a semaphore that limits simultaneous actions on each buildslave.
+class SubordinateLock(BaseLockId):
+    """I am a semaphore that limits simultaneous actions on each buildsubordinate.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
     Only a limited number of such builds or steps will be able to run
-    simultaneously on any given buildslave. By default this number is one,
+    simultaneously on any given buildsubordinate. By default this number is one,
     but my maxCount parameter can be raised to allow two or three or more
-    operations to happen on a single buildslave at the same time.
+    operations to happen on a single buildsubordinate at the same time.
 
     Use this to protect a resource that is shared among all the builds taking
-    place on each slave, for example to limit CPU or memory load on an
+    place on each subordinate, for example to limit CPU or memory load on an
     underpowered machine.
 
-    Each buildslave will get an independent copy of this semaphore. By
+    Each buildsubordinate will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
-    you can provide maxCountForSlave with a dictionary that maps slavename to
-    owner count, to allow some slaves more parallelism than others.
+    you can provide maxCountForSubordinate with a dictionary that maps subordinatename to
+    owner count, to allow some subordinates more parallelism than others.
 
     """
 
-    compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
-    lockClass = RealSlaveLock
-    def __init__(self, name, maxCount=1, maxCountForSlave={}):
+    compare_attrs = ['name', 'maxCount', '_maxCountForSubordinateList']
+    lockClass = RealSubordinateLock
+    def __init__(self, name, maxCount=1, maxCountForSubordinate={}):
         self.name = name
         self.maxCount = maxCount
-        self.maxCountForSlave = maxCountForSlave
+        self.maxCountForSubordinate = maxCountForSubordinate
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForSlaveList = self.maxCountForSlave.items()
-        self._maxCountForSlaveList.sort()
-        self._maxCountForSlaveList = tuple(self._maxCountForSlaveList)
+        self._maxCountForSubordinateList = self.maxCountForSubordinate.items()
+        self._maxCountForSubordinateList.sort()
+        self._maxCountForSubordinateList = tuple(self._maxCountForSubordinateList)

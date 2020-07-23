@@ -5,9 +5,9 @@
 
 """See README.md for usage instructions.
 
-This file heavily modified from build/scripts/slave/gtest_slave_utils.py and
+This file heavily modified from build/scripts/subordinate/gtest_subordinate_utils.py and
 is intended to replace it as all tests move to swarming.
-TODO(estaab): Remove build/scripts/slave/gtest.* once this is fully deployed.
+TODO(estaab): Remove build/scripts/subordinate/gtest.* once this is fully deployed.
 """
 
 
@@ -50,7 +50,7 @@ def get_results_map_from_json(results_json):
 
 
 def generate_json_results(test_results_map, builder_name, build_number,
-                          results_directory, chrome_revision, master_name):
+                          results_directory, chrome_revision, main_name):
   """Generates JSON results files from the given test_results_map.
 
   Args:
@@ -63,11 +63,11 @@ def generate_json_results(test_results_map, builder_name, build_number,
         'builder_name:%s, build_number:%s, '
         'results_directory:%s, '
         'chrome_revision:%s '
-        'master_name:%s' %
+        'main_name:%s' %
         (builder_name, build_number,
          results_directory,
          chrome_revision,
-         master_name))
+         main_name))
 
   # TODO(estaab): This doesn't need to be an object. Make it a simple function.
   generator = JSONResultsGenerator(
@@ -75,7 +75,7 @@ def generate_json_results(test_results_map, builder_name, build_number,
       results_directory,
       test_results_map,
       svn_revisions=[('chromium', chrome_revision)],
-      master_name=master_name)
+      main_name=main_name)
   generator.generate_json_output()
   generator.generate_times_ms_file()
 
@@ -99,9 +99,9 @@ def main():
   option_parser.add_option('--test-results-server',
                            help='The test results server to upload the '
                                 'results.')
-  option_parser.add_option('--master-name',
-                           help='The name of the buildbot master. '
-                                'Both test-results-server and master-name '
+  option_parser.add_option('--main-name',
+                           help='The name of the buildbot main. '
+                                'Both test-results-server and main-name '
                                 'need to be specified to upload the results '
                                 'to the server.')
   option_parser.add_option('--chrome-revision', default='0',
@@ -119,9 +119,9 @@ def main():
     option_parser.error('--input-gtest-json needs to be specified.')
     return 1
 
-  if options.test_results_server and not options.master_name:
+  if options.test_results_server and not options.main_name:
     logging.warn('--test-results-server is given but '
-                 '--master-name is not specified; the results won\'t be '
+                 '--main-name is not specified; the results won\'t be '
                  'uploaded to the server.')
 
   with file(options.input_gtest_json) as json_file:
@@ -129,15 +129,15 @@ def main():
 
   generate_json_results(results_map, options.builder_name,
                         options.build_number, options.results_directory,
-                        options.chrome_revision, options.master_name)
+                        options.chrome_revision, options.main_name)
 
   # Upload to a test results server if specified.
-  if options.test_results_server and options.master_name:
+  if options.test_results_server and options.main_name:
     print 'Uploading JSON files for builder "%s" to server "%s"' % (
         options.builder_name, options.test_results_server)
     attrs = [('builder', options.builder_name),
              ('testtype', options.test_type),
-             ('master', options.master_name)]
+             ('main', options.main_name)]
 
     files = [(f, os.path.join(options.results_directory, f)) for f in
              (FULL_RESULTS_FILENAME, TIMES_MS_FILENAME)]

@@ -89,7 +89,7 @@ class Contact(base.StatusReceiver):
     def __init__(self, channel):
         #StatusReceiver.__init__(self) doesn't exist
         self.channel = channel
-        self.master = channel.master
+        self.main = channel.main
         self.notify_events = {}
         self.subscribed = 0
         self.muted = False
@@ -452,8 +452,8 @@ class Contact(base.StatusReceiver):
             raise UsageError("you must provide a Builder, " + errReply)
 
         # keep weird stuff out of the branch and revision strings. 
-        branch_validate = self.master.config.validation['branch']
-        revision_validate = self.master.config.validation['revision']
+        branch_validate = self.main.config.validation['branch']
+        revision_validate = self.main.config.validation['revision']
         if branch and not branch_validate.match(branch):
             log.msg("bad branch '%s'" % branch)
             self.send("sorry, bad branch '%s'" % branch)
@@ -732,7 +732,7 @@ class IrcStatusBot(irc.IRCClient):
         @type  channels: list of dictionaries
         @param channels: the bot will maintain a presence in these channels
         @type  status: L{buildbot.status.builder.Status}
-        @param status: the build master's Status object, through which the
+        @param status: the build main's Status object, through which the
                        bot retrieves all status information
         @type  noticeOnChannel: boolean
         @param noticeOnChannel: Defaults to False. If True, error messages
@@ -743,7 +743,7 @@ class IrcStatusBot(irc.IRCClient):
         self.channels = channels
         self.password = password
         self.status = status
-        self.master = status.master
+        self.main = status.main
         self.categories = categories
         self.notify_events = notify_events
         self.counter = 0
@@ -874,7 +874,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     def shutdown(self):
         self.shuttingDown = True
         if self.p:
-            self.p.quit("buildmaster reconfigured: bot disconnecting")
+            self.p.quit("buildmain reconfigured: bot disconnecting")
 
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,

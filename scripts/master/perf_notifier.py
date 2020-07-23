@@ -4,7 +4,7 @@
 
 import re
 
-from master import chromium_notifier
+from main import chromium_notifier
 
 
 class PerfNotifier(chromium_notifier.ChromiumNotifier):

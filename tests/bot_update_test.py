@@ -18,8 +18,8 @@ from textwrap import dedent
 
 BUILD_DIR = os.path.realpath(os.path.join(
     os.path.dirname(__file__), '..'))
-BOT_UPDATE_PATH = os.path.join(BUILD_DIR, 'scripts', 'slave', 'bot_update.py')
-SLAVE_DIR = os.path.join(BUILD_DIR, 'slave')
+BOT_UPDATE_PATH = os.path.join(BUILD_DIR, 'scripts', 'subordinate', 'bot_update.py')
+SLAVE_DIR = os.path.join(BUILD_DIR, 'subordinate')
 CACHE_DIR = os.path.join(SLAVE_DIR, 'cache_dir')
 DEPOT_TOOLS = os.path.realpath(os.path.join(BUILD_DIR, '..', 'depot_tools'))
 GIT_CL_PATH = os.path.realpath(os.path.join(DEPOT_TOOLS, 'git_cl.py'))
@@ -310,7 +310,7 @@ class BotUpdateTest(unittest.TestCase):
     self.assertSubproc(['git', 'svn', 'init', repo.url], mirror.populate_dir)
     self.assertSubproc(['git', 'svn', 'fetch'], mirror.populate_dir)
     self.assertSubproc(['git', 'push', mirror.serve_dir,
-                        'refs/remotes/git-svn:refs/heads/master'],
+                        'refs/remotes/git-svn:refs/heads/main'],
                        mirror.populate_dir)
 
     # Update template_dict with the git hash corresponding to each svn commit.
@@ -350,7 +350,7 @@ class BotUpdateTest(unittest.TestCase):
       self.assertTrue(re.match(r'[0-9a-fA-F]{40}', sha1))
       self.template_dict['%s_revision_%d' % (repo.path, i)] = sha1
     self.assertSubproc(['git', 'push', repo.serve_dir,
-                        'HEAD:refs/heads/master'], repo.populate_dir)
+                        'HEAD:refs/heads/main'], repo.populate_dir)
 
   def populate_svn(self):
     """Populates the local svn server with the repositories described in
@@ -418,10 +418,10 @@ class BotUpdateTest(unittest.TestCase):
     os.mkdir(self.builddir)
     self.bu_args = [
         BOT_UPDATE_PATH, '--force', '--output_json',
-        os.path.join(self.builddir, 'out.json'), '--master',
-        '%s_master' % self.test_name, '--builder_name',
-        '%s_builder' % self.test_name, '--slave_name',
-        '%s_slave' % self.test_name]
+        os.path.join(self.builddir, 'out.json'), '--main',
+        '%s_main' % self.test_name, '--builder_name',
+        '%s_builder' % self.test_name, '--subordinate_name',
+        '%s_subordinate' % self.test_name]
     self.template_dict = {}
     self.populate_svn()
     self.populate_git()
@@ -586,7 +586,7 @@ class BotUpdateTest(unittest.TestCase):
     if result.status:
       self.dump_subproc(result)
       self.fail('git cl upload failed.')
-    issue = self.assertSubproc(['git', 'config', 'branch.master.rietveldissue'],
+    issue = self.assertSubproc(['git', 'config', 'branch.main.rietveldissue'],
                                top_workdir).stdout.strip()
     solution = {
         'name': 'top',

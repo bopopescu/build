@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 from common import chromium_utils
-from slave import build_directory
+from subordinate import build_directory
 
 
 COVERAGE_DIR_POSTFIX = '_coverage'

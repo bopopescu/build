@@ -107,7 +107,7 @@ class StepNotifier(MailNotifier):
     return False
 
   def builderAdded(self, name, builder):
-    """Called as a hook when a builder attaches to the master.
+    """Called as a hook when a builder attaches to the main.
 
     We subscribe to events from the builder if we find it interesting.
     """

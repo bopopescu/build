@@ -9,7 +9,7 @@ import os
 import sys
 
 
-# This script is located in build/scripts/slave/ios.
+# This script is located in build/scripts/subordinate/ios.
 # Update this path if the script is moved.
 BUILD_DIR = os.path.abspath(os.path.join(
   os.path.dirname(__file__),

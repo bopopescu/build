@@ -36,10 +36,10 @@ def RunSteps(api):
 
     v8.set_up_swarming()
   else:
-    # Make sure we don't run a non-pure swarming tester on a subdir slave.
-    # Subdir slaves have the name pattern 'slaveN-c3#M'.
-    assert '#' not in api.properties.get('slavename', ''), (
-        'Can only use pure swarming testers on subdir slaves.')
+    # Make sure we don't run a non-pure swarming tester on a subdir subordinate.
+    # Subdir subordinates have the name pattern 'subordinateN-c3#M'.
+    assert '#' not in api.properties.get('subordinatename', ''), (
+        'Can only use pure swarming testers on subdir subordinates.')
 
     if api.platform.is_win:
       api.chromium.taskkill()
@@ -103,8 +103,8 @@ def RunSteps(api):
 
 
 def GenTests(api):
-  for mastername, _, buildername, _ in api.v8.iter_builders():
-    yield api.v8.test(mastername, buildername)
+  for mainname, _, buildername, _ in api.v8.iter_builders():
+    yield api.v8.test(mainname, buildername)
 
   yield (
     api.v8.test(

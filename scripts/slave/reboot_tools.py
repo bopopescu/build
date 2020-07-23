@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-""" Reboot the slave machine, unless it is run in a development
+""" Reboot the subordinate machine, unless it is run in a development
 envirenment (TESTING_MASTER environment variable is defined).
 
 The reboot is also controlled by reboot_on_step_timeout flag in the
-master config.
+main config.
 """
 
 import os
@@ -90,9 +90,9 @@ def ReallyReboot():
   """Repeatedly try to reboot the system.
 
      In IssueReboot, use subprocess.call() instead of Popen() to ensure that
-     run_slave.py doesn't exit at all when it calls Reboot().  This ensures that
-     run_slave.py won't exit and trigger any cleanup routines by whatever
-     launched run_slave.py.
+     run_subordinate.py doesn't exit at all when it calls Reboot().  This ensures that
+     run_subordinate.py won't exit and trigger any cleanup routines by whatever
+     launched run_subordinate.py.
 
   Since our strategy depends on Reboot() never returning, raise an exception
   if that should occur to make it clear in logs that an error condition is
@@ -113,23 +113,23 @@ def ReallyReboot():
 
 
 def Reboot():
-  """Reboot the buildbot slave machine.
+  """Reboot the buildbot subordinate machine.
 
   This behavior is controlled by the reboot_on_step_timeout flag in
-  the active master configuration.
+  the active main configuration.
   """
-  # This envrionment is defined only when testing the slave on a dev machine.
+  # This envrionment is defined only when testing the subordinate on a dev machine.
   is_testing = 'TESTING_MASTER' in os.environ
 
   should_reboot = False
   try:
     import config_bootstrap
-    master = getattr(config_bootstrap.Master, 'active_master', None)
-    should_reboot = getattr(master, 'reboot_on_step_timeout', True)
-    Log('Reboot: reboot_on_step_timeout = %r (from master_site_config: %r)'
-        % (should_reboot, master))
+    main = getattr(config_bootstrap.Main, 'active_main', None)
+    should_reboot = getattr(main, 'reboot_on_step_timeout', True)
+    Log('Reboot: reboot_on_step_timeout = %r (from main_site_config: %r)'
+        % (should_reboot, main))
   except:  # pylint: disable=W0702
-    Log('Reboot: failed to read master config: %s' % str(sys.exc_info()[0]))
+    Log('Reboot: failed to read main config: %s' % str(sys.exc_info()[0]))
     return
 
   if should_reboot:

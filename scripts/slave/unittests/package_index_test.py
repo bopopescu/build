@@ -16,7 +16,7 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-from slave.chromium import package_index
+from subordinate.chromium import package_index
 
 
 TEST_CC_FILE_CONTENT = '#include "test.h"\nint main() {\nreturn 0;\n}\n'

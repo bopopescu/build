@@ -46,16 +46,16 @@ class StatusEventLogger(StatusReceiverMultiService):
                service's parent directory by default, mainly overridden for
                testing.
       event_logging_dir: directory where to write events. This object adds the
-               master name to the path. Mainly overridden for testing.
+               main name to the path. Mainly overridden for testing.
     """
     self._logfile = self._original_logfile = logfile
     self._configfile = configfile
     self._basedir = basedir
-    self.master_dir = os.path.basename(os.path.abspath(os.curdir))
+    self.main_dir = os.path.basename(os.path.abspath(os.curdir))
 
     self._event_logging_dir = os.path.join(
       event_logging_dir or '/var/log/chrome-infra',
-      'status_logger-' + self.master_dir)
+      'status_logger-' + self.main_dir)
 
     self._event_logfile = os.path.join(self._event_logging_dir, 'events.log')
     self._ts_mon_logfile = os.path.join(self._event_logging_dir, 'ts_mon.log')
@@ -189,12 +189,12 @@ class StatusEventLogger(StatusReceiverMultiService):
       project_id=None, subproject_tag=None, steps=None, pre_test_time_s=None):
     """Log a build result for ts_mon.
 
-    This allows computing metrics for builds in mastermon.
+    This allows computing metrics for builds in mainmon.
     """
     d = {
         'timestamp_ms': finished * 1000,
         'builder': builder_name,
-        'slave': bot_name,
+        'subordinate': bot_name,
         'result': result.lower(),
         'duration_s': finished - started,
         'pending_s': started - scheduled,
@@ -221,7 +221,7 @@ class StatusEventLogger(StatusReceiverMultiService):
       # a bit of space.
       d = {'event-mon-timestamp-kind': timestamp_kind,
            'event-mon-event-timestamp': timestamp,
-           'event-mon-service-name': 'buildbot/master/%s' % self.master_dir,
+           'event-mon-service-name': 'buildbot/main/%s' % self.main_dir,
            'build-event-type': build_event_type,
            'build-event-hostname': bot_name,
            'build-event-build-name': builder_name,
@@ -382,9 +382,9 @@ class StatusEventLogger(StatusReceiverMultiService):
     self.log('buildsetSubmitted', '%r, %s', buildset, reason)
 
   def builderAdded(self, builderName, builder):
-    # Use slavenames rather than getSlaves() to just get strings.
-    slaves = builder.slavenames
-    self.log('builderAdded', '%s, %r', builderName, slaves)
+    # Use subordinatenames rather than getSubordinates() to just get strings.
+    subordinates = builder.subordinatenames
+    self.log('builderAdded', '%s, %r', builderName, subordinates)
     # Must return self in order to subscribe to builderChangedState and
     # buildStarted/Finished events.
     return self
@@ -394,7 +394,7 @@ class StatusEventLogger(StatusReceiverMultiService):
 
   def buildStarted(self, builderName, build):
     build_number = build.getNumber()
-    bot = build.getSlavename()
+    bot = build.getSubordinatename()
     self.log('buildStarted', '%s, %d, %s', builderName, build_number, bot)
     started, _ = build.getTimes()
     self.send_build_event(
@@ -412,7 +412,7 @@ class StatusEventLogger(StatusReceiverMultiService):
     self.log('changeAdded', '%r', change)
 
   def stepStarted(self, build, step):
-    bot = build.getSlavename()
+    bot = build.getSubordinatename()
     builder_name = build.getBuilder().name
     build_number = build.getNumber()
     step_name = step.getName()
@@ -478,7 +478,7 @@ class StatusEventLogger(StatusReceiverMultiService):
   def stepFinished(self, build, step, results):
     builder_name = build.getBuilder().name
     build_number = build.getNumber()
-    bot = build.getSlavename()
+    bot = build.getSubordinatename()
     step_name = step.getName()
     self.log('stepFinished', '%s, %d, %s, %r',
              builder_name, build_number, step_name, results)
@@ -492,7 +492,7 @@ class StatusEventLogger(StatusReceiverMultiService):
 
   def buildFinished(self, builderName, build, results):
     build_number = build.getNumber()
-    bot = build.getSlavename()
+    bot = build.getSubordinatename()
     self.log('buildFinished', '%s, %d, %s, %r',
              builderName, build_number, bot, results)
     started, finished = build.getTimes()
@@ -551,8 +551,8 @@ class StatusEventLogger(StatusReceiverMultiService):
   def builderRemoved(self, builderName):
     self.log('builderRemoved', '%s', builderName)
 
-  def slaveConnected(self, slaveName):
-    self.log('slaveConnected', '%s', slaveName)
+  def subordinateConnected(self, subordinateName):
+    self.log('subordinateConnected', '%s', subordinateName)
 
-  def slaveDisconnected(self, slaveName):
-    self.log('slaveDisconnected', '%s', slaveName)
+  def subordinateDisconnected(self, subordinateName):
+    self.log('subordinateDisconnected', '%s', subordinateName)

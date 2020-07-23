@@ -2,11 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""This module provides means to authenticate buildbot master to GAE apps.
+"""This module provides means to authenticate buildbot main to GAE apps.
 
-A master may have an assigned service account specified in the
-"service_account_file" attribute of a master definition in
-master_site_config.py. It is a name of a JSON key file created and deployed by
+A main may have an assigned service account specified in the
+"service_account_file" attribute of a main definition in
+main_site_config.py. It is a name of a JSON key file created and deployed by
 administrators. One service account can be used to authenticate to different GAE
 apps.
 
@@ -14,10 +14,10 @@ Cloud Endpoints and other Google APIs
 -------------------------------------
 
 This sample creates a Cloud Endpoints service client for Twisted code,
-authorized with master's service account:
+authorized with main's service account:
 
-    from master import auth
-    from master import deferred_resource
+    from main import auth
+    from main import deferred_resource
 
     MY_SERVICE_HOSTNAME = 'my_service.appspot.com'
     MY_SERVICE_DISCOVERY_URL = (
@@ -26,8 +26,8 @@ authorized with master's service account:
     )
 
     @defer.inlineCallbacks
-    def my_call(active_master)
-      creds = auth.create_credentials_for_master(active_master)
+    def my_call(active_main)
+      creds = auth.create_credentials_for_main(active_main)
       my_service = yield deferred_resource.DeferredResource.build(
           'my_service',
           'v1',
@@ -109,27 +109,27 @@ def create_service_account_credentials(json_key_filename, scope=None):
     raise Error(msg)
 
 
-def create_credentials_for_master(master, scope=None):
-  """Creates service account credentials for the master.
+def create_credentials_for_main(main, scope=None):
+  """Creates service account credentials for the main.
 
   Args:
-    master (config.Master): master configuration (what is normally
-        called ActiveMaster in master.cfg) with service_account_path set.
+    main (config.Main): main configuration (what is normally
+        called ActiveMain in main.cfg) with service_account_path set.
     scope (str|list of str): scope(s) of the credentials being
       requested. Defaults to https://www.googleapis.com/auth/userinfo.email.
 
   Returns:
     oauth2client.client.SignedJwtAssertionCredentials.
   """
-  if master.service_account_path:
+  if main.service_account_path:
     return create_service_account_credentials(
-        master.service_account_path, scope)
+        main.service_account_path, scope)
 
-  if master.is_production_host:
-    # If we're a live master and there is no configured service account,
+  if main.is_production_host:
+    # If we're a live main and there is no configured service account,
     # that is an error.
     raise Error(
         'Production instances must have a service account configured. '
-        'Set service_account_path or service_account_file in the master site '
+        'Set service_account_path or service_account_file in the main site '
         'config.')
   return None

@@ -20,13 +20,13 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from twisted.internet.protocol import ProcessProtocol
 
-class MasterShellCommand(BuildStep):
+class MainShellCommand(BuildStep):
     """
-    Run a shell command locally - on the buildmaster.  The shell command
+    Run a shell command locally - on the buildmain.  The shell command
     COMMAND is specified just as for a RemoteShellCommand.  Note that extra
     logfiles are not supported.
     """
-    name='MasterShellCommand'
+    name='MainShellCommand'
     description='Running'
     descriptionDone='Ran'
     renderables = [ 'command' ]

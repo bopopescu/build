@@ -8,9 +8,9 @@ from urllib import urlencode
 from urlparse import parse_qs, urlsplit, urlunsplit
 
 from buildbot.status.builder import FAILURE, SUCCESS
-from master import build_utils
-from master.chromium_notifier import ChromiumNotifier
-from master.failures_history import FailuresHistory
+from main import build_utils
+from main.chromium_notifier import ChromiumNotifier
+from main.failures_history import FailuresHistory
 
 from twisted.internet import defer
 from twisted.python import log
@@ -303,7 +303,7 @@ class PerfCountNotifier(ChromiumNotifier):
 
   def GetEmailSubject(self, builder_name, build_status, results, step_name):
     """Returns the subject of for an email based on perf results."""
-    project_name = self.master_status.getTitle()
+    project_name = self.main_status.getTitle()
     latest_revision = build_utils.getLatestRevision(build_status)
     result = 'changes'
     builders = [builder_name]
@@ -316,7 +316,7 @@ class PerfCountNotifier(ChromiumNotifier):
     """Returns a header message in an email.
 
     Used for backward compatibility with chromium_notifier.  It allows the
-    users to add text to every email from the master.cfg setup.
+    users to add text to every email from the main.cfg setup.
     """
     status_text = self.status_header % {
         'builder': builder_name,
@@ -383,7 +383,7 @@ class PerfCountNotifier(ChromiumNotifier):
 
   def GenStepBox(self, builder_name, build_status, step_name):
     """Generates a HTML styled summary box for one step."""
-    waterfall_url = self.master_status.getBuildbotURL()
+    waterfall_url = self.main_status.getBuildbotURL()
     styles = dict(build_utils.DEFAULT_STYLES)
     builder_results = self.GetEmailResults(builder_name)
     if builder_results[IMPROVE] and not builder_results[REGRESS]:

@@ -24,13 +24,13 @@ Define the interfaces that are implemented by various buildbot classes.
 from zope.interface import Interface, Attribute
 
 # exceptions that can be raised while trying to start a build
-class NoSlaveError(Exception):
+class NoSubordinateError(Exception):
     pass
 class BuilderInUseError(Exception):
     pass
-class BuildSlaveTooOldError(Exception):
+class BuildSubordinateTooOldError(Exception):
     pass
-class LatentBuildSlaveFailedToSubstantiate(Exception):
+class LatentBuildSubordinateFailedToSubstantiate(Exception):
     pass
 
 # other exceptions
@@ -42,16 +42,16 @@ class ParameterError(Exception):
 
 class IChangeSource(Interface):
     """
-    Service which feeds Change objects to the changemaster. When files or
+    Service which feeds Change objects to the changemain. When files or
     directories are changed in version control, this object should represent
     the changes as a change dictionary and call::
 
-      self.master.addChange(who=.., rev=.., ..)
+      self.main.addChange(who=.., rev=.., ..)
 
     See 'Writing Change Sources' in the manual for more information.
     """
-    master = Attribute('master',
-            'Pointer to BuildMaster, automatically set when started.')
+    main = Attribute('main',
+            'Pointer to BuildMain, automatically set when started.')
 
     def describe():
         """Return a string which briefly describes this source."""
@@ -111,7 +111,7 @@ class IEmailLookup(Interface):
         be reached by email), or a Deferred which will fire with the same."""
 
 class IStatus(Interface):
-    """I am an object, obtainable from the buildmaster, which can provide
+    """I am an object, obtainable from the buildmain, which can provide
     status information."""
 
     def getTitle():
@@ -144,11 +144,11 @@ class IStatus(Interface):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
 
-    def getSlaveNames():
-        """Return a list of buildslave names, suitable for passing to
-        getSlave()."""
-    def getSlave(name):
-        """Return the ISlaveStatus object for a given named buildslave."""
+    def getSubordinateNames():
+        """Return a list of buildsubordinate names, suitable for passing to
+        getSubordinate()."""
+    def getSubordinate(name):
+        """Return the ISubordinateStatus object for a given named buildsubordinate."""
 
     def getBuildSets():
         """
@@ -267,7 +267,7 @@ class IBuildRequestStatus(Interface):
         IBuildStatus object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost subordinate. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):
@@ -277,22 +277,22 @@ class IBuildRequestStatus(Interface):
         Deferred."""
 
 
-class ISlaveStatus(Interface):
+class ISubordinateStatus(Interface):
     def getName():
-        """Return the name of the build slave."""
+        """Return the name of the build subordinate."""
 
     def getAdmin():
-        """Return a string with the slave admin's contact data."""
+        """Return a string with the subordinate admin's contact data."""
 
     def getHost():
-        """Return a string with the slave host info."""
+        """Return a string with the subordinate host info."""
 
     def isConnected():
-        """Return True if the slave is currently online, False if not."""
+        """Return True if the subordinate is currently online, False if not."""
 
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
-        recent message was received from the buildslave."""
+        recent message was received from the buildsubordinate."""
 
 class ISchedulerStatus(Interface):
     def getName():
@@ -319,8 +319,8 @@ class IBuilderStatus(Interface):
         'idle', or 'building'. 'builds' is a list of IBuildStatus objects
         (possibly empty) representing the currently active builds."""
 
-    def getSlaves():
-        """Return a list of ISlaveStatus objects for the buildslaves that are
+    def getSubordinates():
+        """Return a list of ISubordinateStatus objects for the buildsubordinates that are
         used by this builder."""
 
     def getPendingBuildRequestStatuses():
@@ -529,8 +529,8 @@ class IBuildStatus(Interface):
     # Once you know the build has finished, the following methods are legal.
     # Before ths build has finished, they all return None.
 
-    def getSlavename():
-        """Return the name of the buildslave which handled this build."""
+    def getSubordinatename():
+        """Return the name of the buildsubordinate which handled this build."""
 
     def getText():
         """Returns a list of strings to describe the build. These are
@@ -686,7 +686,7 @@ class IStatusEvent(Interface):
     def getTimes():
         """Returns a tuple of (start, end) like IBuildStepStatus, but end==0
         indicates that this is a 'point event', which has no duration.
-        SlaveConnect/Disconnect are point events. Ping is not: it starts
+        SubordinateConnect/Disconnect are point events. Ping is not: it starts
         when requested and ends when the response (positive or negative) is
         returned"""
 
@@ -855,13 +855,13 @@ class IStatusReceiver(Interface):
     subscribed to an IStatus, an IBuilderStatus, or an IBuildStatus."""
 
     def buildsetSubmitted(buildset):
-        """A new BuildSet has been submitted to the buildmaster.
+        """A new BuildSet has been submitted to the buildmain.
 
         @type buildset: implementor of L{IBuildSetStatus}
         """
 
     def requestSubmitted(request):
-        """A new BuildRequest has been submitted to the buildmaster.
+        """A new BuildRequest has been submitted to the buildmain.
 
         @type request: implementor of L{IBuildRequestStatus}
         """
@@ -909,7 +909,7 @@ class IStatusReceiver(Interface):
         towards completion."""
 
     def changeAdded(change):
-        """A new Change was added to the ChangeMaster.  By the time this event
+        """A new Change was added to the ChangeMain.  By the time this event
         is received, all schedulers have already received the change."""
 
     def stepStarted(build, step):
@@ -980,11 +980,11 @@ class IStatusReceiver(Interface):
     def builderRemoved(builderName):
         """The Builder has been removed."""
 
-    def slaveConnected(slaveName):
-        """The slave has connected."""
+    def subordinateConnected(subordinateName):
+        """The subordinate has connected."""
 
-    def slaveDisconnected(slaveName):
-        """The slave has disconnected."""
+    def subordinateDisconnected(subordinateName):
+        """The subordinate has disconnected."""
 
 class IControl(Interface):
     def addChange(change):
@@ -1021,13 +1021,13 @@ class IBuilderControl(Interface):
         there is nothing to control anymore."""
 
     def ping():
-        """Attempt to contact the slave and see if it is still alive. This
-        returns a Deferred which fires with either True (the slave is still
-        alive) or False (the slave did not respond). As a side effect, adds an
+        """Attempt to contact the subordinate and see if it is still alive. This
+        returns a Deferred which fires with either True (the subordinate is still
+        alive) or False (the subordinate did not respond). As a side effect, adds an
         event to this builder's column in the waterfall display containing the
         results of the ping. Note that this may not fail for a long time, it is
         implemented in terms of the timeout on the underlying TCP connection."""
-        # TODO: this ought to live in ISlaveControl, maybe with disconnect()
+        # TODO: this ought to live in ISubordinateControl, maybe with disconnect()
         # or something. However the event that is emitted is most useful in
         # the Builder column, so it kinda fits here too.
 
@@ -1037,7 +1037,7 @@ class IBuildRequestControl(Interface):
         IBuildControl object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost subordinate. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):
@@ -1082,19 +1082,19 @@ class ILogObserver(Interface):
     def logChunk(build, step, log, channel, text):
         pass
 
-class IBuildSlave(Interface):
-    # this is a marker interface for the BuildSlave class
+class IBuildSubordinate(Interface):
+    # this is a marker interface for the BuildSubordinate class
     pass
 
-class ILatentBuildSlave(IBuildSlave):
-    """A build slave that is not always running, but can run when requested.
+class ILatentBuildSubordinate(IBuildSubordinate):
+    """A build subordinate that is not always running, but can run when requested.
     """
     substantiated = Attribute('Substantiated',
-                              'Whether the latent build slave is currently '
+                              'Whether the latent build subordinate is currently '
                               'substantiated with a real instance.')
 
     def substantiate():
-        """Request that the slave substantiate with a real instance.
+        """Request that the subordinate substantiate with a real instance.
 
         Returns a deferred that will callback when a real instance has
         attached."""
@@ -1102,16 +1102,16 @@ class ILatentBuildSlave(IBuildSlave):
     # there is an insubstantiate too, but that is not used externally ATM.
 
     def buildStarted(sb):
-        """Inform the latent build slave that a build has started.
+        """Inform the latent build subordinate that a build has started.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentSubordinateBuilder}.  The sb is the one for whom the
         build finished.
         """
 
     def buildFinished(sb):
-        """Inform the latent build slave that a build has finished.
+        """Inform the latent build subordinate that a build has finished.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentSubordinateBuilder}.  The sb is the one for whom the
         build finished.
         """
 

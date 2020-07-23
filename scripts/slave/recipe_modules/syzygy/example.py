@@ -37,7 +37,7 @@ def RunSteps(api, buildername):
     api.chromium.set_config('syzygy_official')
     api.gclient.set_config('syzygy_official')
 
-  # Clean up any running processes on the slave.
+  # Clean up any running processes on the subordinate.
   api.syzygy.taskkill()
 
   # Checkout and compile the project.
@@ -72,7 +72,7 @@ def GenTests(api):
   """Generates an end-to-end successful test for this builder."""
   yield api.syzygy.generate_test(api, 'Syzygy Debug')
 
-  # Use 'fake_slave' as a slave name to ensure that we get coverage of the
+  # Use 'fake_subordinate' as a subordinate name to ensure that we get coverage of the
   # alternate code paths in Coverage and Official specific commands builds.
-  yield api.syzygy.generate_test(api, 'Syzygy Coverage', slavename='fake_slave')
-  yield api.syzygy.generate_test(api, 'Syzygy Official', slavename='fake_slave')
+  yield api.syzygy.generate_test(api, 'Syzygy Coverage', subordinatename='fake_subordinate')
+  yield api.syzygy.generate_test(api, 'Syzygy Official', subordinatename='fake_subordinate')

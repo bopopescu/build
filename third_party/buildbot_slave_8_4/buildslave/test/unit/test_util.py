@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 
-from buildslave import util
+from buildsubordinate import util
 
 class remove_userpassword(unittest.TestCase):
 

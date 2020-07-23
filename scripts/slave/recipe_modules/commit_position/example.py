@@ -12,9 +12,9 @@ DEPS = [
     'recipe_engine/step',
     ]
 
-VALID_CP = 'refs/heads/master@{#12345}'
+VALID_CP = 'refs/heads/main@{#12345}'
 INVALID_CP_BAD_FORMAT = 'foo/var@{missing-hash}'
-INVALID_CP_NON_NUMERIC = 'refs/heads/master@{#foo}'
+INVALID_CP_NON_NUMERIC = 'refs/heads/main@{#foo}'
 
 def RunSteps(api):
   fake_checkout_path = api.path.mkdtemp('fake_checkout')
@@ -61,7 +61,7 @@ def GenTests(api):
       api.properties(
         cp=VALID_CP,
         revision=12345,
-        branch='refs/heads/master',
+        branch='refs/heads/main',
         hash_to_resolve=valid_hash) +
       api.step_data('resolving hash ' + valid_hash,
                     stdout=api.raw_io.output(VALID_CP)))

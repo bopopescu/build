@@ -15,9 +15,9 @@
 
 from twisted.trial import unittest
 
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import cvs
+from buildsubordinate.test.fake.runprocess import Expect
+from buildsubordinate.test.util.sourcecommand import SourceCommandTestMixin
+from buildsubordinate.commands import cvs
 
 class TestCVS(SourceCommandTestMixin, unittest.TestCase):
 

@@ -24,8 +24,8 @@ DEPS = [
 
 
 PROPERTIES = {
-    'target_mastername': Property(
-        kind=str, help='The target master to match compile config to.'),
+    'target_mainname': Property(
+        kind=str, help='The target main to match compile config to.'),
     'target_buildername': Property(
         kind=str, help='The target builder to match compile config to.'),
     'good_revision': Property(
@@ -48,12 +48,12 @@ class CompileResult(object):
   FAILED = 'failed'  # Compile failed.
 
 
-def _run_compile_at_revision(api, target_mastername, target_buildername,
+def _run_compile_at_revision(api, target_mainname, target_buildername,
                              revision, compile_targets, use_analyze):
   with api.step.nest('test %s' % str(revision)):
     # Checkout code at the given revision to recompile.
     bot_config = api.chromium_tests.create_bot_config_object(
-        target_mastername, target_buildername)
+        target_mainname, target_buildername)
     bot_update_step, bot_db = api.chromium_tests.prepare_checkout(
         bot_config, root_solution_revision=revision)
 
@@ -76,13 +76,13 @@ def _run_compile_at_revision(api, target_mastername, target_buildername,
             test_targets=[],
             additional_compile_targets=compile_targets,
             config_file_name='trybot_analyze_config.json',
-            mb_mastername=target_mastername,
+            mb_mainname=target_mainname,
             mb_buildername=target_buildername,
             additional_names=None)
     else:
       # Use ninja to filter out none-existing targets.
       compile_targets = api.findit.existing_targets(
-          compile_targets, target_mastername, target_buildername)
+          compile_targets, target_mainname, target_buildername)
 
     if not compile_targets:
       # No compile target exists, or is impacted by the given revision.
@@ -95,7 +95,7 @@ def _run_compile_at_revision(api, target_mastername, target_buildername,
           bot_db,
           compile_targets,
           tests_including_triggered=[],
-          mb_mastername=target_mastername,
+          mb_mainname=target_mainname,
           mb_buildername=target_buildername,
           override_bot_type='builder_tester')
       return CompileResult.PASSED
@@ -105,11 +105,11 @@ def _run_compile_at_revision(api, target_mastername, target_buildername,
       return CompileResult.FAILED
 
 
-def RunSteps(api, target_mastername, target_buildername,
+def RunSteps(api, target_mainname, target_buildername,
              good_revision, bad_revision,
              compile_targets, use_analyze):
   bot_config = api.chromium_tests.create_bot_config_object(
-      target_mastername, target_buildername)
+      target_mainname, target_buildername)
   api.chromium_tests.configure_build(
       bot_config, override_bot_type='builder_tester')
 
@@ -132,7 +132,7 @@ def RunSteps(api, target_mastername, target_buildername,
     for current_revision in revisions_to_check:
       last_revision = None
       compile_result = _run_compile_at_revision(
-          api, target_mastername, target_buildername,
+          api, target_mainname, target_buildername,
           current_revision, compile_targets, use_analyze)
 
       compile_results[current_revision] = compile_result
@@ -149,7 +149,7 @@ def RunSteps(api, target_mastername, target_buildername,
       step_result.presentation.step_text = '<br/>Culprit: %s' % last_revision
 
     # Set the report as a build property too, so that it will be reported back
-    # to Buildbucket and Findit will pull from there instead of buildbot master.
+    # to Buildbucket and Findit will pull from there instead of buildbot main.
     step_result.presentation.properties['report'] = report
 
   return report
@@ -158,11 +158,11 @@ def RunSteps(api, target_mastername, target_buildername,
 def GenTests(api):
   def props(compile_targets=None, use_analyze=False):
     properties = {
-        'mastername': 'tryserver.chromium.linux',
+        'mainname': 'tryserver.chromium.linux',
         'buildername': 'linux_variable',
-        'slavename': 'build1-a1',
+        'subordinatename': 'build1-a1',
         'buildnumber': '1',
-        'target_mastername': 'chromium.linux',
+        'target_mainname': 'chromium.linux',
         'target_buildername': 'Linux Builder',
         'good_revision': 'r0',
         'bad_revision': 'r1',

@@ -9,21 +9,21 @@ DEPS = [
 ]
 
 def RunSteps(api):
-  mastername = api.properties.get('mastername')
+  mainname = api.properties.get('mainname')
   buildername = api.properties.get('buildername')
 
   bot_config = api.chromium_tests.create_bot_config_object(
-      mastername, buildername)
+      mainname, buildername)
   api.chromium_tests.configure_build(bot_config)
   update_step, bot_db = api.chromium_tests.prepare_checkout(bot_config)
-  #api.chromium_tests.compile(mastername, buildername, update_step, bot_db,
+  #api.chromium_tests.compile(mainname, buildername, update_step, bot_db,
   #                           out_dir='/tmp')
   api.chromium.compile(targets=['All'], out_dir='/tmp')
 
 def GenTests(api):
   yield api.test('basic_out_dir') + api.properties(
-      mastername='chromium.linux',
+      mainname='chromium.linux',
       buildername='Android Builder (dbg)',
-      slavename='build1-a1',
+      subordinatename='build1-a1',
       buildnumber='77457',
   )

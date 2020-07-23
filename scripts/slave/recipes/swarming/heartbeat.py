@@ -19,7 +19,7 @@ DEPS = [
 def RunSteps(api):
   branch = 'stable'
   if api.properties.get('target_environment') == 'staging':
-    branch = 'master'
+    branch = 'main'
   api.swarming_client.checkout(branch, can_fail_build=False)
   api.swarming.check_client_version()
   api.swarming_heartbeat.run()

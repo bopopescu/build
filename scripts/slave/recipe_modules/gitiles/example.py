@@ -55,7 +55,7 @@ def GenTests(api):
           ])
       )
       + api.step_data(
-          'fetch master:OWNERS',
+          'fetch main:OWNERS',
           api.gitiles.make_encoded_file('foobar')
       )
   )

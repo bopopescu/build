@@ -406,7 +406,7 @@ class RevisionState(object):
     ]
     try:
       if not self.bisector.bisect_config.get('skip_gclient_ops'):
-        self.bisector.ensure_sync_master_branch()
+        self.bisector.ensure_sync_main_branch()
       api.m.git(
           *try_cmd, name='Requesting build for %s via git try.'
           % str(self.commit_hash), git_config_options={

@@ -3,18 +3,18 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Dumps a list of known slaves, along with their OS and master."""
+"""Dumps a list of known subordinates, along with their OS and main."""
 
 import os
 import sys
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 sys.path.append(path)
 
-from tools import list_slaves
+from tools import list_subordinates
 
 
 def main():
-  list_slaves.Main(['--botmap', '-x', 'all'])
+  list_subordinates.Main(['--botmap', '-x', 'all'])
 
 
 if __name__ == '__main__':

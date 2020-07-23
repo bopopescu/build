@@ -16,8 +16,8 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands.base import Command
+from buildsubordinate.test.util.command import CommandTestMixin
+from buildsubordinate.commands.base import Command
 
 # set up a fake Command subclass to test the handling in Command.  Think of
 # this as testing Command's subclassability.

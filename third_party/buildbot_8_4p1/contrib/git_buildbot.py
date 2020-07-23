@@ -5,7 +5,7 @@
 #
 # For example:
 #   aa453216d1b3e49e7f6f98441fa56946ddcd6a20
-#   68f7abf4e6f922807889f52bc043ecd31b79f814 refs/heads/master
+#   68f7abf4e6f922807889f52bc043ecd31b79f814 refs/heads/main
 #
 # Each of these changes will be passed to the buildbot server along
 # with any other change information we manage to extract from the
@@ -35,10 +35,10 @@ from twisted.internet import reactor, defer
 
 from optparse import OptionParser
 
-# Modify this to fit your setup, or pass in --master server:host on the
+# Modify this to fit your setup, or pass in --main server:host on the
 # command line
 
-master = "localhost:9989"
+main = "localhost:9989"
 
 # When sending the notification, send this category iff
 # it's set (via --category)
@@ -68,7 +68,7 @@ changes = []
 
 def connectFailed(error):
     logging.error("Could not connect to %s: %s"
-            % (master, error.getErrorMessage()))
+            % (main, error.getErrorMessage()))
     return error
 
 
@@ -282,7 +282,7 @@ def process_changes():
         logging.warning("No changes found")
         return
 
-    host, port = master.split(':')
+    host, port = main.split(':')
     port = int(port)
 
     f = pb.PBClientFactory()
@@ -302,10 +302,10 @@ def parse_options():
             help="Log to the specified file")
     parser.add_option("-v", "--verbose", action="count",
             help="Be more verbose. Ignored if -l is not specified.")
-    master_help = ("Build master to push to. Default is %(master)s" % 
-                   { 'master' : master })
-    parser.add_option("-m", "--master", action="store", type="string",
-            help=master_help)
+    main_help = ("Build main to push to. Default is %(main)s" % 
+                   { 'main' : main })
+    parser.add_option("-m", "--main", action="store", type="string",
+            help=main_help)
     parser.add_option("-c", "--category", action="store",
                       type="string", help="Scheduler category to notify.")
     parser.add_option("-r", "--repository", action="store",
@@ -345,8 +345,8 @@ try:
         logfile.setFormatter(fmt)
         logging.getLogger().addHandler(logfile)
 
-    if options.master:
-        master=options.master
+    if options.main:
+        main=options.main
 
     if options.category:
         category = options.category

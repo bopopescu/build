@@ -33,7 +33,7 @@ except ImportError:
 class Model(base.DBConnectorComponent):
     """
     DBConnector component to handle the database model; an instance is available
-    at C{master.db.model}.
+    at C{main.db.model}.
 
     This class has attributes for each defined table, as well as methods to
     handle schema migration (using sqlalchemy-migrate).  View the source to see
@@ -67,18 +67,18 @@ class Model(base.DBConnectorComponent):
         sa.Column('buildername', sa.String(length=256), nullable=False),
         sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")), # TODO: used?
 
-        # claimed_at is the time at which a master most recently asserted that
+        # claimed_at is the time at which a main most recently asserted that
         # it is responsible for running the build: this will be updated
         # periodically to maintain the claim.  Note that 0 and NULL mean the
         # same thing here (and not 1969!)
         sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
 
-        # claimed_by indicates which buildmaster has claimed this request. The
+        # claimed_by indicates which buildmain has claimed this request. The
         # 'name' contains hostname/basedir, and will be the same for subsequent
-        # runs of any given buildmaster. The 'incarnation' contains bootime/pid,
-        # and will be different for subsequent runs. This allows each buildmaster
+        # runs of any given buildmain. The 'incarnation' contains bootime/pid,
+        # and will be different for subsequent runs. This allows each buildmain
         # to distinguish their current claims, their old claims, and the claims
-        # of other buildmasters, to treat them each appropriately.
+        # of other buildmains, to treat them each appropriately.
         sa.Column('claimed_by_name', sa.String(length=256)),
         sa.Column('claimed_by_incarnation', sa.String(length=256)),
 
@@ -86,7 +86,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")), # TODO: boolean
 
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
-        # etc - see master/buildbot/status/builder.py
+        # etc - see main/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger),
 
         # time the buildrequest was created
@@ -97,7 +97,7 @@ class Model(base.DBConnectorComponent):
     )
     """A BuildRequest is a request for a particular build to be performed.
     Each BuildRequest is a part of a BuildSet.  BuildRequests are claimed by
-    masters, to avoid multiple masters running the same build."""
+    mains, to avoid multiple mains running the same build."""
 
     # builds
 
@@ -105,7 +105,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer,  primary_key=True),
 
         # XXX
-        # the build number is local to the builder and (maybe?) the buildmaster
+        # the build number is local to the builder and (maybe?) the buildmain
         sa.Column('number', sa.Integer, nullable=False),
 
         sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=False),
@@ -142,7 +142,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('complete_at', sa.Integer), # TODO: redundant
 
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
-        # etc - see master/buildbot/status/builder.py
+        # etc - see main/buildbot/status/builder.py
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
     )
     """This table represents BuildSets - sets of BuildRequests that share the same
@@ -184,7 +184,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('is_dir', sa.SmallInteger, nullable=False), # old, for CVS
 
         # The branch where this change occurred.  When branch is NULL, that
-        # means the main branch (trunk, master, etc.)
+        # means the main branch (trunk, main, etc.)
         sa.Column('branch', sa.String(256)),
 
         # revision identifier for this change
@@ -238,7 +238,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer,  primary_key=True),
 
         # the branch to check out.  When branch is NULL, that means
-        # the main branch (trunk, master, etc.)
+        # the main branch (trunk, main, etc.)
         sa.Column('branch', sa.String(256)),
 
         # the revision to check out, or the latest if NULL
@@ -286,7 +286,7 @@ class Model(base.DBConnectorComponent):
     schedulers = sa.Table("schedulers", metadata,
         # unique ID for scheduler
         sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
-        # scheduler's name in master.cfg
+        # scheduler's name in main.cfg
         sa.Column('name', sa.String(128), nullable=False),
         # JSON-encoded state for this scheduler
         sa.Column('state', sa.String(1024), nullable=False),
@@ -363,7 +363,7 @@ class Model(base.DBConnectorComponent):
 
     # this is a bit more complicated than might be expected because the first
     # seven database versions were once implemented using a homespun migration
-    # system, and we need to support upgrading masters from that system.  The
+    # system, and we need to support upgrading mains from that system.  The
     # old system used a 'version' table, where SQLAlchemy-Migrate uses
     # 'migrate_version'
 

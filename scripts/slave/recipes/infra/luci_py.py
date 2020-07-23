@@ -21,7 +21,7 @@ def GenTests(api):
     api.properties.git_scheduled(
         buildername='luci-py-linux64',
         buildnumber=123,
-        mastername='chromium.infra',
+        mainname='chromium.infra',
         repository='https://chromium.googlesource.com/external/github.com/luci/luci-py',
     )
   )

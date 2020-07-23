@@ -21,7 +21,7 @@ class CacheManager(object):
     and with potentially-overlapping key spaces.
 
     There is generally only one instance of this class, available at
-    C{master.caches}.
+    C{main.caches}.
     """
 
     # a cache of length one still has many benefits: it collects objects that

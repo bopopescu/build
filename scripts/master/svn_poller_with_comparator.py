@@ -16,7 +16,7 @@ class SvnPollerWithComparator(SVNPoller):
   def startService(self):
     # Initialize revision comparator with revisions from all changes
     # known to buildbot.
-    yield self.comparator.initialize(self.master.db)
+    yield self.comparator.initialize(self.main.db)
     PollingChangeSource.startService(self)
 
   def create_changes(self, new_logentries):
@@ -44,4 +44,4 @@ class PBChangeSourceWithComparator(PBChangeSource):
   def getPerspective(self, _mind, username):
     assert username == self.user
     return ChangePerspectiveWithComparator(
-        self.comparator, self.master, self.prefix)
+        self.comparator, self.main, self.prefix)

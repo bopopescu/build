@@ -21,8 +21,8 @@ class DBConnectorComponent(object):
     """
     A fixed component of the DBConnector, handling one particular aspect of the
     database.  Instances of subclasses are assigned to attributes of the
-    DBConnector object, so that they are available at e.g., C{master.db.model}
-    or C{master.db.changes}.  This parent class takes care of the necessary
+    DBConnector object, so that they are available at e.g., C{main.db.model}
+    or C{main.db.changes}.  This parent class takes care of the necessary
     backlinks and other housekeeping.
     """
 
@@ -47,7 +47,7 @@ class CachedMethod(object):
         meth = self.method
 
         meth_name = meth.__name__
-        cache = component.db.master.caches.get_cache(self.cache_name,
+        cache = component.db.main.caches.get_cache(self.cache_name,
                 lambda key : meth(component, key))
         def wrap(key, no_cache=0):
             if no_cache:

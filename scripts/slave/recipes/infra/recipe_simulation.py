@@ -15,13 +15,13 @@ DEPS = [
 def RunSteps(api):
   api.gclient.set_config('build')
   api.bot_update.ensure_checkout(force=True)
-  recipes_py = api.path['checkout'].join('scripts', 'slave', 'recipes.py')
+  recipes_py = api.path['checkout'].join('scripts', 'subordinate', 'recipes.py')
   api.python('recipe fetch deps', recipes_py, ['fetch'])
   # In theory, this should work too. But in practice, this fails to import
   # coverage module (http://crbug.com/577049).
   # api.python('recipe simulation test', recipes_py, ['simulation_test'])
   recipe_simulation_test = api.path['checkout'].join(
-      'scripts', 'slave', 'unittests', 'recipe_simulation_test.py')
+      'scripts', 'subordinate', 'unittests', 'recipe_simulation_test.py')
   api.python('recipe simulation test', recipe_simulation_test, ['test'])
 
 
@@ -29,7 +29,7 @@ def GenTests(api):
   yield (
       api.test('normal') +
       api.properties.generic(
-          mastername='chromium.tools.build',
+          mainname='chromium.tools.build',
           buildername='recipe simulation tester',
           revision='deadbeaf',
       )

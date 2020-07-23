@@ -15,7 +15,7 @@ import unittest
 
 import test_env  # pylint: disable=W0403,W0611
 
-from slave.chromium import filter_compilations
+from subordinate.chromium import filter_compilations
 
 
 def _GetCompilationUnitDictionary(filename):

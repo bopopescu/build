@@ -13,7 +13,7 @@ import default_flavor
 class iOSFlavorUtils(default_flavor.DefaultFlavorUtils):
   def __init__(self, skia_api):
     super(iOSFlavorUtils, self).__init__(skia_api)
-    self.ios_bin = self._skia_api.m.path['slave_build'].join(
+    self.ios_bin = self._skia_api.m.path['subordinate_build'].join(
         'skia', 'platform_tools', 'ios', 'bin')
 
   def step(self, name, cmd, **kwargs):

@@ -21,11 +21,11 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor, task
 from twisted.python import failure, log
 
-from buildslave.test.util import command, compat
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.fake.runprocess import Expect
-import buildslave
-from buildslave import bot
+from buildsubordinate.test.util import command, compat
+from buildsubordinate.test.fake.remote import FakeRemote
+from buildsubordinate.test.fake.runprocess import Expect
+import buildsubordinate
+from buildsubordinate import bot
 
 class TestBot(unittest.TestCase):
 
@@ -59,25 +59,25 @@ class TestBot(unittest.TestCase):
     def test_getVersion(self):
         d = self.bot.callRemote("getVersion")
         def check(vers):
-            self.assertEqual(vers, buildslave.version)
+            self.assertEqual(vers, buildsubordinate.version)
         d.addCallback(check)
         return d
 
-    def test_getSlaveInfo(self):
+    def test_getSubordinateInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
         open(os.path.join(infodir, "admin"), "w").write("testy!")
         open(os.path.join(infodir, "foo"), "w").write("bar")
         open(os.path.join(infodir, "environ"), "w").write("something else")
 
-        d = self.bot.callRemote("getSlaveInfo")
+        d = self.bot.callRemote("getSubordinateInfo")
         def check(info):
             self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ, system=os.name, basedir=self.basedir))
         d.addCallback(check)
         return d
 
-    def test_getSlaveInfo_nodir(self):
-        d = self.bot.callRemote("getSlaveInfo")
+    def test_getSubordinateInfo_nodir(self):
+        d = self.bot.callRemote("getSubordinateInfo")
         def check(info):
             self.assertEqual(set(info.keys()), set(['environ','system','basedir']))
         d.addCallback(check)
@@ -95,14 +95,14 @@ class TestBot(unittest.TestCase):
         def check(builders):
             self.assertEqual(builders.keys(), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-            # note that we test the SlaveBuilder instance below
+            # note that we test the SubordinateBuilder instance below
         d.addCallback(check)
         return d
 
     def test_setBuilderList_updates(self):
         d = defer.succeed(None)
 
-        slavebuilders = {}
+        subordinatebuilders = {}
 
         def add_my(_):
             d = self.bot.callRemote("setBuilderList", [
@@ -110,7 +110,7 @@ class TestBot(unittest.TestCase):
             def check(builders):
                 self.assertEqual(builders.keys(), ['mybld'])
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                slavebuilders['my'] = builders['mybld']
+                subordinatebuilders['my'] = builders['mybld']
             d.addCallback(check)
             return d
         d.addCallback(add_my)
@@ -122,9 +122,9 @@ class TestBot(unittest.TestCase):
                 self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                # 'my' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['my']), id(builders['mybld']))
-                slavebuilders['your'] = builders['yourbld']
+                # 'my' should still be the same subordinatebuilder object
+                self.assertEqual(id(subordinatebuilders['my']), id(builders['mybld']))
+                subordinatebuilders['your'] = builders['yourbld']
             d.addCallback(check)
             return d
         d.addCallback(add_your)
@@ -138,8 +138,8 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
-                # 'your' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['your']), id(builders['yourbld']))
+                # 'your' should still be the same subordinatebuilder object
+                self.assertEqual(id(subordinatebuilders['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
         d.addCallback(remove_my)
@@ -167,7 +167,7 @@ class TestBot(unittest.TestCase):
         return defer.gatherResults([d1, d2])
 
 class FakeStep(object):
-    "A fake master-side BuildStep that records its activities."
+    "A fake main-side BuildStep that records its activities."
     def __init__(self):
         self.finished_d = defer.Deferred()
         self.actions = []
@@ -185,7 +185,7 @@ class FakeStep(object):
         self.actions.append(["complete", f])
         self.finished_d.callback(None)
 
-class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
+class TestSubordinateBuilder(command.CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath("basedir")
@@ -196,7 +196,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot = bot.Bot(self.basedir, False)
         self.bot.startService()
 
-        # get a SlaveBuilder object from the bot and wrap it as a fake remote
+        # get a SubordinateBuilder object from the bot and wrap it as a fake remote
         builders = self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
@@ -213,12 +213,12 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.sb.callRemote("print", "Hello, SlaveBuilder.")
+        return self.sb.callRemote("print", "Hello, SubordinateBuilder.")
 
-    def test_setMaster(self):
-        # not much to check here - what the SlaveBuilder does with the
-        # master is not part of the interface (and, in fact, it does very little)
-        return self.sb.callRemote("setMaster", mock.Mock())
+    def test_setMain(self):
+        # not much to check here - what the SubordinateBuilder does with the
+        # main is not part of the interface (and, in fact, it does very little)
+        return self.sb.callRemote("setMain", mock.Mock())
 
     def test_shutdown(self):
         # don't *actually* shut down the reactor - that would be silly
@@ -309,7 +309,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_startCommand_failure(self):
-        # similar to test_startCommand, but leave out some args so the slave
+        # similar to test_startCommand, but leave out some args so the subordinate
         # generates a failure
 
         # set up a fake step to receive updates
@@ -372,4 +372,4 @@ class TestBotFactory(unittest.TestCase):
         clock.advance(35)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-# note that the BuildSlave class is tested in test_bot_BuildSlave
+# note that the BuildSubordinate class is tested in test_bot_BuildSubordinate

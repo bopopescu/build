@@ -10,7 +10,7 @@ DEPS = [
 
 def RunSteps(api):
   """Move things around in a loop!"""
-  local_file = api.path['slave_build'].join('boom')
+  local_file = api.path['subordinate_build'].join('boom')
   bucket = 'chromium-recipe-test'
   cloud_file = 'some/random/path/to/boom'
   api.gsutil.upload(local_file, bucket, cloud_file,
@@ -45,7 +45,7 @@ def RunSteps(api):
     pass
 
   new_cloud_file = 'staging/to/boom'
-  new_local_file = api.path['slave_build'].join('erang')
+  new_local_file = api.path['subordinate_build'].join('erang')
   api.gsutil.download(bucket, new_cloud_file, new_local_file)
 
   private_key_file = 'path/to/key'

@@ -46,7 +46,7 @@ def RunSteps(api, buildername):
            cwd=api.path['checkout'])
 
   # Capture the SKPs.
-  cmd = ['python', api.path['build'].join('scripts', 'slave', 'skia',
+  cmd = ['python', api.path['build'].join('scripts', 'subordinate', 'skia',
                                           'recreate_skps.py'),
          api.path['checkout'],
          api.path['checkout'].join('out', 'Release', 'chrome')]
@@ -54,7 +54,7 @@ def RunSteps(api, buildername):
     cmd.append('--dry-run')
   api.step('Recreate SKPs',
            cmd=cmd,
-           cwd=api.path['slave_build'].join('skia'),
+           cwd=api.path['subordinate_build'].join('skia'),
   )
 
 def GenTests(api):

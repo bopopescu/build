@@ -18,8 +18,8 @@ import traceback
 
 from apiclient import discovery
 from buildbot.status.base import StatusReceiverMultiService
-from master import auth
-from master.deferred_resource import DeferredResource
+from main import auth
+from main.deferred_resource import DeferredResource
 from oauth2client import client as oauth2client
 from twisted.internet import defer, reactor
 from twisted.python import log
@@ -207,28 +207,28 @@ class StatusPush(StatusReceiverMultiService):
   verbose = False
 
   @classmethod
-  def CreateStatusPush(cls, activeMaster, pushInterval=None):
-    assert activeMaster, 'An active master must be supplied.'
+  def CreateStatusPush(cls, activeMain, pushInterval=None):
+    assert activeMain, 'An active main must be supplied.'
     if not (
-          activeMaster.is_production_host or os.environ.get('TESTING_MASTER')):
+          activeMain.is_production_host or os.environ.get('TESTING_MASTER')):
       log.msg(
           'Not a production host or testing, not loading the PubSub '
           'status listener.')
       return None
 
-    topic_url = getattr(activeMaster, 'pubsub_topic_url', None)
+    topic_url = getattr(activeMain, 'pubsub_topic_url', None)
     if not topic_url:
       log.msg('PubSub: Missing pubsub_topic_url, not enabling.')
       return None
 
-    # Set the master name, for indexing purposes.
-    name = getattr(activeMaster, 'name', None)
+    # Set the main name, for indexing purposes.
+    name = getattr(activeMain, 'name', None)
     if not name:
       raise ConfigError(
-          'A master name must be supplied for pubsub push support.')
+          'A main name must be supplied for pubsub push support.')
 
     service_account_file = getattr(
-        activeMaster, 'pubsub_service_account_file', None)
+        activeMain, 'pubsub_service_account_file', None)
     if not service_account_file:
       raise ConfigError('A service account file must be specified.')
 
@@ -250,7 +250,7 @@ class StatusPush(StatusReceiverMultiService):
     self.pushInterval = self._getTimeDelta(pushInterval or
                                            self.DEFAULT_PUSH_INTERVAL_SEC)
 
-    self.name = name  # Master name, since builds don't include this info.
+    self.name = name  # Main name, since builds don't include this info.
     self.topic_url = topic_url
     self._client = PubSubClient(self.topic_url, service_account_file)
     self._status = None
@@ -316,7 +316,7 @@ class StatusPush(StatusReceiverMultiService):
 
       # result is a (build, build_dict) tuple.
       _, send_build = result
-      send_build['master'] = self.name
+      send_build['main'] = self.name
       send_builds.append(send_build)
 
     # If there are no builds to send, do nothing.

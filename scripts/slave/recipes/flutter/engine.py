@@ -217,7 +217,7 @@ def GetCheckout(api):
 def RunSteps(api):
   # buildbot sets 'clobber' to the empty string which is falsey, check with 'in'
   if 'clobber' in api.properties:
-    api.file.rmcontents('everything', api.path['slave_build'])
+    api.file.rmcontents('everything', api.path['subordinate_build'])
 
   GetCheckout(api)
 
@@ -246,6 +246,6 @@ def GenTests(api):
   # A valid commit to flutter/engine, to make the gsutil urls look real.
   for platform in ('mac', 'linux'):
     yield (api.test(platform) + api.platform(platform, 64)
-        + api.properties(mastername='client.flutter',
+        + api.properties(mainname='client.flutter',
               buildername='%s Engine' % platform.capitalize(),
-              slavename='fake-m1', clobber=''))
+              subordinatename='fake-m1', clobber=''))

@@ -32,8 +32,8 @@ import sys
 
 from common import archive_utils
 from common import chromium_utils
-from slave import build_directory
-from slave import slave_utils
+from subordinate import build_directory
+from subordinate import subordinate_utils
 
 # Directory name, above the build directory, in which test results can be
 # found if no --results-dir option is given.
@@ -88,7 +88,7 @@ def _ArchiveFullLayoutTestResults(staging_dir, dest_dir, diff_file_list,
   full_zip_file = chromium_utils.MakeZip(staging_dir,
       'layout-test-results', diff_file_list, options.results_dir,
       remove_archive_directory=False)[1]
-  slave_utils.CopyFileToArchiveHost(full_zip_file, dest_dir)
+  subordinate_utils.CopyFileToArchiveHost(full_zip_file, dest_dir)
 
   # Extract the files on the web server.
   extract_dir = os.path.join(dest_dir, 'results')
@@ -157,7 +157,7 @@ def archive_layout(options, args):
   else:
     options.results_dir = chromium_utils.FindUpward(chrome_dir, RESULT_DIR)
   print 'Archiving results from %s' % options.results_dir
-  staging_dir = slave_utils.GetStagingDir(chrome_dir)
+  staging_dir = subordinate_utils.GetStagingDir(chrome_dir)
   print 'Staging in %s' % staging_dir
 
   (actual_file_list, diff_file_list) = _CollectArchiveFiles(options.results_dir)
@@ -171,13 +171,13 @@ def archive_layout(options, args):
   failing_results_json = os.path.join(options.results_dir,
       'failing_results.json')
 
-  # Extract the build name of this slave (e.g., 'chrome-release') from its
+  # Extract the build name of this subordinate (e.g., 'chrome-release') from its
   # configuration file if not provided as a param.
-  build_name = options.builder_name or slave_utils.SlaveBuildName(chrome_dir)
+  build_name = options.builder_name or subordinate_utils.SubordinateBuildName(chrome_dir)
   build_name = re.sub('[ .()]', '_', build_name)
 
   wc_dir = os.path.dirname(chrome_dir)
-  last_change = slave_utils.GetHashOrRevision(wc_dir)
+  last_change = subordinate_utils.GetHashOrRevision(wc_dir)
 
   # TODO(dpranke): Is it safe to assume build_number is not blank? Should we
   # assert() this ?
@@ -194,16 +194,16 @@ def archive_layout(options, args):
     gs_acl = options.gs_acl
     # These files never change, cache for a year.
     cache_control = "public, max-age=31556926"
-    slave_utils.GSUtilCopyFile(zip_file, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyFile(zip_file, gs_base, gs_acl=gs_acl,
       cache_control=cache_control)
-    slave_utils.GSUtilCopyDir(options.results_dir, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyDir(options.results_dir, gs_base, gs_acl=gs_acl,
       cache_control=cache_control)
 
     # TODO(dpranke): Remove these two lines once clients are fetching the
     # files from the layout-test-results dir.
-    slave_utils.GSUtilCopyFile(full_results_json, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyFile(full_results_json, gs_base, gs_acl=gs_acl,
       cache_control=cache_control)
-    slave_utils.GSUtilCopyFile(failing_results_json, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyFile(failing_results_json, gs_base, gs_acl=gs_acl,
       cache_control=cache_control)
 
     # And also to the 'results' directory to provide the 'latest' results
@@ -211,9 +211,9 @@ def archive_layout(options, args):
     # caching w/ a max-age=3600).
     gs_base = '/'.join([options.gs_bucket, build_name, 'results'])
     cache_control = 'no-cache'
-    slave_utils.GSUtilCopyFile(zip_file, gs_base, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyFile(zip_file, gs_base, gs_base, gs_acl=gs_acl,
         cache_control=cache_control)
-    slave_utils.GSUtilCopyDir(options.results_dir, gs_base, gs_acl=gs_acl,
+    subordinate_utils.GSUtilCopyDir(options.results_dir, gs_base, gs_acl=gs_acl,
         cache_control=cache_control)
   else:
     # Where to save layout test results.
@@ -248,7 +248,7 @@ def main():
                            default=None,
                            help=('The google storage bucket to upload to. '
                                  'If provided, this script will upload to gs '
-                                 'instead of the master.'))
+                                 'instead of the main.'))
   option_parser.add_option('', '--gs-acl',
                            default=None,
                            help=('The ACL of the google storage files.'))

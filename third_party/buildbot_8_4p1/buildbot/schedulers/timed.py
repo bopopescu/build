@@ -260,7 +260,7 @@ class Nightly(Timed):
             return self.startConsumingChanges(
                     fileIsImportant=self.fileIsImportant, change_filter=self.change_filter)
         else:
-            return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
+            return self.main.db.schedulers.flushChangeClassifications(self.schedulerid)
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
@@ -269,7 +269,7 @@ class Nightly(Timed):
         # change filter
         if change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
-        return self.master.db.schedulers.classifyChanges(
+        return self.main.db.schedulers.classifyChanges(
                 self.schedulerid, { change.number : important })
 
     def getNextBuildTime(self, lastActuated):
@@ -324,7 +324,7 @@ class Nightly(Timed):
 
     @defer.deferredGenerator
     def startBuild(self):
-        scheds = self.master.db.schedulers
+        scheds = self.main.db.schedulers
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
         if self.onlyIfChanged:

@@ -52,7 +52,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # no subscription should be in place yet
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler, exercising properties while we're at it
@@ -79,7 +79,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertNotEqual(callbacks['buildset_completion'], None)
         self.assertFalse(self.fired)
 
@@ -87,7 +87,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         callbacks['buildset_completion'](bsid+27, 3)
 
         # scheduler should not have reacted
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertNotEqual(callbacks['buildset_completion'], None)
         self.assertFalse(self.fired)
 
@@ -95,7 +95,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         callbacks['buildset_completion'](bsid, 13)
 
         # scheduler should have reacted
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
         self.assertTrue(self.fired)
 
@@ -109,7 +109,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         ])
 
         # no subscription should be in place yet
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler the first time
@@ -133,7 +133,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      revision='myrev2'))
 
         # check that the scheduler has subscribed to buildset changes
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertNotEqual(callbacks['buildset_completion'], None)
 
         # let a few buildsets complete
@@ -144,5 +144,5 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)

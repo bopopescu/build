@@ -7,13 +7,13 @@ import logging
 import sys
 
 from common.cros_chromite import Get, ChromiteTarget
-from common.slave_alloc import SlaveAllocator
-from master.cros import builder_config
+from common.subordinate_alloc import SubordinateAllocator
+from main.cros import builder_config
 
 
-# Declare a slave allocator. We do this here so we can access the slaves
-# configured by 'slaves.cfg' in 'master.cfg'.
-slave_allocator = SlaveAllocator(list_unallocated=True)
+# Declare a subordinate allocator. We do this here so we can access the subordinates
+# configured by 'subordinates.cfg' in 'main.cfg'.
+subordinate_allocator = SubordinateAllocator(list_unallocated=True)
 
 
 # Get the pinned Chromite configuration.

@@ -100,7 +100,7 @@ class TestSourceStampsConnectorComponent(
         d.addCallback(lambda _ :
             self.db.sourcestamps.addSourceStamp('production', 'abdef',
                 'test://repo', 'stamper', patch_body='my patch', patch_level=3,
-                patch_subdir='master/'))
+                patch_subdir='main/'))
         def check(ssid):
             def thd(conn):
                 # should see one sourcestamp row
@@ -119,7 +119,7 @@ class TestSourceStampsConnectorComponent(
                 r = conn.execute(patches_tbl.select())
                 rows = [ (row.id, row.patchlevel, row.patch_base64, row.subdir)
                          for row in r.fetchall() ]
-                self.assertEqual(rows, [(patchid, 3, 'bXkgcGF0Y2g=', 'master/')])
+                self.assertEqual(rows, [(patchid, 3, 'bXkgcGF0Y2g=', 'main/')])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d

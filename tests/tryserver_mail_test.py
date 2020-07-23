@@ -17,10 +17,10 @@ import mock
 from buildbot.status import results
 from buildbot.status.builder import BuildStatus, BuildStepStatus, BuilderStatus
 from buildbot.status.logfile import LogFile
-from buildbot.status.master  import Status as MasterStatus
+from buildbot.status.main  import Status as MainStatus
 
-from master.build_utils import FakeBuild
-from master.try_mail_notifier import TryMailNotifier
+from main.build_utils import FakeBuild
+from main.try_mail_notifier import TryMailNotifier
 
 
 class TestMailNotifier(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestMailNotifier(unittest.TestCase):
     '''
     bs_cfg: BuildStatus config dict
     step_cfgs: [BuildStepStatus config dict]
-    ms_cfg: MasterStatus config dict
+    ms_cfg: MainStatus config dict
     '''
     mn = TryMailNotifier(
         fromaddr='from@example.org',
@@ -69,7 +69,7 @@ class TestMailNotifier(unittest.TestCase):
     bs_cfg.update({'getBuilder.return_value': builder})
     bs.configure_mock(**bs_cfg)
 
-    ms = mock.Mock(MasterStatus)
+    ms = mock.Mock(MainStatus)
 
     def getBuildStatusURL(obj):
       if isinstance(obj, BuilderStatus):
@@ -87,7 +87,7 @@ class TestMailNotifier(unittest.TestCase):
     ms_cfg.update({'getURLForThing.side_effect': getBuildStatusURL})
     ms.configure_mock(**ms_cfg)
 
-    mn.master_status = ms
+    mn.main_status = ms
 
     mail = mn.buildMessage_internal(
         bs.getBuilder().getName(), [bs], bs.getResults())
@@ -176,7 +176,7 @@ def test_from_files(infile, expected, name):
         data['build_step_props']).getProperties()
     data = recursive_key_replace(data, '()', '.return_value')
     self.check_mail(
-        data['build_step'], data['builder'], data['steps'], data['master'],
+        data['build_step'], data['builder'], data['steps'], data['main'],
         expected, name
     )
   inner.__name__ = "test_%s" % name

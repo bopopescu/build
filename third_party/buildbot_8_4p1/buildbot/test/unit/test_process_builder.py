@@ -18,7 +18,7 @@ import random
 from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb, fakemain
 from buildbot.process import builder, buildrequest
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -36,26 +36,26 @@ class TestBuilderBuildCreation(unittest.TestCase):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = fakemaster.make_master()
+        self.main = fakemain.make_main()
         # only include the necessary required config, plus user-requested
-        config = dict(name="bldr", slavename="slv", builddir="bdir",
-                     slavebuilddir="sbdir", factory=self.factory)
+        config = dict(name="bldr", subordinatename="slv", builddir="bdir",
+                     subordinatebuilddir="sbdir", factory=self.factory)
         config.update(config_kwargs)
         self.bldr = builder.Builder(config, self.bstatus)
-        self.master.db = self.db = db = fakedb.FakeDBConnector(self)
-        self.master.master_name = db.buildrequests.MASTER_NAME
-        self.master.master_incarnation = db.buildrequests.MASTER_INCARNATION
-        self.bldr.master = self.master
+        self.main.db = self.db = db = fakedb.FakeDBConnector(self)
+        self.main.main_name = db.buildrequests.MASTER_NAME
+        self.main.main_incarnation = db.buildrequests.MASTER_INCARNATION
+        self.bldr.main = self.main
 
         # patch into the _startBuildsFor method
         self.builds_started = []
-        def _startBuildFor(slavebuilder, buildrequests):
-            self.builds_started.append((slavebuilder, buildrequests))
+        def _startBuildFor(subordinatebuilder, buildrequests):
+            self.builds_started.append((subordinatebuilder, buildrequests))
             return defer.succeed(None)
         self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
-            # patch 'random.choice' to always take the slave that sorts
+            # patch 'random.choice' to always take the subordinate that sorts
             # last, based on its name
             self.patch(random, "choice",
                     lambda lst : sorted(lst, key=lambda m : m.name)[-1])
@@ -66,20 +66,20 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr.startService()
 
     def assertBuildsStarted(self, exp):
-        # munge builds_started into a list of (slave, [brids])
+        # munge builds_started into a list of (subordinate, [brids])
         builds_started = [
                 (sl.name, [ br.id for br in buildreqs ])
                 for (sl, buildreqs) in self.builds_started ]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def setSlaveBuilders(self, slavebuilders):
-        """C{slaves} maps name : available"""
-        self.bldr.slaves = []
-        for name, avail in slavebuilders.iteritems():
+    def setSubordinateBuilders(self, subordinatebuilders):
+        """C{subordinates} maps name : available"""
+        self.bldr.subordinates = []
+        for name, avail in subordinatebuilders.iteritems():
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
-            self.bldr.slaves.append(sb)
+            self.bldr.subordinates.append(sb)
 
     # services
 
@@ -129,10 +129,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_maybeStartBuild_no_buildreqests(self):
         self.makeBuilder()
-        self.setSlaveBuilders({'test-slave11':1})
+        self.setSubordinateBuilders({'test-subordinate11':1})
         return self.do_test_maybeStartBuild(exp_claims=[], exp_builds=[])
 
-    def test_maybeStartBuild_no_slavebuilders(self):
+    def test_maybeStartBuild_no_subordinatebuilders(self):
         self.makeBuilder()
         rows = [
             fakedb.BuildRequest(id=11, buildsetid=10, buildername="bldr"),
@@ -140,9 +140,9 @@ class TestBuilderBuildCreation(unittest.TestCase):
         return self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[], exp_builds=[])
 
-    def test_maybeStartBuild_limited_by_slaves(self):
+    def test_maybeStartBuild_limited_by_subordinates(self):
         self.makeBuilder(mergeRequests=False)
-        self.setSlaveBuilders({'test-slave1':1})
+        self.setSubordinateBuilders({'test-subordinate1':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
                 submitted_at=130000),
@@ -150,11 +150,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave1', [10])])
+                exp_claims=[10], exp_builds=[('test-subordinate1', [10])])
 
-    def test_maybeStartBuild_limited_by_available_slaves(self):
+    def test_maybeStartBuild_limited_by_available_subordinates(self):
         self.makeBuilder(mergeRequests=False)
-        self.setSlaveBuilders({'test-slave1':0, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':0, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
                 submitted_at=130000),
@@ -162,11 +162,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave2', [10])])
+                exp_claims=[10], exp_builds=[('test-subordinate2', [10])])
 
     def test_maybeStartBuild_unlimited(self):
         self.makeBuilder(mergeRequests=False, patch_random=True)
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
                 submitted_at=130000),
@@ -175,41 +175,41 @@ class TestBuilderBuildCreation(unittest.TestCase):
         ]
         return self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[10, 11],
-                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
+                exp_builds=[('test-subordinate2', [10]), ('test-subordinate1', [11])])
 
     def test_maybeStartBuild_limited_by_requests(self):
         self.makeBuilder(mergeRequests=False, patch_random=True)
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
         return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+                exp_claims=[11], exp_builds=[('test-subordinate2', [11])])
 
-    def test_maybeStartBuild_chooseSlave_None(self):
+    def test_maybeStartBuild_chooseSubordinate_None(self):
         self.makeBuilder()
-        self.bldr._chooseSlave = lambda avail : defer.succeed(None)
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
-        ]
-        return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[], exp_builds=[])
-
-    def test_maybeStartBuild_chooseSlave_bogus(self):
-        self.makeBuilder()
-        self.bldr._chooseSlave = lambda avail : defer.succeed(mock.Mock())
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.bldr._chooseSubordinate = lambda avail : defer.succeed(None)
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
         return self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[], exp_builds=[])
 
-    def test_maybeStartBuild_chooseSlave_fails(self):
+    def test_maybeStartBuild_chooseSubordinate_bogus(self):
         self.makeBuilder()
-        self.bldr._chooseSlave = lambda avail : defer.fail(RuntimeError("xx"))
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.bldr._chooseSubordinate = lambda avail : defer.succeed(mock.Mock())
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
+        rows = self.base_rows + [
+            fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
+        ]
+        return self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[], exp_builds=[])
+
+    def test_maybeStartBuild_chooseSubordinate_fails(self):
+        self.makeBuilder()
+        self.bldr._chooseSubordinate = lambda avail : defer.fail(RuntimeError("xx"))
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
@@ -219,7 +219,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_maybeStartBuild_chooseBuild_None(self):
         self.makeBuilder()
         self.bldr._chooseBuild = lambda reqs : defer.succeed(None)
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
@@ -229,7 +229,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_maybeStartBuild_chooseBuild_bogus(self):
         self.makeBuilder()
         self.bldr._chooseBuild = lambda reqs : defer.succeed(mock.Mock())
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
@@ -239,7 +239,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def test_maybeStartBuild_chooseBuild_fails(self):
         self.makeBuilder(patch_random=True)
         self.bldr._chooseBuild = lambda reqs : defer.fail(RuntimeError("xx"))
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
@@ -251,7 +251,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         def _mergeRequests(breq, unclaimed_requests, mergeRequests_fn):
             return defer.fail(RuntimeError("xx"))
         self.bldr._mergeRequests = _mergeRequests
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
         ]
@@ -266,15 +266,15 @@ class TestBuilderBuildCreation(unittest.TestCase):
         def claimBuildRequests(brids):
             # first, ensure this only happens the first time
             self.db.buildrequests.claimBuildRequests = old_claimBuildRequests
-            # claim brid 10 for some other master
+            # claim brid 10 for some other main
             assert 10 in brids
             self.db.buildrequests.fakeClaimBuildRequest(10, 136000,
-                    master_name="interloper", master_incarnation="interloper")
+                    main_name="interloper", main_incarnation="interloper")
             # ..and fail
             return defer.fail(buildrequests.AlreadyClaimedError())
         self.db.buildrequests.claimBuildRequests = claimBuildRequests
 
-        self.setSlaveBuilders({'test-slave1':1, 'test-slave2':1})
+        self.setSubordinateBuilders({'test-subordinate1':1, 'test-subordinate2':1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
                 submitted_at=130000), # will turn out to be claimed!
@@ -282,57 +282,57 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         return self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+                exp_claims=[11], exp_builds=[('test-subordinate2', [11])])
 
     def test_maybeStartBuild_builder_stopped(self):
         self.makeBuilder()
 
         # this will cause an exception if maybeStartBuild tries to start
-        self.bldr.slaves = None
+        self.bldr.subordinates = None
 
         # so we just hope this does not fail
         d = self.bldr.stopService()
         d.addCallback(lambda _ : self.bldr.maybeStartBuild())
         return d
 
-    # _chooseSlave
+    # _chooseSubordinate
 
-    def do_test_chooseSlave(self, nextSlave, exp_choice=None, exp_fail=None):
-        self.makeBuilder(nextSlave=nextSlave)
-        slavebuilders = [ mock.Mock(name='sb%d' % i) for i in range(4) ]
-        d = self.bldr._chooseSlave(slavebuilders)
+    def do_test_chooseSubordinate(self, nextSubordinate, exp_choice=None, exp_fail=None):
+        self.makeBuilder(nextSubordinate=nextSubordinate)
+        subordinatebuilders = [ mock.Mock(name='sb%d' % i) for i in range(4) ]
+        d = self.bldr._chooseSubordinate(subordinatebuilders)
         def check(sb):
-            self.assertIdentical(sb, slavebuilders[exp_choice])
+            self.assertIdentical(sb, subordinatebuilders[exp_choice])
         def failed(f):
             f.trap(exp_fail)
         d.addCallbacks(check, failed)
         return d
 
-    def test_chooseSlave_default(self):
+    def test_chooseSubordinate_default(self):
         self.patch(random, "choice", lambda lst : lst[2])
-        return self.do_test_chooseSlave(None, exp_choice=2)
+        return self.do_test_chooseSubordinate(None, exp_choice=2)
 
-    def test_chooseSlave_nextSlave_simple(self):
-        def nextSlave(bldr, lst):
+    def test_chooseSubordinate_nextSubordinate_simple(self):
+        def nextSubordinate(bldr, lst):
             self.assertIdentical(bldr, self.bldr)
             return lst[1]
-        return self.do_test_chooseSlave(nextSlave, exp_choice=1)
+        return self.do_test_chooseSubordinate(nextSubordinate, exp_choice=1)
 
-    def test_chooseSlave_nextSlave_deferred(self):
-        def nextSlave(bldr, lst):
+    def test_chooseSubordinate_nextSubordinate_deferred(self):
+        def nextSubordinate(bldr, lst):
             self.assertIdentical(bldr, self.bldr)
             return defer.succeed(lst[1])
-        return self.do_test_chooseSlave(nextSlave, exp_choice=1)
+        return self.do_test_chooseSubordinate(nextSubordinate, exp_choice=1)
 
-    def test_chooseSlave_nextSlave_exception(self):
-        def nextSlave(bldr, lst):
+    def test_chooseSubordinate_nextSubordinate_exception(self):
+        def nextSubordinate(bldr, lst):
             raise RuntimeError
-        return self.do_test_chooseSlave(nextSlave, exp_fail=RuntimeError)
+        return self.do_test_chooseSubordinate(nextSubordinate, exp_fail=RuntimeError)
 
-    def test_chooseSlave_nextSlave_failure(self):
-        def nextSlave(bldr, lst):
+    def test_chooseSubordinate_nextSubordinate_failure(self):
+        def nextSubordinate(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))
-        return self.do_test_chooseSlave(nextSlave, exp_fail=RuntimeError)
+        return self.do_test_chooseSubordinate(nextSubordinate, exp_fail=RuntimeError)
 
     # _chooseBuild
 
@@ -419,7 +419,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
     def do_test_getMergeRequestsFn(self, builder_param, global_param,
                                   expected):
         self.makeBuilder(mergeRequests=builder_param)
-        self.master.mergeRequests=global_param
+        self.main.mergeRequests=global_param
         self.assertEqual(self.bldr._getMergeRequestsFn(), expected)
 
     def test_getMergeRequestsFn_defaults(self):
@@ -529,7 +529,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         def fakeClaimBRs(*args):
             claims.append(args)
             return defer.succeed(None)
-        self.bldr.master.db.buildrequests.claimBuildRequests = fakeClaimBRs
+        self.bldr.main.db.buildrequests.claimBuildRequests = fakeClaimBRs
 
         def mkbld(brids):
             bld = mock.Mock(name='Build')
@@ -570,15 +570,15 @@ class TestGetOldestRequestTime(unittest.TestCase):
     def makeBuilder(self, name):
         self.bstatus = mock.Mock()
         self.factory = mock.Mock()
-        self.master = mock.Mock()
+        self.main = mock.Mock()
         # only include the necessary required config
-        config = dict(name=name, slavename="slv", builddir="bdir",
-                     slavebuilddir="sbdir", factory=self.factory)
+        config = dict(name=name, subordinatename="slv", builddir="bdir",
+                     subordinatebuilddir="sbdir", factory=self.factory)
         self.bldr = builder.Builder(config, self.bstatus)
-        self.master.db = self.db = db = fakedb.FakeDBConnector(self)
-        self.master.master_name = db.buildrequests.MASTER_NAME
-        self.master.master_incarnation = db.buildrequests.MASTER_INCARNATION
-        self.bldr.master = self.master
+        self.main.db = self.db = db = fakedb.FakeDBConnector(self)
+        self.main.main_name = db.buildrequests.MASTER_NAME
+        self.main.main_incarnation = db.buildrequests.MASTER_INCARNATION
+        self.bldr.main = self.main
 
         # we don't want the reclaim service running during tests..
         self.bldr.reclaim_svc.disownServiceParent()

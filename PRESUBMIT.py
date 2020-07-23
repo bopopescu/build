@@ -27,23 +27,23 @@ def CommonChecks(input_api, output_api):
     return input_api.os_path.join(input_api.PresubmitLocalPath(), *args)
 
   black_list = list(input_api.DEFAULT_BLACK_LIST) + [
-      r'.*slave/.*/build.*/.*',
-      r'.*slave/.*/isolate.*/.*',
+      r'.*subordinate/.*/build.*/.*',
+      r'.*subordinate/.*/isolate.*/.*',
       r'.*depot_tools/.*',
       r'.*goma/.*',
       r'.*scripts/tools/buildbot_tool_templates/.*',
       r'.*scripts/release/.*',
-      r'.*scripts/slave/recipe_modules/.*',
-      r'.*scripts/slave/.recipe_deps/.*',
+      r'.*scripts/subordinate/recipe_modules/.*',
+      r'.*scripts/subordinate/.recipe_deps/.*',
       r'.*scripts/gsd_generate_index/.*',
-      r'.*masters/.*/templates/.*\.html$',
-      r'.*masters/.*/templates/.*\.css$',
-      r'.*masters/.*/public_html/.*\.html$',
-      r'.*masters/.*/public_html/.*\.css$',
+      r'.*mains/.*/templates/.*\.html$',
+      r'.*mains/.*/templates/.*\.css$',
+      r'.*mains/.*/public_html/.*\.html$',
+      r'.*mains/.*/public_html/.*\.css$',
       # These gitpoller directories are working directories for
-      # master.client.drmemory and master.client.dynamorio and do not contain
+      # main.client.drmemory and main.client.dynamorio and do not contain
       # checked-in code.
-      r'.*masters/.*/gitpoller/.*',
+      r'.*mains/.*/gitpoller/.*',
   ]
   tests = []
 
@@ -54,9 +54,9 @@ def CommonChecks(input_api, output_api):
       # Initially, a separate run was done for unit tests but now that
       # pylint is fetched in memory with setuptools, it seems it caches
       # sys.path so modifications to sys.path aren't kept.
-      join('scripts', 'master', 'unittests'),
-      join('scripts', 'master', 'buildbucket', 'unittests'),
-      join('scripts', 'slave', 'unittests'),
+      join('scripts', 'main', 'unittests'),
+      join('scripts', 'main', 'buildbucket', 'unittests'),
+      join('scripts', 'subordinate', 'unittests'),
       join('scripts', 'tools', 'deps2git'),
       join('tests'),
   ] + sys.path
@@ -76,22 +76,22 @@ def CommonChecks(input_api, output_api):
   # executing the tests in parallel. Otherwise, individual tests may attempt to
   # generate the binaries at the same time, causing race conflicts.
   input_api.subprocess.check_output(
-      ['python', 'scripts/slave/unittests/test_env.py'])
+      ['python', 'scripts/subordinate/unittests/test_env.py'])
 
   whitelist = [r'.+_test\.py$']
-  blacklist = [r'bot_update_test.py$', r'masters_test.py$']
+  blacklist = [r'bot_update_test.py$', r'mains_test.py$']
   tests.extend(input_api.canned_checks.GetUnitTestsInDirectory(
       input_api, output_api, 'tests', whitelist=whitelist,
       blacklist=blacklist))
   tests.extend(input_api.canned_checks.GetUnitTestsInDirectory(
       input_api,
       output_api,
-      input_api.os_path.join('scripts', 'master', 'unittests'),
+      input_api.os_path.join('scripts', 'main', 'unittests'),
       whitelist))
   tests.extend(input_api.canned_checks.GetUnitTestsInDirectory(
       input_api,
       output_api,
-      input_api.os_path.join('scripts', 'slave', 'unittests'),
+      input_api.os_path.join('scripts', 'subordinate', 'unittests'),
       whitelist))
   tests.extend(input_api.canned_checks.GetUnitTestsInDirectory(
       input_api,
@@ -110,7 +110,7 @@ def CommonChecks(input_api, output_api):
       whitelist))
 
   recipe_modules_tests = input_api.glob(
-      join('scripts', 'slave', 'recipe_modules', '*', 'tests'))
+      join('scripts', 'subordinate', 'recipe_modules', '*', 'tests'))
   for path in recipe_modules_tests:
     tests.extend(input_api.canned_checks.GetUnitTestsInDirectory(
         input_api,
@@ -119,18 +119,18 @@ def CommonChecks(input_api, output_api):
         whitelist))
 
   with pythonpath(infra_path + sys.path):
-    import common.master_cfg_utils  # pylint: disable=F0401
+    import common.main_cfg_utils  # pylint: disable=F0401
     # Fetch recipe dependencies once in serial so that we don't hit a race
     # condition where multiple tests are trying to fetch at once.
     output = input_api.RunTests([input_api.Command(
         name='recipes fetch',
         cmd=[input_api.python_executable,
-             input_api.os_path.join('scripts', 'slave', 'recipes.py'), 'fetch'],
+             input_api.os_path.join('scripts', 'subordinate', 'recipes.py'), 'fetch'],
         kwargs={},
         message=output_api.PresubmitError,
     )])
     # Run the tests.
-    with common.master_cfg_utils.TemporaryMasterPasswords():
+    with common.main_cfg_utils.TemporaryMainPasswords():
       output.extend(input_api.RunTests(tests))
 
     output.extend(input_api.canned_checks.PanProjectChecks(
@@ -145,7 +145,7 @@ def ConditionalChecks(input_api, output_api):
   """
   tests_to_run = []
   conditional_tests = {
-      'scripts/slave/bot_update.py': ['tests/bot_update_test.py'],
+      'scripts/subordinate/bot_update.py': ['tests/bot_update_test.py'],
   }
   affected_files = set([
       f.LocalPath() for f in input_api.change.AffectedFiles()])
@@ -157,7 +157,7 @@ def ConditionalChecks(input_api, output_api):
 
 def CommitChecks(input_api, output_api):
   """Tests that are only run on commit."""
-  tests_to_run = ['tests/masters_test.py']
+  tests_to_run = ['tests/mains_test.py']
   return input_api.RunTests(input_api.canned_checks.GetUnitTests(
       input_api, output_api, tests_to_run))
 

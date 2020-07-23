@@ -39,7 +39,7 @@ def GenTests(api):
   yield (
       api.test('upload_success') +
       api.properties(
-          mastername='example.master',
+          mainname='example.main',
           buildername='ExampleBuilder',
           buildnumber=123))
 
@@ -47,7 +47,7 @@ def GenTests(api):
       api.test('upload_and_degrade_to_warning') +
       api.step_data('Upload to test-results [example-test-type]', retcode=1) +
       api.properties(
-          mastername='example.master',
+          mainname='example.main',
           buildername='ExampleBuilder',
           buildnumber=123,
           warning=True))
@@ -56,7 +56,7 @@ def GenTests(api):
       api.test('upload_without_degrading_failures') +
       api.step_data('Upload to test-results [example-test-type]', retcode=1) +
       api.properties(
-          mastername='example.master',
+          mainname='example.main',
           buildername='ExampleBuilder',
           buildnumber=123,
           warning=False))

@@ -3,20 +3,20 @@
 # found in the LICENSE file.
 
 # This file was generated from
-# scripts/tools/buildbot_tool_templates/master_site_config.py
+# scripts/tools/buildbot_tool_templates/main_site_config.py
 # by "../../build/scripts/tools/buildbot-tool gen .".
 # DO NOT EDIT BY HAND!
 
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class InfraTryServer(Master.Master4a):
+class InfraTryServer(Main.Main4a):
   project_name = 'InfraTryServer'
-  master_port = 21402
-  slave_port = 31402
-  master_port_alt = 26402
+  main_port = 21402
+  subordinate_port = 31402
+  main_port_alt = 26402
   buildbot_url = 'https://build.chromium.org/p/tryserver.infra/'
-  buildbucket_bucket = 'master.tryserver.infra'
+  buildbucket_bucket = 'main.tryserver.infra'
   service_account_file = 'service-account-chromium-tryserver.json'

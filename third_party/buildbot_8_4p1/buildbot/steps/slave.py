@@ -16,19 +16,19 @@
 import stat
 from buildbot.process.buildstep import BuildStep, LoggedRemoteCommand
 from buildbot.process.buildstep import SUCCESS, FAILURE
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildSubordinateTooOldError
 
 class SetPropertiesFromEnv(BuildStep):
     """
-    Sets properties from envirionment variables on the slave.
+    Sets properties from envirionment variables on the subordinate.
 
-    Note this is transfered when the slave first connects
+    Note this is transfered when the subordinate first connects
     """
     name='SetPropertiesFromEnv'
     description='Setting'
     descriptionDone='Set'
 
-    def __init__(self, variables, source="SlaveEnvironment", **kwargs):
+    def __init__(self, variables, source="SubordinateEnvironment", **kwargs):
         BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(variables = variables,
                                  source = source)
@@ -37,13 +37,13 @@ class SetPropertiesFromEnv(BuildStep):
 
     def start(self):
         # on Windows, environment variables are case-insensitive, but we have
-        # a case-sensitive dictionary in slave_environ.  Fortunately, that
+        # a case-sensitive dictionary in subordinate_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
         # variable names to uppercase to duplicate the case-insensitivity.
-        fold_to_uppercase = (self.buildslave.slave_system == 'win32')
+        fold_to_uppercase = (self.buildsubordinate.subordinate_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.buildslave.slave_environ
+        environ = self.buildsubordinate.subordinate_environ
         variables = self.variables
         if isinstance(variables, str):
             variables = [self.variables]
@@ -60,7 +60,7 @@ class SetPropertiesFromEnv(BuildStep):
 
 class FileExists(BuildStep):
     """
-    Check for the existence of a file on the slave.
+    Check for the existence of a file on the subordinate.
     """
     name='FileExists'
     description='Checking'
@@ -78,9 +78,9 @@ class FileExists(BuildStep):
         self.file = file
 
     def start(self):
-        slavever = self.slaveVersion('stat')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion('stat')
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about stat")
         cmd = LoggedRemoteCommand('stat', {'file': self.file })
         d = self.runCommand(cmd)
@@ -102,7 +102,7 @@ class FileExists(BuildStep):
 
 class RemoveDirectory(BuildStep):
     """
-    Remove a directory tree on the slave.
+    Remove a directory tree on the subordinate.
     """
     name='RemoveDirectory'
     description='Deleting'
@@ -119,9 +119,9 @@ class RemoveDirectory(BuildStep):
         self.dir = dir
 
     def start(self):
-        slavever = self.slaveVersion('rmdir')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
+        subordinatever = self.subordinateVersion('rmdir')
+        if not subordinatever:
+            raise BuildSubordinateTooOldError("subordinate is too old, does not know "
                                         "about rmdir")
         cmd = LoggedRemoteCommand('rmdir', {'dir': self.dir })
         d = self.runCommand(cmd)

@@ -112,7 +112,7 @@ def RunSteps(api):
          'yangguo@chromium.org,vogelheim@chromium.org',
          '--roll',
          '--json-output', api.json.output(),
-         '--work-dir', api.path['slave_build'].join('workdir')],
+         '--work-dir', api.path['subordinate_build'].join('workdir')],
         cwd=api.path['checkout'].join('v8'),
         step_test_data=lambda: api.json.test_api.output(
             {'monitoring_state': 'success'}),
@@ -140,21 +140,21 @@ def RunSteps(api):
 
 def GenTests(api):
   yield api.test('standard') + api.properties.generic(
-      mastername='client.v8.fyi')
+      mainname='client.v8.fyi')
   yield (api.test('rolling_deactivated') +
-      api.properties.generic(mastername='client.v8') +
+      api.properties.generic(mainname='client.v8') +
       api.override_step_data(
           'check roll status', api.raw_io.stream_output('0', stream='stdout'))
     )
   yield (api.test('active_roll') +
-      api.properties.generic(mastername='client.v8') +
+      api.properties.generic(mainname='client.v8') +
       api.override_step_data(
           'check active roll', api.raw_io.output(
               '{"results": [{"subject": "Update V8 to foo",' +
               ' "issue": 123456, "commit": true}]}'))
     )
   yield (api.test('stale_roll') +
-      api.properties.generic(mastername='client.v8') +
+      api.properties.generic(mainname='client.v8') +
       api.override_step_data(
           'check active roll', api.raw_io.output(
               '{"results": [{"subject": "Update V8 to foo",' +

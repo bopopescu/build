@@ -19,12 +19,12 @@ TESTS = [
   {
     'name': 'Test auto-bisect on tester',
     'properties': {
-      'workdir': '/b/build/slave/linux',
+      'workdir': '/b/build/subordinate/linux',
       'repository': 'https://chromium.googlesource.com/v8/v8',
       'buildername': 'V8 Linux - nosnap',
       'parent_buildnumber': 9423,
       'recipe': 'v8',
-      'mastername':
+      'mainname':
       'client.v8',
       'buildbotURL': 'http://build.chromium.org/p/client.v8/',
       'project': 'v8',
@@ -34,15 +34,15 @@ TESTS = [
       'parent_got_swarming_client_revision':
           'df99a00d96fae932bae824dccba13156bf7eddd0',
       'buildnumber': 5472,
-      'slavename': 'slave4-c3',
+      'subordinatename': 'subordinate4-c3',
       'swarm_hashes': {
         'bot_default': '3726ca899b099c077b9551f7163c05ea0f160a7b',
         'mozilla': 'ba5f8a4aeee89b1fe88c764416ee9875584a10d3',
         'simdjs': '55aa4085d018aaf24dc2bc07421515e23cd8a006',
       },
       'blamelist': ['hax@chromium.org', 'dude@chromium.org'],
-      'branch': 'master',
-      'parent_got_revision_cp': 'refs/heads/master@{#32376}',
+      'branch': 'main',
+      'parent_got_revision_cp': 'refs/heads/main@{#32376}',
       'requestedAt': 1448632553,
       'revision': 'c08e952566c3923f8fcbd693dae05f8eae73938b',
       'override_changes': [
@@ -107,7 +107,7 @@ def GenTests(api):
   yield (
       api.test('v8-auto-bisect-end-to-end-pass') +
       api.properties.generic(
-          mastername='chromium.tools.build',
+          mainname='chromium.tools.build',
           buildername='v8-linux-end-to-end',
       ) +
       api.override_step_data(
@@ -123,7 +123,7 @@ def GenTests(api):
   yield (
       api.test('v8-auto-bisect-end-to-end-fail') +
       api.properties.generic(
-          mastername='chromium.tools.build',
+          mainname='chromium.tools.build',
           buildername='v8-linux-end-to-end',
       ) +
       api.override_step_data(

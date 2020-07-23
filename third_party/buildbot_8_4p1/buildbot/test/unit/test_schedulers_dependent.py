@@ -53,13 +53,13 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         sched.startService()
 
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
         self.assertNotEqual(callbacks['buildsets'], None)
         self.assertNotEqual(callbacks['buildset_completion'], None)
 
         d = sched.stopService()
         def check(_):
-            callbacks = self.master.getSubscriptionCallbacks()
+            callbacks = self.main.getSubscriptionCallbacks()
             self.assertEqual(callbacks['buildsets'], None)
             self.assertEqual(callbacks['buildset_completion'], None)
         d.addCallback(check)
@@ -69,11 +69,11 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             result, expect_buildset):
         sched = self.makeScheduler()
         sched.startService()
-        callbacks = self.master.getSubscriptionCallbacks()
+        callbacks = self.main.getSubscriptionCallbacks()
 
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
-            fakedb.SourceStamp(id=93, revision='555', branch='master',
+            fakedb.SourceStamp(id=93, revision='555', branch='main',
                                 project='proj', repository='repo'),
             fakedb.Buildset(id=44, sourcestampid=93),
             ])
@@ -99,7 +99,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     dict(external_idstring=None,
                          properties=[('scheduler', ('n', 'Scheduler'))],
                          reason='downstream'),
-                    dict(revision='555', branch='master', project='proj',
+                    dict(revision='555', branch='main', project='proj',
                          repository='repo'))
         else:
             self.db.buildsets.assertBuildsets(1) # only the one we added above

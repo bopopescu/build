@@ -23,7 +23,7 @@ from twisted.internet import reactor, defer
 from twisted.cred import checkers, portal
 from zope.interface import implements
 
-from buildslave import bot
+from buildsubordinate import bot
 
 from mock import Mock
 
@@ -31,7 +31,7 @@ from mock import Mock
 # up a TCP connection.  This just tests that the PB code will connect and can
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
 
-class MasterPerspective(pb.Avatar):
+class MainPerspective(pb.Avatar):
     def __init__(self, on_keepalive=None):
         self.on_keepalive = on_keepalive
 
@@ -40,7 +40,7 @@ class MasterPerspective(pb.Avatar):
             on_keepalive, self.on_keepalive = self.on_keepalive, None
             on_keepalive()
 
-class MasterRealm:
+class MainRealm:
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment
@@ -61,11 +61,11 @@ class MasterRealm:
     def shutdown(self):
         return self.mind.broker.transport.loseConnection()
 
-class TestBuildSlave(unittest.TestCase):
+class TestBuildSubordinate(unittest.TestCase):
 
     def setUp(self):
         self.realm = None
-        self.buildslave = None
+        self.buildsubordinate = None
         self.listeningport = None
 
         self.basedir = os.path.abspath("basedir")
@@ -73,7 +73,7 @@ class TestBuildSlave(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        # the slave tries to call socket.getfqdn to write its hostname; this hangs
+        # the subordinate tries to call socket.getfqdn to write its hostname; this hangs
         # without network, so fake it
         self.patch(socket, "getfqdn", lambda : 'test-hostname.domain.com')
 
@@ -81,16 +81,16 @@ class TestBuildSlave(unittest.TestCase):
         d = defer.succeed(None)
         if self.realm:
             d.addCallback(lambda _ : self.realm.shutdown())
-        if self.buildslave and self.buildslave.running:
-            d.addCallback(lambda _ : self.buildslave.stopService())
+        if self.buildsubordinate and self.buildsubordinate.running:
+            d.addCallback(lambda _ : self.buildsubordinate.stopService())
         if self.listeningport:
             d.addCallback(lambda _ : self.listeningport.stopListening())
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         return d
 
-    def start_master(self, perspective, on_attachment=None):
-        self.realm = MasterRealm(perspective, on_attachment)
+    def start_main(self, perspective, on_attachment=None):
+        self.realm = MainRealm(perspective, on_attachment)
         p = portal.Portal(self.realm)
         p.registerChecker(
             checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
@@ -100,50 +100,50 @@ class TestBuildSlave(unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
+        bot.BuildSubordinate('mstr', 9010, 'me', 'pwd', '/s', 10, False)
 
     def test_constructor_083_tac(self):
         # invocation as made from default 083 tac files
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+        bot.BuildSubordinate('mstr', 9010, 'me', 'pwd', '/s', 10, False,
                 umask=0123, maxdelay=10)
 
     def test_constructor_full(self):
         # invocation with all args
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+        bot.BuildSubordinate('mstr', 9010, 'me', 'pwd', '/s', 10, False,
                 umask=0123, maxdelay=10, keepaliveTimeout=10,
                 unicode_encoding='utf8', allow_shutdown=True)
 
-    def test_buildslave_print(self):
+    def test_buildsubordinate_print(self):
         d = defer.Deferred()
 
         # set up to call print when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_print(mind):
-            print_d = mind.callRemote("print", "Hi, slave.")
+            print_d = mind.callRemote("print", "Hi, subordinate.")
             print_d.addCallbacks(d.callback, d.errback)
 
-        # start up the master and slave
-        persp = MasterPerspective()
-        port = self.start_master(persp, on_attachment=call_print)
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
+        # start up the main and subordinate
+        persp = MainPerspective()
+        port = self.start_main(persp, on_attachment=call_print)
+        self.buildsubordinate = bot.BuildSubordinate("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
-        self.buildslave.startService()
+        self.buildsubordinate.startService()
 
         # and wait for the result of the print
         return d
 
     def test_recordHostname(self):
-        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
+        self.buildsubordinate = bot.BuildSubordinate("127.0.0.1", 9999,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
-        self.buildslave.recordHostname(self.basedir)
+        self.buildsubordinate.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
-    def test_buildslave_graceful_shutdown(self):
-        """Test that running the build slave's gracefulShutdown method results
-        in a call to the master's shutdown method"""
+    def test_buildsubordinate_graceful_shutdown(self):
+        """Test that running the build subordinate's gracefulShutdown method results
+        in a call to the main's shutdown method"""
         d = defer.Deferred()
 
         fakepersp = Mock()
@@ -157,18 +157,18 @@ class TestBuildSlave(unittest.TestCase):
         # set up to call shutdown when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_shutdown(mind):
-            self.buildslave.bf.perspective = fakepersp
-            shutdown_d = self.buildslave.gracefulShutdown()
+            self.buildsubordinate.bf.perspective = fakepersp
+            shutdown_d = self.buildsubordinate.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 
-        persp = MasterPerspective()
-        port = self.start_master(persp, on_attachment=call_shutdown)
+        persp = MainPerspective()
+        port = self.start_main(persp, on_attachment=call_shutdown)
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
+        self.buildsubordinate = bot.BuildSubordinate("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
 
-        self.buildslave.startService()
+        self.buildsubordinate.startService()
 
         def check(ign):
             self.assertEquals(called, [('shutdown',)])
@@ -176,17 +176,17 @@ class TestBuildSlave(unittest.TestCase):
 
         return d
 
-    def test_buildslave_shutdown(self):
+    def test_buildsubordinate_shutdown(self):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
-        buildslave = bot.BuildSlave("127.0.0.1", 1234,
+        buildsubordinate = bot.BuildSubordinate("127.0.0.1", 1234,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022,
                 allow_shutdown='file')
 
         # Mock out gracefulShutdown
-        buildslave.gracefulShutdown = Mock()
+        buildsubordinate.gracefulShutdown = Mock()
 
         # Mock out os.path methods
         exists = Mock()
@@ -199,24 +199,24 @@ class TestBuildSlave(unittest.TestCase):
         mtime.return_value = 0
         exists.return_value = False
 
-        buildslave._checkShutdownFile()
+        buildsubordinate._checkShutdownFile()
 
         # We shouldn't have called gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 0)
+        self.assertEquals(buildsubordinate.gracefulShutdown.call_count, 0)
 
         # Pretend that the file exists now, with an mtime of 2
         exists.return_value = True
         mtime.return_value = 2
-        buildslave._checkShutdownFile()
+        buildsubordinate._checkShutdownFile()
 
         # Now we should have changed gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 1)
+        self.assertEquals(buildsubordinate.gracefulShutdown.call_count, 1)
 
         # Bump the mtime again, and make sure we call shutdown again
         mtime.return_value = 3
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        buildsubordinate._checkShutdownFile()
+        self.assertEquals(buildsubordinate.gracefulShutdown.call_count, 2)
 
         # Try again, we shouldn't call shutdown another time
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        buildsubordinate._checkShutdownFile()
+        self.assertEquals(buildsubordinate.gracefulShutdown.call_count, 2)

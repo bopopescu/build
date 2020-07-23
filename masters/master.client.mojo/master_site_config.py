@@ -2,15 +2,15 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""ActiveMaster definition."""
+"""ActiveMain definition."""
 
-from config_bootstrap import Master
+from config_bootstrap import Main
 
-class Mojo(Master.Master3):
+class Mojo(Main.Main3):
   project_name = 'Mojo'
-  master_port = 8019
-  slave_port = 8119
-  master_port_alt = 8219
+  main_port = 8019
+  subordinate_port = 8119
+  main_port_alt = 8219
   buildbot_url = 'http://build.chromium.org/p/client.mojo/'
   service_account_file = 'service-account-chromium-tryserver.json'
-  buidlbucket_build = 'master.tryserver.client.mojo'
+  buidlbucket_build = 'main.tryserver.client.mojo'

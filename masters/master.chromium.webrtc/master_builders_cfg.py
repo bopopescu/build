@@ -5,7 +5,7 @@
 from buildbot.changes.filter import ChangeFilter
 from buildbot.schedulers.basic import SingleBranchScheduler
 
-from master.factory import annotator_factory
+from main.factory import annotator_factory
 
 m_annotator = annotator_factory.AnnotatorFactory()
 
@@ -13,7 +13,7 @@ def Update(c):
   c['schedulers'].append(
       SingleBranchScheduler(name='chromium_scheduler',
                             change_filter=ChangeFilter(project='chromium',
-                                                       branch='master'),
+                                                       branch='main'),
                             treeStableTimer=60,
                             builderNames=[
                               'Win Builder',

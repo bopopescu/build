@@ -29,8 +29,8 @@ from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
 from twisted.python import log
 
-from master.build_sheriffs import BuildSheriffs
-from master import build_utils
+from main.build_sheriffs import BuildSheriffs
+from main import build_utils
 
 
 class ChromiumNotifier(MailNotifier):
@@ -262,10 +262,10 @@ class ChromiumNotifier(MailNotifier):
 
     # TODO(maruel): Use self.createEmail().
     blame_interested_users = self.shouldBlameCommitters(step_name)
-    project_name = self.master_status.getTitle()
+    project_name = self.main_status.getTitle()
     revisions_list = build_utils.getAllRevisions(build_status)
-    build_url = self.master_status.getURLForThing(build_status)
-    waterfall_url = self.master_status.getBuildbotURL()
+    build_url = self.main_status.getURLForThing(build_status)
+    waterfall_url = self.main_status.getBuildbotURL()
     status_text = self.status_header % {
         'buildbotURL': waterfall_url,
         'builder': builder_name,
@@ -274,7 +274,7 @@ class ChromiumNotifier(MailNotifier):
         'buildURL': build_url,
         'project': project_name,
         'reason':  build_status.getReason(),
-        'slavename': build_status.getSlavename(),
+        'subordinatename': build_status.getSubordinatename(),
         'steps': step_name,
     }
     # Use the first line as a title.
@@ -357,7 +357,7 @@ Buildbot waterfall: http://build.chromium.org/
         'buildnumber': str(build_status.getNumber()),
         'date': str(datetime.date.today()),
         'steps': step_name,
-        'slavename': build_status.getSlavename(),
+        'subordinatename': build_status.getSubordinatename(),
     }
     m['From'] = self.fromaddr
     if self.reply_to:

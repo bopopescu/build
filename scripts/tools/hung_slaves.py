@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Lists slaves with hung build steps."""
+"""Lists subordinates with hung build steps."""
 
 import logging
 import os
@@ -17,7 +17,7 @@ sys.path.append(os.path.join(BASE_DIR, '..'))
 sys.path.append(os.path.join(BASE_DIR, '..', '..', '..', 'commit-queue'))
 
 import buildbot_json  # pylint: disable=F0401
-from tools import slaves
+from tools import subordinates
 
 
 def format_time(value):
@@ -45,7 +45,7 @@ def from_time(value):
 
 
 def main():
-  usage = """%prog [options] <master>
+  usage = """%prog [options] <main>
 
 Sample usage:
   %prog t.c -d 3h
@@ -53,7 +53,7 @@ Sample usage:
 Note: t is replaced with 'tryserver', 'c' with chromium' and
       co with 'chromiumos'.
 
-Only the slave names are printed on stdout, making it bash-friendly.
+Only the subordinate names are printed on stdout, making it bash-friendly.
 """
   parser = optparse.OptionParser(usage=usage)
   parser.add_option(
@@ -73,7 +73,7 @@ Only the slave names are printed on stdout, making it bash-friendly.
   levels = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
   logging.basicConfig(level=levels[min(len(levels)-1, options.verbose)])
 
-  url = 'http://build.chromium.org/p/%s' % slaves.ProcessShortName(args[0])
+  url = 'http://build.chromium.org/p/%s' % subordinates.ProcessShortName(args[0])
   buildbot = buildbot_json.Buildbot(url)
   if options.builder:
     builders = [buildbot.builders[b] for b in options.builder]
@@ -91,7 +91,7 @@ Only the slave names are printed on stdout, making it bash-friendly.
         continue
       duration = now - start
       if not options.duration or duration > options.duration:
-        print build.slave.name
+        print build.subordinate.name
         logging.warn('%s(%d) elapsed:%s' % (
             builder.name, build.number,
             format_time(duration)))

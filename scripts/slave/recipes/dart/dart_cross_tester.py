@@ -83,6 +83,6 @@ def GenTests(api):
   yield (
     api.test('target-arm-vm-linux-release') +
     api.platform('linux', 64) +
-    api.properties.generic(mastername='client.dart',
+    api.properties.generic(mainname='client.dart',
                            buildername='target-arm-vm-linux-release-be',
                            revision='abcd1234efef5656'))

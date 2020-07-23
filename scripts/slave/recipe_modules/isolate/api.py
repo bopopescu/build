@@ -215,7 +215,7 @@ class IsolateApi(recipe_api.RecipeApi):
       self.m.python('remove_build_metadata',
                     self.resource('remove_build_metadata.py'),
                     args=args,
-                    cwd=self.m.path['slave_build'])
+                    cwd=self.m.path['subordinate_build'])
     except self.m.step.StepFailure:
       step_result = self.m.step.active_result
       step_result.presentation.status = self.m.step.WARNING
@@ -230,4 +230,4 @@ class IsolateApi(recipe_api.RecipeApi):
     self.m.python('compare_build_artifacts',
                   self.resource('compare_build_artifacts.py'),
                   args=args,
-                  cwd=self.m.path['slave_build'])
+                  cwd=self.m.path['subordinate_build'])

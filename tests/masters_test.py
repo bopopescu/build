@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""Starts all masters and verify they can server /json/project fine.
+"""Starts all mains and verify they can server /json/project fine.
 """
 
 import collections
@@ -24,24 +24,24 @@ sys.path.insert(0, os.path.join(BUILD_DIR, 'scripts'))
 import common.env
 common.env.Install()
 
-import masters_util
+import mains_util
 from common import chromium_utils
-from common import master_cfg_utils
+from common import main_cfg_utils
 
 
-def do_master_imports():
-  # Import scripts/slave/bootstrap.py to get access to the ImportMasterConfigs
-  # function that will pull in every site_config for us. The master config
-  # classes are saved as attributes of config_bootstrap.Master. The import
+def do_main_imports():
+  # Import scripts/subordinate/bootstrap.py to get access to the ImportMainConfigs
+  # function that will pull in every site_config for us. The main config
+  # classes are saved as attributes of config_bootstrap.Main. The import
   # takes care of knowing which set of site_configs to use.
-  import slave.bootstrap
-  slave.bootstrap.ImportMasterConfigs()
-  return getattr(sys.modules['config_bootstrap'], 'Master')
+  import subordinate.bootstrap
+  subordinate.bootstrap.ImportMainConfigs()
+  return getattr(sys.modules['config_bootstrap'], 'Main')
 
 
 @contextlib.contextmanager
 def BackupPaths(base_path, path_globs):
-  tmpdir = tempfile.mkdtemp(prefix='.tmpMastersTest', dir=base_path)
+  tmpdir = tempfile.mkdtemp(prefix='.tmpMainsTest', dir=base_path)
   paths_to_restore = []
   try:
     for path_glob in path_globs:
@@ -59,36 +59,36 @@ def BackupPaths(base_path, path_globs):
         print >> sys.stderr, 'ERROR: mv %s %s' % (bkup_path, path)
     os.rmdir(tmpdir)
 
-def test_master(master, path, name, ports):
-  if not masters_util.stop_master(master, path):
+def test_main(main, path, name, ports):
+  if not mains_util.stop_main(main, path):
     return False
-  logging.info('%s Starting', master)
+  logging.info('%s Starting', main)
   start = time.time()
   with BackupPaths(path, ['twistd.log', 'twistd.log.?', 'git_poller_*.git',
                           'state.sqlite']):
     try:
-      if not masters_util.start_master(master, path, dry_run=True):
+      if not mains_util.start_main(main, path, dry_run=True):
         return False
-      res = masters_util.wait_for_start(master, name, path, ports)
+      res = mains_util.wait_for_start(main, name, path, ports)
       if not res:
-        logging.info('%s Success in %1.1fs', master, (time.time() - start))
+        logging.info('%s Success in %1.1fs', main, (time.time() - start))
       return res
     finally:
-      masters_util.stop_master(master, path, force=True)
+      mains_util.stop_main(main, path, force=True)
 
 
-class MasterTestThread(threading.Thread):
+class MainTestThread(threading.Thread):
   # Class static. Only access this from the main thread.
   port_lock_map = collections.defaultdict(threading.Lock)
 
-  def __init__(self, master, master_class, master_path):
-    super(MasterTestThread, self).__init__()
-    self.master = master
-    self.master_path = master_path
-    self.name = master_class.project_name
+  def __init__(self, main, main_class, main_path):
+    super(MainTestThread, self).__init__()
+    self.main = main
+    self.main_path = main_path
+    self.name = main_class.project_name
     all_ports = [
-        master_class.master_port, master_class.master_port_alt,
-        master_class.slave_port, getattr(master_class, 'try_job_port', 0)]
+        main_class.main_port, main_class.main_port_alt,
+        main_class.subordinate_port, getattr(main_class, 'try_job_port', 0)]
     # Sort port locks numerically to prevent deadlocks.
     self.port_locks = [self.port_lock_map[p] for p in sorted(all_ports) if p]
 
@@ -99,8 +99,8 @@ class MasterTestThread(threading.Thread):
 
   def run(self):
     with contextlib.nested(*self.port_locks):
-      self.result = test_master(
-          self.master, self.master_path, self.name, self.ports)
+      self.result = test_main(
+          self.main, self.main_path, self.name, self.ports)
 
 
 def join_threads(started_threads, failed):
@@ -108,9 +108,9 @@ def join_threads(started_threads, failed):
   for cur_thread in started_threads:
     cur_thread.join(30)
     if cur_thread.result:
-      print '\n=== Error running %s === ' % cur_thread.master
+      print '\n=== Error running %s === ' % cur_thread.main
       print cur_thread.result
-      failed.add(cur_thread.master)
+      failed.add(cur_thread.main)
     else:
       success += 1
   return success
@@ -118,48 +118,48 @@ def join_threads(started_threads, failed):
 
 def real_main(all_expected):
   start = time.time()
-  master_classes = do_master_imports()
-  all_masters = {}
+  main_classes = do_main_imports()
+  all_mains = {}
   for base in all_expected:
-    base_dir = os.path.join(base, 'masters')
-    all_masters[base] = sorted(p for p in
+    base_dir = os.path.join(base, 'mains')
+    all_mains[base] = sorted(p for p in
         os.listdir(base_dir) if
-        os.path.exists(os.path.join(base_dir, p, 'master.cfg')))
+        os.path.exists(os.path.join(base_dir, p, 'main.cfg')))
   failed = set()
   skipped = 0
   success = 0
 
-  # First make sure no master is started. Otherwise it could interfere with
+  # First make sure no main is started. Otherwise it could interfere with
   # conflicting port binding.
-  if not masters_util.check_for_no_masters():
+  if not mains_util.check_for_no_mains():
     return 1
-  for base, masters in all_masters.iteritems():
-    for master in masters:
-      pid_path = os.path.join(base, 'masters', master, 'twistd.pid')
+  for base, mains in all_mains.iteritems():
+    for main in mains:
+      pid_path = os.path.join(base, 'mains', main, 'twistd.pid')
       if os.path.isfile(pid_path):
         pid_value = int(open(pid_path).read().strip())
-        if masters_util.pid_exists(pid_value):
+        if mains_util.pid_exists(pid_value):
           print >> sys.stderr, ('%s is still running as pid %d.' %
-              (master, pid_value))
+              (main, pid_value))
           print >> sys.stderr, 'Please stop it before running the test.'
           return 1
 
 
-  with master_cfg_utils.TemporaryMasterPasswords():
-    for base, masters in all_masters.iteritems():
+  with main_cfg_utils.TemporaryMainPasswords():
+    for base, mains in all_mains.iteritems():
       started_threads = []
-      for master in masters[:]:
-        if not master in all_expected[base]:
+      for main in mains[:]:
+        if not main in all_expected[base]:
           continue
-        masters.remove(master)
-        classname = all_expected[base].pop(master)
+        mains.remove(main)
+        classname = all_expected[base].pop(main)
         if not classname:
           skipped += 1
           continue
-        cur_thread = MasterTestThread(
-            master=master,
-            master_class=getattr(master_classes, classname),
-            master_path=os.path.join(base, 'masters', master))
+        cur_thread = MainTestThread(
+            main=main,
+            main_class=getattr(main_classes, classname),
+            main_path=os.path.join(base, 'mains', main))
         cur_thread.start()
         started_threads.append(cur_thread)
         # Avoid having too many concurrent threads; join if we have reached the
@@ -173,25 +173,25 @@ def real_main(all_expected):
 
   if failed:
     print >> sys.stderr, (
-        '%d masters failed:\n%s' % (len(failed), '\n'.join(sorted(failed))))
-  remaining_masters = []
-  for masters in all_masters.itervalues():
-    remaining_masters.extend(masters)
-  if any(remaining_masters):
+        '%d mains failed:\n%s' % (len(failed), '\n'.join(sorted(failed))))
+  remaining_mains = []
+  for mains in all_mains.itervalues():
+    remaining_mains.extend(mains)
+  if any(remaining_mains):
     print >> sys.stderr, (
-        '%d masters were not expected:\n%s' %
-        (len(remaining_masters), '\n'.join(sorted(remaining_masters))))
+        '%d mains were not expected:\n%s' %
+        (len(remaining_mains), '\n'.join(sorted(remaining_mains))))
   outstanding_expected = []
   for expected in all_expected.itervalues():
     outstanding_expected.extend(expected)
   if outstanding_expected:
     print >> sys.stderr, (
-        '%d masters were expected but not found:\n%s' %
+        '%d mains were expected but not found:\n%s' %
         (len(outstanding_expected), '\n'.join(sorted(outstanding_expected))))
   print >> sys.stderr, (
-      '%s masters succeeded, %d failed, %d skipped in %1.1fs.' % (
+      '%s mains succeeded, %d failed, %d skipped in %1.1fs.' % (
         success, len(failed), skipped, time.time() - start))
-  return int(bool(remaining_masters or outstanding_expected or failed))
+  return int(bool(remaining_mains or outstanding_expected or failed))
 
 
 def main(argv):
@@ -212,95 +212,95 @@ def main(argv):
       'site_config',
       os.path.join(build_internal, 'site_config'),
   ))
-  public_masters = {
-      'master.chromium': 'Chromium',
-      'master.chromium.android': 'ChromiumAndroid',
-      'master.chromium.chrome': 'ChromiumChrome',
-      'master.chromium.chromedriver': 'ChromiumChromeDriver',
-      'master.chromium.chromiumos': 'ChromiumChromiumos',
-      'master.chromium.fyi': 'ChromiumFYI',
-      'master.chromium.gatekeeper': 'Gatekeeper',
-      'master.chromium.goma': 'ChromiumGoma',
-      'master.chromium.gpu': 'ChromiumGPU',
-      'master.chromium.gpu.fyi': 'ChromiumGPUFYI',
-      'master.chromium.infra': 'Infra',
-      'master.chromium.infra.cron': 'InfraCron',
-      'master.chromium.linux': 'ChromiumLinux',
-      'master.chromium.lkgr': 'ChromiumLKGR',
-      'master.chromium.mac': 'ChromiumMac',
-      'master.chromium.memory': 'ChromiumMemory',
-      'master.chromium.memory.fyi': 'ChromiumMemoryFYI',
-      'master.chromium.mojo': 'ChromiumMojo',
-      'master.chromium.perf': 'ChromiumPerf',
-      'master.chromium.perf.fyi': 'ChromiumPerfFyi',
-      'master.chromium.swarm': 'ChromiumSwarm',
-      'master.chromium.tools.build': 'ChromiumToolsBuild',
-      'master.chromium.webkit': 'ChromiumWebkit',
-      'master.chromium.webrtc': 'ChromiumWebRTC',
-      'master.chromium.webrtc.fyi': 'ChromiumWebRTCFYI',
-      'master.chromium.win': 'ChromiumWin',
-      'master.chromiumos': 'ChromiumOS',
-      'master.chromiumos.chromium': 'ChromiumOSChromium',
-      'master.chromiumos.tryserver': 'ChromiumOSTryServer',
-      'master.client.art': 'ART',
-      'master.client.boringssl': 'Boringssl',
-      'master.client.catapult': 'Catapult',
-      'master.client.crashpad': 'ClientCrashpad',
-      'master.client.dart': 'Dart',
-      'master.client.dart.fyi': 'DartFYI',
-      'master.client.dart.packages': 'DartPackages',
-      'master.client.drmemory': 'DrMemory',
-      'master.client.dynamorio': 'DynamoRIO',
-      'master.client.fletch': 'Dartino',
-      'master.client.flutter': 'ClientFlutter',
-      'master.client.gyp': 'GYP',
-      'master.client.legion': 'ClientLegion',
-      'master.client.libyuv': 'Libyuv',
-      'master.client.libvpx': 'Libvpx',
-      'master.client.mojo': 'Mojo',
-      'master.client.nacl': 'NativeClient',
-      'master.client.nacl.ports': 'WebPorts',
-      'master.client.nacl.sdk': 'NativeClientSDK',
-      'master.client.nacl.toolchain': 'NativeClientToolchain',
-      'master.client.ndk': 'NDK',
-      'master.client.pdfium': 'Pdfium',
-      'master.client.skia': 'Skia',
-      'master.client.skia.android': 'SkiaAndroid',
-      'master.client.skia.compile': 'SkiaCompile',
-      'master.client.skia.fyi': 'SkiaFYI',
-      'master.client.syzygy': 'Syzygy',
-      'master.client.v8': 'V8',
-      'master.client.v8.branches': 'V8Branches',
-      'master.client.v8.fyi': 'V8FYI',
-      'master.client.v8.ports': 'V8Ports',
-      'master.client.wasm.llvm': 'WasmLlvm',
-      'master.client.webrtc': 'WebRTC',
-      'master.client.webrtc.fyi': 'WebRTCFYI',
-      'master.tryserver.chromium.android': 'TryserverChromiumAndroid',
-      'master.tryserver.chromium.angle': 'TryServerANGLE',
-      'master.tryserver.chromium.linux': 'TryServerChromiumLinux',
-      'master.tryserver.chromium.mac': 'TryServerChromiumMac',
-      'master.tryserver.chromium.win': 'TryServerChromiumWin',
-      'master.tryserver.chromium.perf': 'ChromiumPerfTryServer',
-      'master.tryserver.client.catapult': 'CatapultTryserver',
-      'master.tryserver.client.custom_tabs_client': 'CustomTabsClientTryserver',
-      'master.tryserver.client.mojo': 'MojoTryServer',
-      'master.tryserver.client.pdfium': 'PDFiumTryserver',
-      'master.tryserver.client.syzygy': 'SyzygyTryserver',
-      'master.tryserver.blink': 'BlinkTryServer',
-      'master.tryserver.infra': 'InfraTryServer',
-      'master.tryserver.libyuv': 'LibyuvTryServer',
-      'master.tryserver.nacl': 'NativeClientTryServer',
-      'master.tryserver.v8': 'V8TryServer',
-      'master.tryserver.webrtc': 'WebRTCTryServer',
+  public_mains = {
+      'main.chromium': 'Chromium',
+      'main.chromium.android': 'ChromiumAndroid',
+      'main.chromium.chrome': 'ChromiumChrome',
+      'main.chromium.chromedriver': 'ChromiumChromeDriver',
+      'main.chromium.chromiumos': 'ChromiumChromiumos',
+      'main.chromium.fyi': 'ChromiumFYI',
+      'main.chromium.gatekeeper': 'Gatekeeper',
+      'main.chromium.goma': 'ChromiumGoma',
+      'main.chromium.gpu': 'ChromiumGPU',
+      'main.chromium.gpu.fyi': 'ChromiumGPUFYI',
+      'main.chromium.infra': 'Infra',
+      'main.chromium.infra.cron': 'InfraCron',
+      'main.chromium.linux': 'ChromiumLinux',
+      'main.chromium.lkgr': 'ChromiumLKGR',
+      'main.chromium.mac': 'ChromiumMac',
+      'main.chromium.memory': 'ChromiumMemory',
+      'main.chromium.memory.fyi': 'ChromiumMemoryFYI',
+      'main.chromium.mojo': 'ChromiumMojo',
+      'main.chromium.perf': 'ChromiumPerf',
+      'main.chromium.perf.fyi': 'ChromiumPerfFyi',
+      'main.chromium.swarm': 'ChromiumSwarm',
+      'main.chromium.tools.build': 'ChromiumToolsBuild',
+      'main.chromium.webkit': 'ChromiumWebkit',
+      'main.chromium.webrtc': 'ChromiumWebRTC',
+      'main.chromium.webrtc.fyi': 'ChromiumWebRTCFYI',
+      'main.chromium.win': 'ChromiumWin',
+      'main.chromiumos': 'ChromiumOS',
+      'main.chromiumos.chromium': 'ChromiumOSChromium',
+      'main.chromiumos.tryserver': 'ChromiumOSTryServer',
+      'main.client.art': 'ART',
+      'main.client.boringssl': 'Boringssl',
+      'main.client.catapult': 'Catapult',
+      'main.client.crashpad': 'ClientCrashpad',
+      'main.client.dart': 'Dart',
+      'main.client.dart.fyi': 'DartFYI',
+      'main.client.dart.packages': 'DartPackages',
+      'main.client.drmemory': 'DrMemory',
+      'main.client.dynamorio': 'DynamoRIO',
+      'main.client.fletch': 'Dartino',
+      'main.client.flutter': 'ClientFlutter',
+      'main.client.gyp': 'GYP',
+      'main.client.legion': 'ClientLegion',
+      'main.client.libyuv': 'Libyuv',
+      'main.client.libvpx': 'Libvpx',
+      'main.client.mojo': 'Mojo',
+      'main.client.nacl': 'NativeClient',
+      'main.client.nacl.ports': 'WebPorts',
+      'main.client.nacl.sdk': 'NativeClientSDK',
+      'main.client.nacl.toolchain': 'NativeClientToolchain',
+      'main.client.ndk': 'NDK',
+      'main.client.pdfium': 'Pdfium',
+      'main.client.skia': 'Skia',
+      'main.client.skia.android': 'SkiaAndroid',
+      'main.client.skia.compile': 'SkiaCompile',
+      'main.client.skia.fyi': 'SkiaFYI',
+      'main.client.syzygy': 'Syzygy',
+      'main.client.v8': 'V8',
+      'main.client.v8.branches': 'V8Branches',
+      'main.client.v8.fyi': 'V8FYI',
+      'main.client.v8.ports': 'V8Ports',
+      'main.client.wasm.llvm': 'WasmLlvm',
+      'main.client.webrtc': 'WebRTC',
+      'main.client.webrtc.fyi': 'WebRTCFYI',
+      'main.tryserver.chromium.android': 'TryserverChromiumAndroid',
+      'main.tryserver.chromium.angle': 'TryServerANGLE',
+      'main.tryserver.chromium.linux': 'TryServerChromiumLinux',
+      'main.tryserver.chromium.mac': 'TryServerChromiumMac',
+      'main.tryserver.chromium.win': 'TryServerChromiumWin',
+      'main.tryserver.chromium.perf': 'ChromiumPerfTryServer',
+      'main.tryserver.client.catapult': 'CatapultTryserver',
+      'main.tryserver.client.custom_tabs_client': 'CustomTabsClientTryserver',
+      'main.tryserver.client.mojo': 'MojoTryServer',
+      'main.tryserver.client.pdfium': 'PDFiumTryserver',
+      'main.tryserver.client.syzygy': 'SyzygyTryserver',
+      'main.tryserver.blink': 'BlinkTryServer',
+      'main.tryserver.infra': 'InfraTryServer',
+      'main.tryserver.libyuv': 'LibyuvTryServer',
+      'main.tryserver.nacl': 'NativeClientTryServer',
+      'main.tryserver.v8': 'V8TryServer',
+      'main.tryserver.webrtc': 'WebRTCTryServer',
   }
-  all_masters = {base_dir: public_masters}
+  all_mains = {base_dir: public_mains}
   if os.path.exists(build_internal):
     internal_test_data = chromium_utils.ParsePythonCfg(
-        os.path.join(build_internal, 'tests', 'internal_masters_cfg.py'),
+        os.path.join(build_internal, 'tests', 'internal_mains_cfg.py'),
         fail_hard=True)
-    all_masters[build_internal] = internal_test_data['masters_test']
-  return real_main(all_masters)
+    all_mains[build_internal] = internal_test_data['mains_test']
+  return real_main(all_mains)
 
 
 if __name__ == '__main__':

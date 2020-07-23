@@ -23,16 +23,16 @@ class TestRegisterDebugClient(unittest.TestCase):
     def test_registerDebugClient(self):
         pbmanager = mock.Mock()
         pbmanager.register.return_value = mock.Mock()
-        master = mock.Mock()
-        slavePortnum = 9824
+        main = mock.Mock()
+        subordinatePortnum = 9824
         debugPassword = 'seeeekrt'
 
-        rv = debug.registerDebugClient(master, slavePortnum,
+        rv = debug.registerDebugClient(main, subordinatePortnum,
                                        debugPassword, pbmanager)
 
         # test return value and that the register method was called
         self.assertIdentical(rv, pbmanager.register.return_value)
-        self.assertEqual(pbmanager.register.call_args[0][0], slavePortnum)
+        self.assertEqual(pbmanager.register.call_args[0][0], subordinatePortnum)
         self.assertEqual(pbmanager.register.call_args[0][1], "debug")
         self.assertEqual(pbmanager.register.call_args[0][2], debugPassword)
 
@@ -46,8 +46,8 @@ class TestDebugPerspective(unittest.TestCase):
 
     def setUp(self):
         self.persp = debug.DebugPerspective()
-        self.master = self.persp.master = mock.Mock()
-        self.botmaster = self.persp.botmaster = mock.Mock()
+        self.main = self.persp.main = mock.Mock()
+        self.botmain = self.persp.botmain = mock.Mock()
 
     def test_attached(self):
         self.assertIdentical(self.persp.attached(mock.Mock()), self.persp)
@@ -58,7 +58,7 @@ class TestDebugPerspective(unittest.TestCase):
     def test_perspective_reload(self):
         d = defer.maybeDeferred(lambda : self.persp.perspective_reload())
         def check(_):
-            self.master.loadTheConfigFile.assert_called_with()
+            self.main.loadTheConfigFile.assert_called_with()
         d.addCallback(check)
         return d
 

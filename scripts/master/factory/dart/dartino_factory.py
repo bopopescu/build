@@ -10,8 +10,8 @@ Based on gclient_factory.py.
 
 from buildbot.steps import trigger
 
-from master.factory import gclient_factory
-from master.factory.dart import dart_commands
+from main.factory import gclient_factory
+from main.factory.dart import dart_commands
 
 class DartinoFactory(gclient_factory.GClientFactory):
   def __init__(self, build_dir='sdk', target_platform='posix'):

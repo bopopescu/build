@@ -24,9 +24,9 @@ sys.path.insert(0, os.path.join(BUILD_ROOT, 'scripts'))
 from common import annotator
 from common import chromium_utils
 from common import env
-from common import master_cfg_utils
-from slave import gce
-from slave import infra_platform
+from common import main_cfg_utils
+from subordinate import gce
+from subordinate import infra_platform
 
 # Logging instance.
 LOGGER = logging.getLogger('annotated_run')
@@ -40,11 +40,11 @@ LOGDOG_ERROR_RETURNCODES = (
     251,
 )
 
-# Sentinel value that, if present in master config, matches all builders
-# underneath that master.
+# Sentinel value that, if present in main config, matches all builders
+# underneath that main.
 WHITELIST_ALL = '*'
 
-# Whitelist of {master}=>[{builder}|WHITELIST_ALL] whitelisting specific masters
+# Whitelist of {main}=>[{builder}|WHITELIST_ALL] whitelisting specific mains
 # and builders for experimental LogDog/Annotee export.
 LOGDOG_WHITELIST_MASTER_BUILDERS = {
     'chromium.infra': { WHITELIST_ALL },
@@ -385,7 +385,7 @@ def _logdog_install_cipd(path, *packages):
   pmap = {}
   cmd = [
       sys.executable,
-      os.path.join(env.Build, 'scripts', 'slave', 'cipd.py'),
+      os.path.join(env.Build, 'scripts', 'subordinate', 'cipd.py'),
       '--dest-directory', path,
       '--json-output', packages_path,
   ] + (['--verbose'] * verbosity)
@@ -407,7 +407,7 @@ def _build_logdog_prefix(properties):
   """Constructs a LogDog stream prefix from the supplied properties.
 
   The returned prefix is of the form:
-  bb/<mastername>/<buildername>/<buildnumber>
+  bb/<mainname>/<buildername>/<buildnumber>
 
   Any path-incompatible characters will be flattened to underscores.
   """
@@ -423,12 +423,12 @@ def _build_logdog_prefix(properties):
     return ''.join(parts)
 
   components = {}
-  for f in ('mastername', 'buildername', 'buildnumber'):
+  for f in ('mainname', 'buildername', 'buildnumber'):
     prop = properties.get(f)
     if not prop:
       raise LogDogBootstrapError('Missing build property [%s].' % (f,))
     components[f] = normalize(properties.get(f))
-  return 'bb/%(mastername)s/%(buildername)s/%(buildnumber)s' % components
+  return 'bb/%(mainname)s/%(buildername)s/%(buildnumber)s' % components
 
 
 def _logdog_bootstrap(rt, opts, basedir, tempdir, config, properties, cmd):
@@ -566,26 +566,26 @@ def _should_run_logdog(properties):
   Args:
     properties (dict): The factory properties for this recipe run.
   """
-  mastername = properties.get('mastername')
+  mainname = properties.get('mainname')
   buildername = properties.get('buildername')
-  if not all((mastername, buildername)):
-    LOGGER.warning('Required mastername/buildername is not set.')
+  if not all((mainname, buildername)):
+    LOGGER.warning('Required mainname/buildername is not set.')
     return False
 
-  # Key on mastername.
-  bdict = LOGDOG_WHITELIST_MASTER_BUILDERS.get(mastername)
+  # Key on mainname.
+  bdict = LOGDOG_WHITELIST_MASTER_BUILDERS.get(mainname)
   if bdict is not None:
     # Key on buildername. If WHITELIST_ALL is present, other builders are
     # blacklisted.
     if (
         (WHITELIST_ALL in bdict and buildername not in bdict) or
         (WHITELIST_ALL not in bdict and buildername in bdict)):
-      LOGGER.info('Whitelisted master %s, builder %s.',
-                  mastername, buildername)
+      LOGGER.info('Whitelisted main %s, builder %s.',
+                  mainname, buildername)
       return True
 
-  LOGGER.info('Master %s, builder %s is not whitelisted for LogDog.',
-              mastername, buildername)
+  LOGGER.info('Main %s, builder %s is not whitelisted for LogDog.',
+              mainname, buildername)
   return False
 
 
@@ -593,16 +593,16 @@ def get_recipe_properties(workdir, build_properties,
                           use_factory_properties_from_disk):
   """Constructs the recipe's properties from buildbot's properties.
 
-  This retrieves the current factory properties from the master_config
-  in the slave's checkout (no factory properties are handed to us from the
-  master), and merges in the build properties.
+  This retrieves the current factory properties from the main_config
+  in the subordinate's checkout (no factory properties are handed to us from the
+  main), and merges in the build properties.
 
   Using the values from the checkout allows us to do things like change
   the recipe and other factory properties for a builder without needing
-  a master restart.
+  a main restart.
 
   As the build properties doesn't include the factory properties, we would:
-  1. Load factory properties from checkout on the slave.
+  1. Load factory properties from checkout on the subordinate.
   2. Override the factory properties with the build properties.
   3. Set the factory-only properties as build properties using annotation so
      that they will show up on the build page.
@@ -614,12 +614,12 @@ def get_recipe_properties(workdir, build_properties,
   with stream.step('setup_properties') as s:
     factory_properties = {}
 
-    mastername = build_properties.get('mastername')
+    mainname = build_properties.get('mainname')
     buildername = build_properties.get('buildername')
-    if mastername and buildername:
-      # Load factory properties from tip-of-tree checkout on the slave builder.
+    if mainname and buildername:
+      # Load factory properties from tip-of-tree checkout on the subordinate builder.
       factory_properties = get_factory_properties_from_disk(
-          workdir, mastername, buildername)
+          workdir, mainname, buildername)
 
     # Check conflicts between factory properties and build properties.
     conflicting_properties = {}
@@ -660,36 +660,36 @@ def get_recipe_properties(workdir, build_properties,
     return properties
 
 
-def get_factory_properties_from_disk(workdir, mastername, buildername):
-  master_list = master_cfg_utils.GetMasters()
-  master_path = None
-  for name, path in master_list:
-    if name == mastername:
-      master_path = path
+def get_factory_properties_from_disk(workdir, mainname, buildername):
+  main_list = main_cfg_utils.GetMains()
+  main_path = None
+  for name, path in main_list:
+    if name == mainname:
+      main_path = path
 
-  if not master_path:
-    raise LookupError('master "%s" not found.' % mastername)
+  if not main_path:
+    raise LookupError('main "%s" not found.' % mainname)
 
   script_path = os.path.join(env.Build, 'scripts', 'tools',
-                             'dump_master_cfg.py')
+                             'dump_main_cfg.py')
 
-  master_json = os.path.join(workdir, 'dump_master_cfg.json')
+  main_json = os.path.join(workdir, 'dump_main_cfg.json')
   dump_cmd = [sys.executable,
               script_path,
-              master_path, master_json]
+              main_path, main_json]
   proc = subprocess.Popen(dump_cmd, cwd=env.Build,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode:
-    raise LookupError('Failed to get the master config; dump_master_cfg %s'
+    raise LookupError('Failed to get the main config; dump_main_cfg %s'
                       'returned %d):\n%s\n%s\n'% (
-                      mastername, proc.returncode, out, err))
+                      mainname, proc.returncode, out, err))
 
-  with open(master_json, 'rU') as f:
+  with open(main_json, 'rU') as f:
     config = json.load(f)
 
   # Now extract just the factory properties for the requested builder
-  # from the master config.
+  # from the main config.
   props = {}
   found = False
   for builder_dict in config['builders']:
@@ -700,12 +700,12 @@ def get_factory_properties_from_disk(workdir, mastername, buildername):
         props[name] = value
 
   if not found:
-    raise LookupError('builder "%s" not found on in master "%s"' %
-                      (buildername, mastername))
+    raise LookupError('builder "%s" not found on in main "%s"' %
+                      (buildername, mainname))
 
   if 'recipe' not in props:
     raise LookupError('Cannot find recipe for %s on %s' %
-                      (buildername, mastername))
+                      (buildername, mainname))
 
   return props
 
@@ -735,12 +735,12 @@ def get_args(argv):
       help='factory properties in b64 gz JSON format')
   parser.add_argument('--keep-stdin', action='store_true', default=False,
       help='don\'t close stdin when running recipe steps')
-  parser.add_argument('--master-overrides-slave', action='store_true',
-      help='use the property values given on the command line from the master, '
-           'not the ones looked up on the slave')
+  parser.add_argument('--main-overrides-subordinate', action='store_true',
+      help='use the property values given on the command line from the main, '
+           'not the ones looked up on the subordinate')
   parser.add_argument('--use-factory-properties-from-disk',
       action='store_true', default=False,
-      help='use factory properties loaded from disk on the slave')
+      help='use factory properties loaded from disk on the subordinate')
 
   group = parser.add_argument_group('LogDog Bootstrap')
   group.add_argument('--logdog-verbose',
@@ -869,8 +869,8 @@ def write_monitoring_event(config, datadir, build_properties):
        '--event-mon-output-file', os.path.join(datadir, 'log_request_proto'),
        '--event-mon-run-type', 'file',
        '--event-mon-service-name',
-           'buildbot/master/master.%s'
-           % build_properties.get('mastername', 'UNKNOWN'),
+           'buildbot/main/main.%s'
+           % build_properties.get('mainname', 'UNKNOWN'),
        '--build-event-build-name',
            build_properties.get('buildername', 'UNKNOWN'),
        '--build-event-build-number',
@@ -898,9 +898,9 @@ def _exec_recipe(rt, opts, basedir, tdir, config, properties):
   # Use the standard recipe runner unless the recipes are explicitly in the
   # "build_limited" repository.
   recipe_runner = os.path.join(env.Build,
-                               'scripts', 'slave', 'recipes.py')
+                               'scripts', 'subordinate', 'recipes.py')
   if env.BuildInternal:
-    build_limited = os.path.join(env.BuildInternal, 'scripts', 'slave')
+    build_limited = os.path.join(env.BuildInternal, 'scripts', 'subordinate')
     if os.path.exists(os.path.join(build_limited, 'recipes', recipe_file)):
       recipe_runner = os.path.join(build_limited, 'recipes.py')
 

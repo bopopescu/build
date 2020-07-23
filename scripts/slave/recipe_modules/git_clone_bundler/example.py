@@ -31,7 +31,7 @@ def RunSteps(api):
   else:
     # Create a bundle.
     api.git_clone_bundler.create(
-        api.path['slave_build'].join('checkout'),
+        api.path['subordinate_build'].join('checkout'),
         'clone-dot-bundle-bucket',
         gs_subpath='checkout/repository')
 
